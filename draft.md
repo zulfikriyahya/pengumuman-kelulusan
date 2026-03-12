@@ -33,7 +33,6 @@
 │   ├── manifest.json
 │   ├── sw.js
 │   └── template_import_siswa.csv
-├── setup.sh
 ├── src
 │   ├── layouts
 │   │   └── Layout.astro
@@ -46,15 +45,12 @@
 ├── tsconfig.json
 └── uploads
     ├── album
-    │   └── album_69b27a062bfae.png
     ├── guru
-    │   └── guru_69b27948375f7.png
     └── informasi
         ├── file
         └── foto
-            └── info_foto_69b28137669f1.png
 
-24 directories, 29 files
+24 directories, 25 files
 
 # File Contents
 
@@ -64,6 +60,65 @@
 allowBuilds:
   esbuild: true
   sharp: true
+
+```
+---
+
+## ./todo.md
+
+```markdown
+Dependensi :
+
+{
+
+  "name": "madrasah-universe-pengumuman-kelulusan",
+
+"type": "module",
+
+"version": "1.0.0",
+
+"scripts": {
+
+"dev": "astro dev",
+
+"build": "astro build",
+
+"preview": "astro preview",
+
+"astro": "astro"
+
+  },
+
+"dependencies": {
+
+"@tailwindcss/vite": "^4.2.1",
+
+"astro": "^6.0.3",
+
+"tailwindcss": "^4.2.1"
+
+  }
+
+}
+
+Fitur:
+- Halaman Admin (Gunakan username dan password untuk mengelola data pada tampilan publik)
+- Halaman Album : Menampilkan Foto galeri yang diupload admin
+- Halaman Cari Masukkan NISN Untuk Membuka Amplop
+- Halaman Buka Amplop / Section Buka Amplop Berdasarkan Waktu Mundur (Amplop dapat diklik buka jika sudah waktunya dan menampilkan modal informasi jika belum Waktunya)
+- Halaman Album Pegawai dan Guru Yang menampilkan Nama, Foto, Kesan Pesan.
+- Halaman Masukkan Testimoni, Kesan Pesan.
+
+Ketentuan (Halaman dashboard admin):
+Data Yang dimasukkan :
+- Identitas SIswa: Nama Lengkap, NISN, Kelas, Jenis Kelamin, tahun pelajaran, Status kelulusan: Lulus, Tidak Lulus, Lulus Bersyarat
+- input data dengan di import
+- input data tanggal dan waktu pengumuman dan status aktifkan
+- ada fitur tambah, hapus, edit, hapus semua,
+- ada filter tampilan data, per jenis kelamin, tahun pelajaran, status kelulusan, perkelas
+- ada filter pencarian berdasarkan nama atau nisn
+
+Database menggunakan mysql (Gunakan PHP untuk backend)
 
 ```
 ---
@@ -286,6 +341,20 @@ CREATE TABLE IF NOT EXISTS admin (
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+CREATE TABLE IF NOT EXISTS informasi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    judul VARCHAR(255) NOT NULL,
+    isi TEXT,
+    foto_path VARCHAR(500),
+    foto_caption VARCHAR(255),
+    file_path VARCHAR(500),
+    file_name VARCHAR(255),
+    link_eksternal VARCHAR(500),
+    is_published TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+ALTER TABLE testimoni ADD COLUMN is_approved TINYINT(1) NOT NULL DEFAULT 0 AFTER isi;
 
 INSERT INTO admin (username, password)
 VALUES ('admin', '$2y$12$placeholder_will_be_generated_on_setup');
@@ -923,9 +992,7 @@ err('Not found', 404);
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $path = rtrim($uri, '/');
 
-// Serve static files dari uploads/
 if (str_starts_with($path, '/uploads/')) {
-
     $file = realpath(__DIR__ . '/..' . $path);
     if ($file && is_file($file) && str_starts_with($file, realpath(__DIR__ . '/../uploads'))) {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
@@ -945,13 +1012,14 @@ if (str_starts_with($path, '/uploads/')) {
     exit;
 }
 
-// Route ke index.php endpoint
 $file = __DIR__ . $path . '/index.php';
+
+if (!is_file($file)) {
+    $file = __DIR__ . $path . '.php';
+}
 
 if (is_file($file)) {
     require $file;
-} elseif (is_file(__DIR__ . $path)) {
-    require __DIR__ . $path;
 } else {
     http_response_code(404);
     header('Content-Type: application/json');
@@ -974,8 +1042,45 @@ $method = $_SERVER['REQUEST_METHOD'];
 $db = getDB();
 
 if ($method === 'GET') {
-    $stmt = $db->query('SELECT * FROM testimoni ORDER BY created_at DESC');
+    $adminMode = !empty($_SESSION['admin']);
+    $where = ['1=1'];
+    $params = [];
+
+    if ($adminMode && isset($_GET['is_approved'])) {
+        $where[] = 'is_approved = ?';
+        $params[] = (int)$_GET['is_approved'];
+    } elseif (!$adminMode || !isset($_GET['show_all'])) {
+        $where[] = 'is_approved = 1';
+    }
+
+    if (!empty($_GET['q'])) {
+        $where[] = '(nama LIKE ? OR isi LIKE ? OR nisn LIKE ?)';
+        $q = '%' . $_GET['q'] . '%';
+        $params[] = $q;
+        $params[] = $q;
+        $params[] = $q;
+    }
+
+    $sort = ($_GET['sort'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+    $sql = 'SELECT * FROM testimoni WHERE ' . implode(' AND ', $where) . " ORDER BY created_at $sort";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
     ok($stmt->fetchAll());
+}
+
+if ($method === 'POST' && ($_GET['action'] ?? '') === 'approve') {
+    requireAdmin();
+    $body = getBody();
+    $ids = $body['ids'] ?? [];
+    $approved = (int)($body['is_approved'] ?? 1);
+    if (empty($ids)) err('IDs diperlukan');
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $params = [...$ids, $approved];
+    $stmt = $db->prepare("UPDATE testimoni SET is_approved = ? WHERE id IN ($placeholders)");
+    $stmt->execute([$approved, ...$ids]);
+    ok(['updated' => $stmt->rowCount()]);
 }
 
 if ($method === 'POST' && ($_GET['action'] ?? '') === 'bulk-delete') {
@@ -994,7 +1099,7 @@ if ($method === 'POST') {
     $body = getBody();
     if (empty($body['nama']) || empty($body['isi'])) err('Nama dan isi diperlukan');
 
-    $stmt = $db->prepare('INSERT INTO testimoni (nama, nisn, isi) VALUES (?, ?, ?)');
+    $stmt = $db->prepare('INSERT INTO testimoni (nama, nisn, isi, is_approved) VALUES (?, ?, ?, 0)');
     $stmt->execute([$body['nama'], $body['nisn'] ?? null, $body['isi']]);
     ok(['id' => $db->lastInsertId()]);
 }
@@ -1024,7 +1129,7 @@ err('Not found', 404);
 ## ./.env
 
 ```
-PUBLIC_API_BASE=http://localhost:3000
+PUBLIC_API_BASE=http://localhost:4321/api
 
 ```
 ---
@@ -1044,7 +1149,11 @@ export default defineConfig({
         "/api": {
           target: "http://localhost:3000",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+          rewrite: (path) => {
+            const rewritten = path.replace(/^\/api/, "") || "/";
+            console.log(`[proxy] ${path} -> ${rewritten}`);
+            return rewritten;
+          },
         },
       },
     },
@@ -1376,6 +1485,7 @@ const API = import.meta.env.PUBLIC_API_BASE;
             <tbody id="siswaBody" class="divide-y divide-white/5"></tbody>
           </table>
         </div>
+        <div id="siswaPagination"></div>
       </section>
 
       <!-- PANEL: PENGUMUMAN -->
@@ -1459,7 +1569,35 @@ const API = import.meta.env.PUBLIC_API_BASE;
 
       <!-- PANEL: TESTIMONI -->
       <section id="tab-testimoni" class="tab-panel hidden p-4 max-w-4xl mx-auto">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <input
+            id="searchTestimoni"
+            type="text"
+            placeholder="Cari nama / isi..."
+            class="flex-1 min-w-[180px] bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <select
+            id="filterTestimoni"
+            class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm"
+          >
+            <option value="">Semua</option>
+            <option value="0">Pending</option>
+            <option value="1">Approved</option>
+          </select>
+          <select
+            id="sortTestimoni"
+            class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm"
+          >
+            <option value="desc">Terbaru</option>
+            <option value="asc">Terlama</option>
+          </select>
+        </div>
         <div class="flex gap-2 mb-4">
+          <button
+            id="btnBulkApproveTestimoni"
+            class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-sm font-semibold transition active:scale-95 hidden"
+            >Approve Terpilih</button
+          >
           <button
             id="btnBulkDeleteTestimoni"
             class="px-4 py-2 bg-red-700/60 hover:bg-red-600 rounded-xl text-sm font-semibold transition active:scale-95 hidden"
@@ -1469,7 +1607,9 @@ const API = import.meta.env.PUBLIC_API_BASE;
           ></span>
         </div>
         <div id="testimoniList" class="space-y-3"></div>
+        <div id="testimoniPagination"></div>
       </section>
+
       <!-- PANEL: INFORMASI -->
       <section id="tab-informasi" class="tab-panel hidden p-4 max-w-4xl mx-auto">
         <button
@@ -1774,6 +1914,8 @@ const API = import.meta.env.PUBLIC_API_BASE;
   // ---- SISWA ----
   let siswaData = [];
   let editSiswaId = null;
+  let siswaPage = 1;
+  let siswaLimit = 10;
 
   async function loadSiswa() {
     const q = document.getElementById("searchSiswa").value;
@@ -1793,10 +1935,113 @@ const API = import.meta.env.PUBLIC_API_BASE;
     const j = await res.json();
     siswaData = j.data ?? [];
 
+    siswaPage = 1;
     populateFilters(siswaData);
-    renderSiswaTable(siswaData);
-    document.getElementById("siswaCount").textContent = `${siswaData.length} data`;
+    renderSiswaTable();
   }
+
+  function renderSiswaTable() {
+    const total = siswaData.length;
+    const totalPages = Math.max(1, Math.ceil(total / siswaLimit));
+    siswaPage = Math.min(siswaPage, totalPages);
+
+    const start = (siswaPage - 1) * siswaLimit;
+    const pageData = siswaData.slice(start, start + siswaLimit);
+
+    document.getElementById("siswaCount").textContent = `${total} data`;
+
+    const tbody = document.getElementById("siswaBody");
+    if (!pageData.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Tidak ada data</td></tr>`;
+    } else {
+      tbody.innerHTML = pageData
+        .map(
+          (s) => `
+      <tr class="hover:bg-white/5 transition-colors">
+        <td class="px-4 py-3 font-medium">${s.nama_lengkap}</td>
+        <td class="px-4 py-3 text-slate-400 font-mono text-xs">${s.nisn}</td>
+        <td class="px-4 py-3">${s.kelas}</td>
+        <td class="px-4 py-3">${s.jenis_kelamin === "L" ? "L" : "P"}</td>
+        <td class="px-4 py-3 text-slate-400 text-xs">${s.tahun_pelajaran}</td>
+        <td class="px-4 py-3">${statusBadge(s.status_kelulusan)}</td>
+        <td class="px-4 py-3 text-center">
+          <button onclick="editSiswa(${s.id})" class="text-xs text-indigo-400 hover:text-indigo-300 mr-3">Edit</button>
+          <button onclick="hapusSiswa(${s.id})" class="text-xs text-red-400 hover:text-red-300">Hapus</button>
+        </td>
+      </tr>
+    `
+        )
+        .join("");
+    }
+
+    renderPagination(total, totalPages);
+  }
+
+  function renderPagination(total, totalPages) {
+    const container = document.getElementById("siswaPagination");
+    const start = Math.min((siswaPage - 1) * siswaLimit + 1, total);
+    const end = Math.min(siswaPage * siswaLimit, total);
+
+    const pageButtons = () => {
+      const btns = [];
+      const delta = 2;
+      const left = Math.max(1, siswaPage - delta);
+      const right = Math.min(totalPages, siswaPage + delta);
+
+      if (left > 1) {
+        btns.push(pageBtn(1));
+        if (left > 2) btns.push(`<span class="px-1 text-slate-500">...</span>`);
+      }
+      for (let i = left; i <= right; i++) btns.push(pageBtn(i));
+      if (right < totalPages) {
+        if (right < totalPages - 1) btns.push(`<span class="px-1 text-slate-500">...</span>`);
+        btns.push(pageBtn(totalPages));
+      }
+      return btns.join("");
+    };
+
+    const pageBtn = (n) => `
+    <button onclick="goSiswaPage(${n})"
+      class="w-8 h-8 rounded-lg text-xs font-medium transition
+        ${n === siswaPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
+      ${n}
+    </button>`;
+
+    container.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mt-3 text-sm">
+      <div class="flex items-center gap-2 text-slate-400 text-xs">
+        <span>Tampilkan</span>
+        <select id="siswaLimitSelect" onchange="changeSiswaLimit(this.value)"
+          class="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs">
+          ${[5, 10, 25, 50, 100]
+            .map((n) => `<option value="${n}" ${n === siswaLimit ? "selected" : ""}>${n}</option>`)
+            .join("")}
+        </select>
+        <span>per halaman · ${total ? `${start}–${end} dari ${total}` : "0 data"}</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="goSiswaPage(${siswaPage - 1})" ${siswaPage === 1 ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
+        ${pageButtons()}
+        <button onclick="goSiswaPage(${siswaPage + 1})" ${siswaPage === totalPages ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
+      </div>
+    </div>
+  `;
+  }
+
+  window.goSiswaPage = (n) => {
+    const totalPages = Math.ceil(siswaData.length / siswaLimit);
+    if (n < 1 || n > totalPages) return;
+    siswaPage = n;
+    renderSiswaTable();
+  };
+
+  window.changeSiswaLimit = (val) => {
+    siswaLimit = parseInt(val);
+    siswaPage = 1;
+    renderSiswaTable();
+  };
 
   function populateFilters(data) {
     const kelasSet = [...new Set(data.map((d) => d.kelas))].sort();
@@ -1822,32 +2067,6 @@ const API = import.meta.env.PUBLIC_API_BASE;
       "Lulus Bersyarat": "bg-amber-500/20 text-amber-300",
     };
     return `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${map[s] ?? ""}">${s}</span>`;
-  }
-
-  function renderSiswaTable(data) {
-    const tbody = document.getElementById("siswaBody");
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Tidak ada data</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = data
-      .map(
-        (s) => `
-      <tr class="hover:bg-white/5 transition-colors">
-        <td class="px-4 py-3 font-medium">${s.nama_lengkap}</td>
-        <td class="px-4 py-3 text-slate-400 font-mono text-xs">${s.nisn}</td>
-        <td class="px-4 py-3">${s.kelas}</td>
-        <td class="px-4 py-3">${s.jenis_kelamin === "L" ? "L" : "P"}</td>
-        <td class="px-4 py-3 text-slate-400 text-xs">${s.tahun_pelajaran}</td>
-        <td class="px-4 py-3">${statusBadge(s.status_kelulusan)}</td>
-        <td class="px-4 py-3 text-center">
-          <button onclick="editSiswa(${s.id})" class="text-xs text-indigo-400 hover:text-indigo-300 mr-3">Edit</button>
-          <button onclick="hapusSiswa(${s.id})" class="text-xs text-red-400 hover:text-red-300">Hapus</button>
-        </td>
-      </tr>
-    `
-      )
-      .join("");
   }
 
   function openModalSiswa(id = null) {
@@ -2151,40 +2370,151 @@ const API = import.meta.env.PUBLIC_API_BASE;
   }
 
   // ---- TESTIMONI ----
-
+  let testimoniData = [];
   let testimoniSelected = new Set();
   let editTestimoniId = null;
+  let testimoniPage = 1;
+  let testimoniLimit = 10;
+  let testimoniSort = "desc";
+  let testimoniQ = "";
+  let testimoniFilter = "";
 
   async function loadTestimoni() {
-    const res = await fetch(TESTIMONI_URL, { credentials: "include" });
+    const params = new URLSearchParams({ q: testimoniQ, sort: testimoniSort });
+    if (testimoniFilter !== "") params.set("is_approved", testimoniFilter);
+    else params.set("show_all", "1");
+
+    const res = await fetch(`${TESTIMONI_URL}?${params}`, { credentials: "include" });
     const j = await res.json();
-    const list = document.getElementById("testimoniList");
+    testimoniData = j.data ?? [];
+    testimoniPage = 1;
     testimoniSelected.clear();
     updateBulkDeleteBtn();
+    renderTestimoniList();
+  }
 
+  function renderTestimoniList() {
+    const total = testimoniData.length;
+    const totalPages = Math.max(1, Math.ceil(total / testimoniLimit));
+    testimoniPage = Math.min(testimoniPage, totalPages);
+
+    const start = (testimoniPage - 1) * testimoniLimit;
+    const pageData = testimoniData.slice(start, start + testimoniLimit);
+
+    const list = document.getElementById("testimoniList");
     list.innerHTML =
-      (j.data ?? [])
+      pageData
         .map(
           (t) => `
-      <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4 flex items-start gap-3">
-        <input type="checkbox" data-id="${t.id}" onchange="toggleSelectTestimoni(${t.id})"
-          class="mt-1 w-4 h-4 accent-indigo-500 flex-shrink-0 cursor-pointer" />
-        <div class="flex-1 min-w-0">
-          <div class="flex justify-between items-start gap-2">
-            <p class="font-semibold text-sm">${t.nama} <span class="text-slate-500 text-xs font-mono">${t.nisn ? "· " + t.nisn : ""}</span></p>
-            <span class="text-slate-500 text-xs flex-shrink-0">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
-          </div>
-          <p class="text-slate-300 text-sm mt-1">${t.isi}</p>
+    <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4 flex items-start gap-3">
+      <input type="checkbox" data-id="${t.id}" onchange="toggleSelectTestimoni(${t.id})"
+        class="mt-1 w-4 h-4 accent-indigo-500 flex-shrink-0 cursor-pointer" />
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-start gap-2">
+          <p class="font-semibold text-sm">
+            ${t.nama}
+            <span class="text-slate-500 text-xs font-mono">${t.nisn ? "· " + t.nisn : ""}</span>
+            <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${t.is_approved ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}">
+              ${t.is_approved ? "Approved" : "Pending"}
+            </span>
+          </p>
+          <span class="text-slate-500 text-xs flex-shrink-0">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
         </div>
-        <div class="flex gap-2 flex-shrink-0">
-          <button onclick="openEditTestimoni(${t.id}, '${t.nama.replace(/'/g, "\\'")}', \`${t.isi.replace(/`/g, "\\`")}\`)" class="text-xs text-indigo-400 hover:text-indigo-300">Edit</button>
-          <button onclick="hapusTestimoni(${t.id})" class="text-xs text-red-400 hover:text-red-300">Hapus</button>
-        </div>
+        <p class="text-slate-300 text-sm mt-1">${t.isi}</p>
       </div>
-    `
+      <div class="flex flex-col gap-1.5 flex-shrink-0">
+        <button onclick="approveTestimoni([${t.id}], ${t.is_approved ? 0 : 1})"
+          class="text-xs px-2 py-1 rounded-lg transition ${t.is_approved ? "bg-slate-600 hover:bg-slate-500 text-slate-300" : "bg-emerald-700 hover:bg-emerald-600 text-emerald-100"}">
+          ${t.is_approved ? "Batalkan" : "Approve"}
+        </button>
+        <button onclick="openEditTestimoni(${t.id}, '${t.nama.replace(/'/g, "\\'")}', \`${t.isi.replace(/`/g, "\\`")}\`)" class="text-xs text-indigo-400 hover:text-indigo-300">Edit</button>
+        <button onclick="hapusTestimoni(${t.id})" class="text-xs text-red-400 hover:text-red-300">Hapus</button>
+      </div>
+    </div>
+  `
         )
-        .join("") || '<p class="text-slate-500 text-sm">Belum ada testimoni.</p>';
+        .join("") || '<p class="text-slate-500 text-sm">Tidak ada testimoni.</p>';
+
+    renderTestimoniPagination(total, totalPages);
   }
+
+  function renderTestimoniPagination(total, totalPages) {
+    const container = document.getElementById("testimoniPagination");
+    if (!container) return;
+
+    const start = Math.min((testimoniPage - 1) * testimoniLimit + 1, total);
+    const end = Math.min(testimoniPage * testimoniLimit, total);
+
+    const pageBtn = (n) => `
+    <button onclick="goTestimoniPage(${n})"
+      class="w-8 h-8 rounded-lg text-xs font-medium transition
+        ${n === testimoniPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
+      ${n}
+    </button>`;
+
+    const pageButtons = () => {
+      const btns = [];
+      const delta = 2;
+      const left = Math.max(1, testimoniPage - delta);
+      const right = Math.min(totalPages, testimoniPage + delta);
+      if (left > 1) {
+        btns.push(pageBtn(1));
+        if (left > 2) btns.push(`<span class="px-1 text-slate-500">...</span>`);
+      }
+      for (let i = left; i <= right; i++) btns.push(pageBtn(i));
+      if (right < totalPages) {
+        if (right < totalPages - 1) btns.push(`<span class="px-1 text-slate-500">...</span>`);
+        btns.push(pageBtn(totalPages));
+      }
+      return btns.join("");
+    };
+
+    container.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 mt-3 text-sm">
+      <div class="flex items-center gap-2 text-slate-400 text-xs">
+        <span>Tampilkan</span>
+        <select onchange="changeTestimoniLimit(this.value)"
+          class="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-xs">
+          ${[5, 10, 25, 50, 100].map((n) => `<option value="${n}" ${n === testimoniLimit ? "selected" : ""}>${n}</option>`).join("")}
+        </select>
+        <span>per halaman · ${total ? `${start}–${end} dari ${total}` : "0 data"}</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="goTestimoniPage(${testimoniPage - 1})" ${testimoniPage === 1 ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
+        ${pageButtons()}
+        <button onclick="goTestimoniPage(${testimoniPage + 1})" ${testimoniPage === totalPages ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
+      </div>
+    </div>
+  `;
+  }
+
+  window.goTestimoniPage = (n) => {
+    const totalPages = Math.ceil(testimoniData.length / testimoniLimit);
+    if (n < 1 || n > totalPages) return;
+    testimoniPage = n;
+    renderTestimoniList();
+  };
+
+  window.changeTestimoniLimit = (val) => {
+    testimoniLimit = parseInt(val);
+    testimoniPage = 1;
+    renderTestimoniList();
+  };
+
+  window.approveTestimoni = async (ids, approved) => {
+    const res = await fetch(`${TESTIMONI_URL}?action=approve`, {
+      method: "POST",
+      credentials: "include",
+      body: JSON.stringify({ ids, is_approved: approved }),
+    });
+    const j = await res.json();
+    if (j.status === "success") {
+      toast(approved ? `${ids.length} testimoni diapprove` : `${ids.length} testimoni dibatalkan`);
+      loadTestimoni();
+    } else toast(j.message, false);
+  };
 
   window.toggleSelectTestimoni = (id) => {
     if (testimoniSelected.has(id)) testimoniSelected.delete(id);
@@ -2194,15 +2524,13 @@ const API = import.meta.env.PUBLIC_API_BASE;
 
   function updateBulkDeleteBtn() {
     const btn = document.getElementById("btnBulkDeleteTestimoni");
+    const btnApprove = document.getElementById("btnBulkApproveTestimoni");
     const count = document.getElementById("testimoniSelectedCount");
-    if (testimoniSelected.size > 0) {
-      btn.classList.remove("hidden");
-      count.textContent = `${testimoniSelected.size} dipilih`;
-      count.classList.remove("hidden");
-    } else {
-      btn.classList.add("hidden");
-      count.classList.add("hidden");
-    }
+    const has = testimoniSelected.size > 0;
+    btn.classList.toggle("hidden", !has);
+    btnApprove.classList.toggle("hidden", !has);
+    count.classList.toggle("hidden", !has);
+    if (has) count.textContent = `${testimoniSelected.size} dipilih`;
   }
 
   window.openEditTestimoni = (id, nama, isi) => {
@@ -2434,6 +2762,21 @@ const API = import.meta.env.PUBLIC_API_BASE;
     document.getElementById("btnSimpanInfo").onclick = simpanInfo;
     document.getElementById("btnBatalInfo").onclick = () =>
       document.getElementById("modalInfo").classList.add("hidden");
+
+    document.getElementById("searchTestimoni").addEventListener("input", (e) => {
+      testimoniQ = e.target.value;
+      loadTestimoni();
+    });
+    document.getElementById("sortTestimoni").addEventListener("change", (e) => {
+      testimoniSort = e.target.value;
+      loadTestimoni();
+    });
+    document.getElementById("filterTestimoni").addEventListener("change", (e) => {
+      testimoniFilter = e.target.value;
+      loadTestimoni();
+    });
+    document.getElementById("btnBulkApproveTestimoni").onclick = () =>
+      approveTestimoni([...testimoniSelected], 1);
   })();
 </script>
 
@@ -2446,7 +2789,6 @@ const API = import.meta.env.PUBLIC_API_BASE;
 ---
 import Layout from "../layouts/Layout.astro";
 const API_BASE = import.meta.env.PUBLIC_API_BASE;
-const INFO_URL = `${API_BASE}/informasi/`;
 ---
 
 <Layout title="Pengumuman Kelulusan — Madrasah Universe">
@@ -2606,13 +2948,28 @@ const INFO_URL = `${API_BASE}/informasi/`;
       <p id="testimoniMsg" class="text-center text-sm hidden"></p>
     </div>
 
+    <!-- Filter -->
+    <div class="flex gap-2 mb-4">
+      <input
+        id="pubSearchTestimoni"
+        type="text"
+        placeholder="Cari testimoni..."
+        class="flex-1 inp"
+      />
+      <select id="pubSortTestimoni" class="inp w-auto">
+        <option value="desc">Terbaru</option>
+        <option value="asc">Terlama</option>
+      </select>
+    </div>
+
     <!-- List -->
     <div id="testimoniPublicList" class="space-y-3">
       <div class="text-center text-slate-500 text-sm py-4">Memuat...</div>
     </div>
+    <div id="testimoniPublicPagination"></div>
   </section>
 
-  <!-- INFOMASI -->
+  <!-- INFORMASI — ganti seluruh section ini -->
   <section id="sec-info" class="section hidden min-h-[100dvh] px-4 py-24 max-w-2xl mx-auto">
     <h2 class="text-xl font-bold text-center mb-6">Informasi</h2>
     <div id="infoPublicList" class="space-y-4">
@@ -2721,6 +3078,7 @@ const INFO_URL = `${API_BASE}/informasi/`;
   const ALBUM_URL = `${API_BASE}/album/`;
   const GURU_URL = `${API_BASE}/guru/`;
   const TESTIMONI_URL = `${API_BASE}/testimoni/`;
+  const INFO_URL = `${API_BASE}/informasi/`;
 
   const QUOTES = [
     "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia.",
@@ -2760,6 +3118,10 @@ const INFO_URL = `${API_BASE}/informasi/`;
     if (id === "testimoni" && !testimoniLoaded) {
       loadTestimoni();
       testimoniLoaded = true;
+    }
+    if (id === "info" && !infoLoaded) {
+      loadInfo();
+      infoLoaded = true;
     }
   };
 
@@ -3093,34 +3455,99 @@ const INFO_URL = `${API_BASE}/informasi/`;
     }
   }
 
-  // ---- TESTIMONI ----
+  // ---- TESTIMONI PUBLIK ----
+  let testimoniPubData = [];
+  let testimoniPubPage = 1;
+  const TESTIMONI_PUB_LIMIT = 5;
+  let testimoniPubSort = "desc";
+  let testimoniPubQ = "";
+
   async function loadTestimoni() {
+    const params = new URLSearchParams({ q: testimoniPubQ, sort: testimoniPubSort });
     const list = document.getElementById("testimoniPublicList");
     try {
-      const res = await fetch(TESTIMONI_URL);
+      const res = await fetch(`${TESTIMONI_URL}?${params}`);
       const j = await res.json();
-      const data = j.data ?? [];
-      if (!data.length) {
-        list.innerHTML = '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
-        return;
-      }
-      list.innerHTML = data
-        .map(
-          (t) => `
-        <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
-          <div class="flex justify-between items-start mb-2">
-            <p class="font-semibold text-sm">${t.nama}</p>
-            <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
-          </div>
-          <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
-        </div>
-      `
-        )
-        .join("");
+      testimoniPubData = j.data ?? [];
+      testimoniPubPage = 1;
+      renderTestimoniPublic();
     } catch {
       list.innerHTML = '<p class="text-center text-slate-500 py-4">Gagal memuat.</p>';
     }
   }
+
+  function renderTestimoniPublic() {
+    const total = testimoniPubData.length;
+    const totalPages = Math.max(1, Math.ceil(total / TESTIMONI_PUB_LIMIT));
+    testimoniPubPage = Math.min(testimoniPubPage, totalPages);
+
+    const start = (testimoniPubPage - 1) * TESTIMONI_PUB_LIMIT;
+    const pageData = testimoniPubData.slice(start, start + TESTIMONI_PUB_LIMIT);
+
+    const list = document.getElementById("testimoniPublicList");
+    list.innerHTML =
+      pageData
+        .map(
+          (t) => `
+    <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-semibold text-sm">${t.nama}</p>
+        <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+      </div>
+      <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
+    </div>
+  `
+        )
+        .join("") || '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
+
+    renderTestimoniPublicPagination(total, totalPages);
+  }
+
+  function renderTestimoniPublicPagination(total, totalPages) {
+    const container = document.getElementById("testimoniPublicPagination");
+    if (!container || totalPages <= 1) {
+      if (container) container.innerHTML = "";
+      return;
+    }
+
+    const pageBtn = (n) => `
+    <button onclick="goTestimoniPubPage(${n})"
+      class="w-8 h-8 rounded-lg text-xs font-medium transition
+        ${n === testimoniPubPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
+      ${n}
+    </button>`;
+
+    const btns = [];
+    const delta = 1;
+    const left = Math.max(1, testimoniPubPage - delta);
+    const right = Math.min(totalPages, testimoniPubPage + delta);
+    if (left > 1) {
+      btns.push(pageBtn(1));
+      if (left > 2) btns.push(`<span class="px-1 text-slate-500">…</span>`);
+    }
+    for (let i = left; i <= right; i++) btns.push(pageBtn(i));
+    if (right < totalPages) {
+      if (right < totalPages - 1) btns.push(`<span class="px-1 text-slate-500">…</span>`);
+      btns.push(pageBtn(totalPages));
+    }
+
+    container.innerHTML = `
+    <div class="flex items-center justify-center gap-1 mt-4">
+      <button onclick="goTestimoniPubPage(${testimoniPubPage - 1})" ${testimoniPubPage === 1 ? "disabled" : ""}
+        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
+      ${btns.join("")}
+      <button onclick="goTestimoniPubPage(${testimoniPubPage + 1})" ${testimoniPubPage === totalPages ? "disabled" : ""}
+        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
+    </div>
+  `;
+  }
+
+  window.goTestimoniPubPage = (n) => {
+    const totalPages = Math.ceil(testimoniPubData.length / TESTIMONI_PUB_LIMIT);
+    if (n < 1 || n > totalPages) return;
+    testimoniPubPage = n;
+    renderTestimoniPublic();
+  };
 
   async function kirimTestimoni() {
     const nama = document.getElementById("tNama").value.trim();
@@ -3199,12 +3626,18 @@ const INFO_URL = `${API_BASE}/informasi/`;
       else openModalBelumWaktu();
     };
 
+    // Testimoni
+    document.getElementById("pubSearchTestimoni").addEventListener("input", (e) => {
+      testimoniPubQ = e.target.value;
+      loadTestimoni();
+    });
+    document.getElementById("pubSortTestimoni").addEventListener("change", (e) => {
+      testimoniPubSort = e.target.value;
+      loadTestimoni();
+    });
+
     // Aktifkan beranda
     goSection("beranda");
-    if (id === "info" && !infoLoaded) {
-      loadInfo();
-      infoLoaded = true;
-    }
   })();
 </script>
 
@@ -3219,9 +3652,9 @@ const INFO_URL = `${API_BASE}/informasi/`;
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --host 0.0.0.0",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "astro preview --host 0.0.0.0",
     "astro": "astro"
   },
   "dependencies": {
@@ -3245,3 +3678,4 @@ const INFO_URL = `${API_BASE}/informasi/`;
 
 ```
 ---
+
