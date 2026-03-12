@@ -41,6 +41,17 @@ function setCorsHeaders(): void
     header('Access-Control-Allow-Headers: Content-Type, Authorization');
     header('Access-Control-Allow-Credentials: true');
     header('Content-Type: application/json');
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_set_cookie_params([
+            'lifetime' => 86400,
+            'path'     => '/',
+            'secure'   => false,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_start();
+    }
 }
 
 function json(mixed $data, int $code = 200): never
@@ -67,7 +78,6 @@ function getBody(): array
 
 function requireAdmin(): void
 {
-    session_start();
     if (empty($_SESSION['admin'])) {
         err('Unauthorized', 401);
     }

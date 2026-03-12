@@ -53,6 +53,20 @@ CREATE TABLE IF NOT EXISTS admin (
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+CREATE TABLE IF NOT EXISTS informasi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    judul VARCHAR(255) NOT NULL,
+    isi TEXT,
+    foto_path VARCHAR(500),
+    foto_caption VARCHAR(255),
+    file_path VARCHAR(500),
+    file_name VARCHAR(255),
+    link_eksternal VARCHAR(500),
+    is_published TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+ALTER TABLE testimoni ADD COLUMN is_approved TINYINT(1) NOT NULL DEFAULT 0 AFTER isi;
 
 INSERT INTO admin (username, password)
 VALUES ('admin', '$2y$12$placeholder_will_be_generated_on_setup');

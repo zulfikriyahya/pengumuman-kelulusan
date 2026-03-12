@@ -2,3 +2,98 @@ nama_lengkap,nisn,kelas,jenis_kelamin,tahun_pelajaran,status_kelulusan
 Ahmad Fauzan,1234567890,IX-A,L,2024/2025,Lulus
 Siti Aisyah,0987654321,IX-B,P,2024/2025,Lulus
 Budi Santoso,1122334455,IX-A,L,2024/2025,Tidak Lulus
+Dewi Rahayu,2233445566,IX-B,P,2024/2025,Lulus
+Eko Prasetyo,3344556677,IX-C,L,2024/2025,Lulus
+Fitri Handayani,4455667788,IX-C,P,2024/2025,Lulus Bersyarat
+Galih Permana,5566778899,IX-A,L,2024/2025,Lulus
+Hana Safitri,6677889900,IX-B,P,2024/2025,Lulus
+Irfan Maulana,7788990011,IX-D,L,2024/2025,Lulus
+Jihan Aulia,8899001122,IX-D,P,2024/2025,Lulus
+Kurniawan,9900112233,IX-A,L,2024/2025,Tidak Lulus
+Laila Nur,0011223344,IX-B,P,2024/2025,Lulus
+Muhammad Rizki,1122334456,IX-C,L,2024/2025,Lulus
+Nadia Putri,2233445567,IX-C,P,2024/2025,Lulus
+Oki Setiawan,3344556678,IX-D,L,2024/2025,Lulus Bersyarat
+Putri Maharani,4455667789,IX-A,P,2024/2025,Lulus
+Qomar Hidayat,5566778890,IX-B,L,2024/2025,Lulus
+Rini Astuti,6677889901,IX-D,P,2024/2025,Lulus
+Surya Dinata,7788990012,IX-A,L,2024/2025,Lulus
+Tari Wulandari,8899001123,IX-C,P,2024/2025,Tidak Lulus
+Umar Faruq,9900112234,IX-B,L,2024/2025,Lulus
+Vina Melinda,0011223345,IX-D,P,2024/2025,Lulus
+Wahyu Hidayat,1122334457,IX-A,L,2024/2025,Lulus
+Xenia Putri,2233445568,IX-C,P,2024/2025,Lulus Bersyarat
+Yusuf Aditya,3344556679,IX-B,L,2024/2025,Lulus
+Zahira Salsabila,4455667790,IX-D,P,2024/2025,Lulus
+Abdul Hafiz,5566778891,IX-A,L,2024/2025,Lulus
+Bella Anggraini,6677889902,IX-B,P,2024/2025,Lulus
+Candra Wijaya,7788990013,IX-C,L,2024/2025,Tidak Lulus
+Dina Fitriani,8899001124,IX-D,P,2024/2025,Lulus
+Endra Kusuma,9900112235,IX-A,L,2024/2025,Lulus
+Farah Nabila,0011223346,IX-B,P,2024/2025,Lulus
+Gilang Ramadhan,1122334458,IX-C,L,2024/2025,Lulus Bersyarat
+Hasna Mutiara,2233445569,IX-D,P,2024/2025,Lulus
+Ivan Prasetya,3344556680,IX-A,L,2024/2025,Lulus
+Julia Rahmawati,4455667791,IX-B,P,2024/2025,Lulus
+Khairul Anwar,5566778892,IX-C,L,2024/2025,Lulus
+Lina Marlina,6677889903,IX-D,P,2024/2025,Tidak Lulus
+Malik Ibrahim,7788990014,IX-A,L,2024/2025,Lulus
+Nisa Aulia,8899001125,IX-B,P,2024/2025,Lulus
+Oman Firdaus,9900112236,IX-C,L,2024/2025,Lulus
+Prita Dewi,0011223347,IX-D,P,2024/2025,Lulus Bersyarat
+Qisma Azzahra,1122334459,IX-A,P,2024/2025,Lulus
+Reza Firmansyah,2233445570,IX-B,L,2024/2025,Lulus
+Sari Indah,3344556681,IX-C,P,2024/2025,Lulus
+Teguh Santoso,4455667792,IX-D,L,2024/2025,Tidak Lulus
+Ulfa Khoiriyah,5566778893,IX-A,P,2024/2025,Lulus
+Vicky Pranata,6677889904,IX-B,L,2024/2025,Lulus
+Weni Oktaviani,7788990015,IX-C,P,2024/2025,Lulus
+Xander Putra,8899001126,IX-D,L,2024/2025,Lulus
+Yasmin Azzahra,9900112237,IX-A,P,2024/2025,Lulus Bersyarat
+Zaki Mubarok,0011223348,IX-B,L,2024/2025,Lulus
+Aulia Rahma,1122334460,IX-C,P,2024/2025,Lulus
+Bagas Saputra,2233445571,IX-D,L,2024/2025,Lulus
+Cahya Ningrum,3344556682,IX-A,P,2024/2025,Tidak Lulus
+Daffa Ardiansyah,4455667793,IX-B,L,2024/2025,Lulus
+Elsa Permatasari,5566778894,IX-C,P,2024/2025,Lulus
+Farhan Syaputra,6677889905,IX-D,L,2024/2025,Lulus
+Gita Puspita,7788990016,IX-A,P,2024/2025,Lulus
+Hendra Kurniawan,8899001127,IX-B,L,2024/2025,Lulus Bersyarat
+Ika Nurhaliza,9900112238,IX-C,P,2024/2025,Lulus
+Joko Widodo,0011223349,IX-D,L,2024/2025,Lulus
+Karina Dewi,1122334461,IX-A,P,2024/2025,Lulus
+Luthfi Hakim,2233445572,IX-B,L,2024/2025,Tidak Lulus
+Mega Sari,3344556683,IX-C,P,2024/2025,Lulus
+Nando Pratama,4455667794,IX-D,L,2024/2025,Lulus
+Oktavia Putri,5566778895,IX-A,P,2024/2025,Lulus
+Panji Nugroho,6677889906,IX-B,L,2024/2025,Lulus
+Qonita Amalia,7788990017,IX-C,P,2024/2025,Lulus Bersyarat
+Rangga Putra,8899001128,IX-D,L,2024/2025,Lulus
+Silvia Anggraeni,9900112239,IX-A,P,2024/2025,Lulus
+Taufik Hidayat,0011223350,IX-B,L,2024/2025,Lulus
+Umi Kalsum,1122334462,IX-C,P,2024/2025,Tidak Lulus
+Vino Bastian,2233445573,IX-D,L,2024/2025,Lulus
+Wulan Sari,3344556684,IX-A,P,2024/2025,Lulus
+Xiomara Putri,4455667795,IX-B,P,2024/2025,Lulus
+Yoga Pratama,5566778896,IX-C,L,2024/2025,Lulus
+Zahra Kamila,6677889907,IX-D,P,2024/2025,Lulus Bersyarat
+Arif Budiman,7788990018,IX-A,L,2024/2025,Lulus
+Bella Safira,8899001129,IX-B,P,2024/2025,Lulus
+Ciko Mardika,9900112240,IX-C,L,2024/2025,Tidak Lulus
+Diana Kusuma,0011223351,IX-D,P,2024/2025,Lulus
+Evan Dwi,1122334463,IX-A,L,2024/2025,Lulus
+Fanny Rahayu,2233445574,IX-B,P,2024/2025,Lulus
+Guntur Prabowo,3344556685,IX-C,L,2024/2025,Lulus
+Hesti Wulandari,4455667796,IX-D,P,2024/2025,Lulus Bersyarat
+Imam Syafi'i,5566778897,IX-A,L,2024/2025,Lulus
+Jasmine Putri,6677889908,IX-B,P,2024/2025,Lulus
+Kevin Ananda,7788990019,IX-C,L,2024/2025,Lulus
+Lusiana Dewi,8899001130,IX-D,P,2024/2025,Tidak Lulus
+Muharram Ali,9900112241,IX-A,L,2024/2025,Lulus
+Nadia Khairunnisa,0011223352,IX-B,P,2024/2025,Lulus
+Oscar Maulana,1122334464,IX-C,L,2024/2025,Lulus
+Puspita Ayu,2233445575,IX-D,P,2024/2025,Lulus Bersyarat
+Qodri Ananda,3344556686,IX-A,L,2024/2025,Lulus
+Riska Amelia,4455667797,IX-B,P,2024/2025,Lulus
+Satria Budi,5566778898,IX-C,L,2024/2025,Lulus
+Tiara Anggun,6677889909,IX-D,P,2024/2025,Lulus

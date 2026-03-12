@@ -16,13 +16,15 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     requireAdmin();
 
-    if (empty($_FILES['foto'])) err('File foto diperlukan');
+    if (empty($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+        err('File foto diperlukan atau upload gagal');
+    }
 
-    $uploadDir = $_ENV['UPLOAD_DIR'] . 'album/';
+    $uploadDir = realpath(__DIR__ . '/../../uploads/album') . '/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-    $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-    $filename = uniqid('album_') . '.' . strtolower($ext);
+    $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+    $filename = uniqid('album_') . '.' . $ext;
     $dest = $uploadDir . $filename;
 
     if (!move_uploaded_file($_FILES['foto']['tmp_name'], $dest)) err('Upload gagal');
@@ -37,6 +39,16 @@ if ($method === 'POST') {
 
 if ($method === 'DELETE' && $id) {
     requireAdmin();
+    $stmt = $db->prepare('SELECT foto_path FROM album WHERE id = ?');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+
+    if ($row) {
+        $filename = basename($row['foto_path']);
+        $filePath = realpath(__DIR__ . '/../../uploads/album') . '/' . $filename;
+        if (is_file($filePath)) unlink($filePath);
+    }
+
     $stmt = $db->prepare('DELETE FROM album WHERE id = ?');
     $stmt->execute([$id]);
     ok(['deleted' => $stmt->rowCount()]);

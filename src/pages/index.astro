@@ -160,9 +160,32 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       <p id="testimoniMsg" class="text-center text-sm hidden"></p>
     </div>
 
+    <!-- Filter -->
+    <div class="flex gap-2 mb-4">
+      <input
+        id="pubSearchTestimoni"
+        type="text"
+        placeholder="Cari testimoni..."
+        class="flex-1 inp"
+      />
+      <select id="pubSortTestimoni" class="inp w-auto">
+        <option value="desc">Terbaru</option>
+        <option value="asc">Terlama</option>
+      </select>
+    </div>
+
     <!-- List -->
     <div id="testimoniPublicList" class="space-y-3">
       <div class="text-center text-slate-500 text-sm py-4">Memuat...</div>
+    </div>
+    <div id="testimoniPublicPagination"></div>
+  </section>
+
+  <!-- INFORMASI — ganti seluruh section ini -->
+  <section id="sec-info" class="section hidden min-h-[100dvh] px-4 py-24 max-w-2xl mx-auto">
+    <h2 class="text-xl font-bold text-center mb-6">Informasi</h2>
+    <div id="infoPublicList" class="space-y-4">
+      <div class="text-center text-slate-500 text-sm py-10">Memuat...</div>
     </div>
   </section>
 
@@ -178,6 +201,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
           { id: "album", icon: "📷", label: "Album" },
           { id: "guru", icon: "👨‍🏫", label: "Guru" },
           { id: "testimoni", icon: "💬", label: "Pesan" },
+          { id: "info", icon: "📢", label: "Info" },
         ].map((n) => (
           <button
             data-nav={n.id}
@@ -266,6 +290,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   const ALBUM_URL = `${API_BASE}/album/`;
   const GURU_URL = `${API_BASE}/guru/`;
   const TESTIMONI_URL = `${API_BASE}/testimoni/`;
+  const INFO_URL = `${API_BASE}/informasi/`;
 
   const QUOTES = [
     "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia.",
@@ -305,6 +330,10 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     if (id === "testimoni" && !testimoniLoaded) {
       loadTestimoni();
       testimoniLoaded = true;
+    }
+    if (id === "info" && !infoLoaded) {
+      loadInfo();
+      infoLoaded = true;
     }
   };
 
@@ -554,6 +583,50 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     }
   }
 
+  // ---- INFORMASI ----
+  let infoLoaded = false;
+
+  async function loadInfo() {
+    const list = document.getElementById("infoPublicList");
+    try {
+      const res = await fetch(INFO_URL);
+      const j = await res.json();
+      const data = j.data ?? [];
+      if (!data.length) {
+        list.innerHTML = '<p class="text-center text-slate-500 py-10">Belum ada informasi.</p>';
+        return;
+      }
+      list.innerHTML = data
+        .map(
+          (d) => `
+      <div class="bg-slate-800/60 border border-white/10 rounded-2xl overflow-hidden">
+        ${
+          d.foto_path
+            ? `
+          <div class="relative">
+            <img src="${d.foto_path}" class="w-full h-48 object-cover" />
+            ${d.foto_caption ? `<p class="absolute bottom-0 inset-x-0 bg-black/60 text-xs text-white px-3 py-1">${d.foto_caption}</p>` : ""}
+          </div>`
+            : ""
+        }
+        <div class="p-4">
+          <p class="font-bold mb-1">${d.judul}</p>
+          ${d.isi ? `<p class="text-slate-300 text-sm leading-relaxed mb-3">${d.isi}</p>` : ""}
+          <div class="flex flex-wrap gap-3">
+            ${d.file_path ? `<a href="${d.file_path}" target="_blank" class="inline-flex items-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition">📎 ${d.file_name ?? "Unduh File"}</a>` : ""}
+            ${d.link_eksternal ? `<a href="${d.link_eksternal}" target="_blank" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/50 px-3 py-1.5 rounded-lg transition text-indigo-300">🔗 Selengkapnya</a>` : ""}
+          </div>
+          <p class="text-slate-500 text-xs mt-3">${new Date(d.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
+        </div>
+      </div>
+    `
+        )
+        .join("");
+    } catch {
+      list.innerHTML = '<p class="text-center text-slate-500 py-10">Gagal memuat informasi.</p>';
+    }
+  }
+
   window.openLightbox = function (src) {
     document.getElementById("lightboxImg").src = src;
     document.getElementById("lightbox").classList.remove("hidden");
@@ -594,34 +667,99 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     }
   }
 
-  // ---- TESTIMONI ----
+  // ---- TESTIMONI PUBLIK ----
+  let testimoniPubData = [];
+  let testimoniPubPage = 1;
+  const TESTIMONI_PUB_LIMIT = 5;
+  let testimoniPubSort = "desc";
+  let testimoniPubQ = "";
+
   async function loadTestimoni() {
+    const params = new URLSearchParams({ q: testimoniPubQ, sort: testimoniPubSort });
     const list = document.getElementById("testimoniPublicList");
     try {
-      const res = await fetch(TESTIMONI_URL);
+      const res = await fetch(`${TESTIMONI_URL}?${params}`);
       const j = await res.json();
-      const data = j.data ?? [];
-      if (!data.length) {
-        list.innerHTML = '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
-        return;
-      }
-      list.innerHTML = data
-        .map(
-          (t) => `
-        <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
-          <div class="flex justify-between items-start mb-2">
-            <p class="font-semibold text-sm">${t.nama}</p>
-            <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
-          </div>
-          <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
-        </div>
-      `
-        )
-        .join("");
+      testimoniPubData = j.data ?? [];
+      testimoniPubPage = 1;
+      renderTestimoniPublic();
     } catch {
       list.innerHTML = '<p class="text-center text-slate-500 py-4">Gagal memuat.</p>';
     }
   }
+
+  function renderTestimoniPublic() {
+    const total = testimoniPubData.length;
+    const totalPages = Math.max(1, Math.ceil(total / TESTIMONI_PUB_LIMIT));
+    testimoniPubPage = Math.min(testimoniPubPage, totalPages);
+
+    const start = (testimoniPubPage - 1) * TESTIMONI_PUB_LIMIT;
+    const pageData = testimoniPubData.slice(start, start + TESTIMONI_PUB_LIMIT);
+
+    const list = document.getElementById("testimoniPublicList");
+    list.innerHTML =
+      pageData
+        .map(
+          (t) => `
+    <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
+      <div class="flex justify-between items-start mb-2">
+        <p class="font-semibold text-sm">${t.nama}</p>
+        <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+      </div>
+      <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
+    </div>
+  `
+        )
+        .join("") || '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
+
+    renderTestimoniPublicPagination(total, totalPages);
+  }
+
+  function renderTestimoniPublicPagination(total, totalPages) {
+    const container = document.getElementById("testimoniPublicPagination");
+    if (!container || totalPages <= 1) {
+      if (container) container.innerHTML = "";
+      return;
+    }
+
+    const pageBtn = (n) => `
+    <button onclick="goTestimoniPubPage(${n})"
+      class="w-8 h-8 rounded-lg text-xs font-medium transition
+        ${n === testimoniPubPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
+      ${n}
+    </button>`;
+
+    const btns = [];
+    const delta = 1;
+    const left = Math.max(1, testimoniPubPage - delta);
+    const right = Math.min(totalPages, testimoniPubPage + delta);
+    if (left > 1) {
+      btns.push(pageBtn(1));
+      if (left > 2) btns.push(`<span class="px-1 text-slate-500">…</span>`);
+    }
+    for (let i = left; i <= right; i++) btns.push(pageBtn(i));
+    if (right < totalPages) {
+      if (right < totalPages - 1) btns.push(`<span class="px-1 text-slate-500">…</span>`);
+      btns.push(pageBtn(totalPages));
+    }
+
+    container.innerHTML = `
+    <div class="flex items-center justify-center gap-1 mt-4">
+      <button onclick="goTestimoniPubPage(${testimoniPubPage - 1})" ${testimoniPubPage === 1 ? "disabled" : ""}
+        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
+      ${btns.join("")}
+      <button onclick="goTestimoniPubPage(${testimoniPubPage + 1})" ${testimoniPubPage === totalPages ? "disabled" : ""}
+        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
+    </div>
+  `;
+  }
+
+  window.goTestimoniPubPage = (n) => {
+    const totalPages = Math.ceil(testimoniPubData.length / TESTIMONI_PUB_LIMIT);
+    if (n < 1 || n > totalPages) return;
+    testimoniPubPage = n;
+    renderTestimoniPublic();
+  };
 
   async function kirimTestimoni() {
     const nama = document.getElementById("tNama").value.trim();
@@ -699,6 +837,16 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       if (isAmplopOpen()) openModalAmplop(siswaFound);
       else openModalBelumWaktu();
     };
+
+    // Testimoni
+    document.getElementById("pubSearchTestimoni").addEventListener("input", (e) => {
+      testimoniPubQ = e.target.value;
+      loadTestimoni();
+    });
+    document.getElementById("pubSortTestimoni").addEventListener("change", (e) => {
+      testimoniPubSort = e.target.value;
+      loadTestimoni();
+    });
 
     // Aktifkan beranda
     goSection("beranda");

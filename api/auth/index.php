@@ -2,8 +2,6 @@
 require_once __DIR__ . '/../config/db.php';
 
 setCorsHeaders();
-session_start();
-
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
