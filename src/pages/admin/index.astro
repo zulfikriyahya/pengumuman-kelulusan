@@ -1,0 +1,589 @@
+---
+import Layout from '../../layouts/Layout.astro';
+const API = import.meta.env.PUBLIC_API_URL;
+---
+
+<Layout title="Admin — Madrasah Universe">
+  <div class="min-h-screen bg-slate-950 text-slate-100 font-['Lexend']">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+      <div class="bg-slate-800/80 backdrop-blur border border-white/10 rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+        <h1 class="text-2xl font-bold text-center mb-1">Admin Panel</h1>
+        <p class="text-slate-400 text-sm text-center mb-6">Madrasah Universe</p>
+        <div class="space-y-3">
+          <input id="loginUser" type="text" placeholder="Username" class="w-full bg-slate-700/60 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input id="loginPass" type="password" placeholder="Password" class="w-full bg-slate-700/60 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <div id="loginErr" class="text-red-400 text-xs hidden text-center"></div>
+          <button id="btnLogin" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition-all active:scale-95">Masuk</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden">
+
+      <!-- TOPBAR -->
+      <header class="bg-slate-900 border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <h1 class="font-bold text-base">Admin Panel</h1>
+        <div class="flex items-center gap-3">
+          <span class="text-slate-400 text-xs hidden sm:block">Madrasah Universe</span>
+          <button id="btnLogout" class="text-xs text-red-400 hover:text-red-300 border border-red-400/30 px-3 py-1.5 rounded-lg transition">Logout</button>
+        </div>
+      </header>
+
+      <!-- TAB NAV -->
+      <nav class="bg-slate-900 border-b border-white/10 px-4 flex gap-1 overflow-x-auto sticky top-[53px] z-20">
+        {[
+          { id: 'siswa',      label: 'Data Siswa' },
+          { id: 'pengumuman', label: 'Pengumuman' },
+          { id: 'album',      label: 'Album Foto' },
+          { id: 'guru',       label: 'Guru & Pegawai' },
+          { id: 'testimoni',  label: 'Testimoni' },
+        ].map(t => (
+          <button data-tab={t.id} class="tab-btn whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:text-white transition-colors">
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      <!-- PANEL: SISWA -->
+      <section id="tab-siswa" class="tab-panel p-4 max-w-7xl mx-auto">
+        <div class="flex flex-wrap gap-3 mb-4">
+          <input id="searchSiswa" type="text" placeholder="Cari nama / NISN..." class="flex-1 min-w-[180px] bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <select id="filterKelas" class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm"><option value="">Semua Kelas</option></select>
+          <select id="filterJK" class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm">
+            <option value="">Semua JK</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+          <select id="filterStatus" class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm">
+            <option value="">Semua Status</option>
+            <option>Lulus</option>
+            <option>Tidak Lulus</option>
+            <option>Lulus Bersyarat</option>
+          </select>
+          <select id="filterTP" class="bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm"><option value="">Semua Tahun</option></select>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button id="btnTambahSiswa" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-semibold transition active:scale-95">+ Tambah</button>
+          <label class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-sm font-semibold transition cursor-pointer active:scale-95">
+            Import CSV <input type="file" id="csvInput" accept=".csv" class="hidden" />
+          </label>
+          <button id="btnHapusSemua" class="px-4 py-2 bg-red-700/60 hover:bg-red-600 rounded-xl text-sm font-semibold transition active:scale-95">Hapus Semua</button>
+          <span id="siswaCount" class="ml-auto text-slate-400 text-sm self-center"></span>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-800 text-slate-400 text-xs uppercase">
+              <tr>
+                <th class="px-4 py-3 text-left">Nama</th>
+                <th class="px-4 py-3 text-left">NISN</th>
+                <th class="px-4 py-3 text-left">Kelas</th>
+                <th class="px-4 py-3 text-left">JK</th>
+                <th class="px-4 py-3 text-left">Tahun</th>
+                <th class="px-4 py-3 text-left">Status</th>
+                <th class="px-4 py-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="siswaBody" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PANEL: PENGUMUMAN -->
+      <section id="tab-pengumuman" class="tab-panel hidden p-4 max-w-lg mx-auto">
+        <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-6 space-y-4">
+          <h2 class="font-bold text-lg">Konfigurasi Pengumuman</h2>
+          <div>
+            <label class="text-slate-400 text-xs mb-1 block">Tanggal & Waktu Pengumuman</label>
+            <input id="inputWaktu" type="datetime-local" class="w-full bg-slate-700/60 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <div class="relative">
+              <input type="checkbox" id="inputAktif" class="sr-only" />
+              <div id="toggleBg" class="w-11 h-6 bg-slate-600 rounded-full transition-colors"></div>
+              <div id="toggleDot" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"></div>
+            </div>
+            <span class="text-sm">Aktifkan pengumuman</span>
+          </label>
+          <button id="btnSavePengumuman" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition active:scale-95">Simpan</button>
+          <p id="pengumumanMsg" class="text-center text-sm hidden"></p>
+        </div>
+      </section>
+
+      <!-- PANEL: ALBUM -->
+      <section id="tab-album" class="tab-panel hidden p-4 max-w-5xl mx-auto">
+        <div class="mb-4 flex items-center gap-3">
+          <label class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-semibold cursor-pointer transition active:scale-95">
+            + Upload Foto <input type="file" id="albumInput" accept="image/*" multiple class="hidden" />
+          </label>
+          <input id="albumJudul" type="text" placeholder="Judul (opsional)" class="flex-1 bg-slate-800 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button id="btnUploadAlbum" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-sm font-semibold transition active:scale-95">Upload</button>
+        </div>
+        <div id="albumGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+      </section>
+
+      <!-- PANEL: GURU -->
+      <section id="tab-guru" class="tab-panel hidden p-4 max-w-5xl mx-auto">
+        <button id="btnTambahGuru" class="mb-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-semibold transition active:scale-95">+ Tambah Guru/Pegawai</button>
+        <div id="guruGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- PANEL: TESTIMONI -->
+      <section id="tab-testimoni" class="tab-panel hidden p-4 max-w-4xl mx-auto">
+        <div id="testimoniList" class="space-y-3"></div>
+      </section>
+
+    </div><!-- /dashboard -->
+
+    <!-- MODAL SISWA -->
+    <div id="modalSiswa" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+      <div class="bg-slate-800 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <h3 id="modalSiswaTitle" class="font-bold text-lg mb-4">Tambah Siswa</h3>
+        <div class="space-y-3">
+          <input id="fNama" type="text" placeholder="Nama Lengkap" class="inp w-full" />
+          <input id="fNisn" type="text" placeholder="NISN" class="inp w-full" />
+          <input id="fKelas" type="text" placeholder="Kelas (contoh: IX-A)" class="inp w-full" />
+          <select id="fJK" class="inp w-full">
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+          <input id="fTP" type="text" placeholder="Tahun Pelajaran (contoh: 2024/2025)" class="inp w-full" />
+          <select id="fStatus" class="inp w-full">
+            <option>Lulus</option>
+            <option>Tidak Lulus</option>
+            <option>Lulus Bersyarat</option>
+          </select>
+        </div>
+        <div class="flex gap-3 mt-5">
+          <button id="btnSimpanSiswa" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition">Simpan</button>
+          <button id="btnBatalSiswa" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold transition">Batal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL GURU -->
+    <div id="modalGuru" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm hidden p-4">
+      <div class="bg-slate-800 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <h3 class="font-bold text-lg mb-4">Tambah Guru / Pegawai</h3>
+        <div class="space-y-3">
+          <input id="gNama" type="text" placeholder="Nama" class="inp w-full" />
+          <input id="gJabatan" type="text" placeholder="Jabatan" class="inp w-full" />
+          <textarea id="gKesan" placeholder="Kesan & Pesan" rows="3" class="inp w-full resize-none"></textarea>
+          <label class="block text-slate-400 text-xs">Foto</label>
+          <input id="gFoto" type="file" accept="image/*" class="text-sm text-slate-300" />
+        </div>
+        <div class="flex gap-3 mt-5">
+          <button id="btnSimpanGuru" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition">Simpan</button>
+          <button id="btnBatalGuru" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold transition">Batal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[100] hidden">
+      <div id="toastMsg" class="bg-slate-700 border border-white/10 text-sm px-5 py-3 rounded-xl shadow-xl"></div>
+    </div>
+
+  </div>
+</Layout>
+
+<style>
+  .inp {
+    @apply bg-slate-700/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  .tab-btn.active {
+    @apply text-indigo-400 border-indigo-500;
+  }
+</style>
+
+<script define:vars={{ API }}>
+  const BASE = API.replace(/\/+$/, '');
+  const SISWA_URL      = `${BASE}/../api/siswa/`;
+  const PENGUMUMAN_URL = `${BASE}/../api/pengumuman/`;
+  const ALBUM_URL      = `${BASE}/../api/album/`;
+  const GURU_URL       = `${BASE}/../api/guru/`;
+  const TESTIMONI_URL  = `${BASE}/../api/testimoni/`;
+  const AUTH_URL       = `${BASE}/../api/auth/`;
+
+  // ---- TOAST ----
+  function toast(msg, ok = true) {
+    const el = document.getElementById('toast');
+    const msg_el = document.getElementById('toastMsg');
+    msg_el.textContent = msg;
+    msg_el.className = `px-5 py-3 rounded-xl shadow-xl text-sm border ${ok ? 'bg-emerald-800 border-emerald-500/40 text-emerald-100' : 'bg-red-800 border-red-500/40 text-red-100'}`;
+    el.classList.remove('hidden');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('hidden'), 3000);
+  }
+
+  // ---- AUTH ----
+  async function checkAuth() {
+    const res = await fetch(`${AUTH_URL}?action=check`, { credentials: 'include' });
+    const j = await res.json();
+    return j.data?.authenticated;
+  }
+
+  async function login() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginErr');
+    errEl.classList.add('hidden');
+
+    const res = await fetch(`${AUTH_URL}?action=login`, {
+      method: 'POST',
+      credentials: 'include',
+      body: JSON.stringify({ username, password }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const j = await res.json();
+    if (j.status === 'success') {
+      showDashboard();
+    } else {
+      errEl.textContent = j.message;
+      errEl.classList.remove('hidden');
+    }
+  }
+
+  async function logout() {
+    await fetch(`${AUTH_URL}?action=logout`, { method: 'POST', credentials: 'include' });
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+  }
+
+  function showDashboard() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    initTabs();
+    loadSiswa();
+  }
+
+  // ---- TABS ----
+  function initTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        const panel = document.getElementById(`tab-${btn.dataset.tab}`);
+        panel.classList.remove('hidden');
+
+        const loaders = { pengumuman: loadPengumuman, album: loadAlbum, guru: loadGuru, testimoni: loadTestimoni };
+        loaders[btn.dataset.tab]?.();
+      });
+    });
+    tabs[0].click();
+  }
+
+  // ---- SISWA ----
+  let siswaData = [];
+  let editSiswaId = null;
+
+  async function loadSiswa() {
+    const q = document.getElementById('searchSiswa').value;
+    const kelas = document.getElementById('filterKelas').value;
+    const jk = document.getElementById('filterJK').value;
+    const status = document.getElementById('filterStatus').value;
+    const tp = document.getElementById('filterTP').value;
+
+    const params = new URLSearchParams({ q, kelas, jenis_kelamin: jk, status_kelulusan: status, tahun_pelajaran: tp });
+    const res = await fetch(`${SISWA_URL}?${params}`, { credentials: 'include' });
+    const j = await res.json();
+    siswaData = j.data ?? [];
+
+    populateFilters(siswaData);
+    renderSiswaTable(siswaData);
+    document.getElementById('siswaCount').textContent = `${siswaData.length} data`;
+  }
+
+  function populateFilters(data) {
+    const kelasSet = [...new Set(data.map(d => d.kelas))].sort();
+    const tpSet = [...new Set(data.map(d => d.tahun_pelajaran))].sort().reverse();
+
+    const fKelas = document.getElementById('filterKelas');
+    const fTP = document.getElementById('filterTP');
+    const curKelas = fKelas.value;
+    const curTP = fTP.value;
+
+    fKelas.innerHTML = '<option value="">Semua Kelas</option>' + kelasSet.map(k => `<option ${k === curKelas ? 'selected' : ''}>${k}</option>`).join('');
+    fTP.innerHTML = '<option value="">Semua Tahun</option>' + tpSet.map(t => `<option ${t === curTP ? 'selected' : ''}>${t}</option>`).join('');
+  }
+
+  function statusBadge(s) {
+    const map = { 'Lulus': 'bg-emerald-500/20 text-emerald-300', 'Tidak Lulus': 'bg-red-500/20 text-red-300', 'Lulus Bersyarat': 'bg-amber-500/20 text-amber-300' };
+    return `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${map[s] ?? ''}">${s}</span>`;
+  }
+
+  function renderSiswaTable(data) {
+    const tbody = document.getElementById('siswaBody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Tidak ada data</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(s => `
+      <tr class="hover:bg-white/5 transition-colors">
+        <td class="px-4 py-3 font-medium">${s.nama_lengkap}</td>
+        <td class="px-4 py-3 text-slate-400 font-mono text-xs">${s.nisn}</td>
+        <td class="px-4 py-3">${s.kelas}</td>
+        <td class="px-4 py-3">${s.jenis_kelamin === 'L' ? 'L' : 'P'}</td>
+        <td class="px-4 py-3 text-slate-400 text-xs">${s.tahun_pelajaran}</td>
+        <td class="px-4 py-3">${statusBadge(s.status_kelulusan)}</td>
+        <td class="px-4 py-3 text-center">
+          <button onclick="editSiswa(${s.id})" class="text-xs text-indigo-400 hover:text-indigo-300 mr-3">Edit</button>
+          <button onclick="hapusSiswa(${s.id})" class="text-xs text-red-400 hover:text-red-300">Hapus</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openModalSiswa(id = null) {
+    editSiswaId = id;
+    const s = id ? siswaData.find(d => d.id === id) : null;
+    document.getElementById('modalSiswaTitle').textContent = id ? 'Edit Siswa' : 'Tambah Siswa';
+    document.getElementById('fNama').value = s?.nama_lengkap ?? '';
+    document.getElementById('fNisn').value = s?.nisn ?? '';
+    document.getElementById('fKelas').value = s?.kelas ?? '';
+    document.getElementById('fJK').value = s?.jenis_kelamin ?? 'L';
+    document.getElementById('fTP').value = s?.tahun_pelajaran ?? '';
+    document.getElementById('fStatus').value = s?.status_kelulusan ?? 'Lulus';
+    document.getElementById('modalSiswa').classList.remove('hidden');
+  }
+
+  async function simpanSiswa() {
+    const body = {
+      nama_lengkap: document.getElementById('fNama').value.trim(),
+      nisn: document.getElementById('fNisn').value.trim(),
+      kelas: document.getElementById('fKelas').value.trim(),
+      jenis_kelamin: document.getElementById('fJK').value,
+      tahun_pelajaran: document.getElementById('fTP').value.trim(),
+      status_kelulusan: document.getElementById('fStatus').value,
+    };
+
+    const url = editSiswaId ? `${SISWA_URL}?id=${editSiswaId}` : SISWA_URL;
+    const method = editSiswaId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, credentials: 'include', body: JSON.stringify(body) });
+    const j = await res.json();
+
+    if (j.status === 'success') {
+      document.getElementById('modalSiswa').classList.add('hidden');
+      toast(editSiswaId ? 'Data diperbarui' : 'Siswa ditambahkan');
+      loadSiswa();
+    } else {
+      toast(j.message, false);
+    }
+  }
+
+  window.editSiswa = (id) => openModalSiswa(id);
+
+  window.hapusSiswa = async (id) => {
+    if (!confirm('Hapus siswa ini?')) return;
+    const res = await fetch(`${SISWA_URL}?id=${id}`, { method: 'DELETE', credentials: 'include' });
+    const j = await res.json();
+    if (j.status === 'success') { toast('Siswa dihapus'); loadSiswa(); }
+    else toast(j.message, false);
+  };
+
+  async function hapusSemua() {
+    if (!confirm('Hapus SEMUA data siswa? Tindakan ini tidak dapat dibatalkan.')) return;
+    const res = await fetch(`${SISWA_URL}?id=all`, { method: 'DELETE', credentials: 'include' });
+    const j = await res.json();
+    if (j.status === 'success') { toast('Semua data dihapus'); loadSiswa(); }
+    else toast(j.message, false);
+  }
+
+  // CSV Import
+  function handleCSV(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const lines = e.target.result.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+      }).filter(r => r.nisn && r.nama_lengkap);
+
+      if (!rows.length) { toast('Format CSV tidak valid', false); return; }
+
+      const res = await fetch(`${SISWA_URL}?action=import`, {
+        method: 'POST', credentials: 'include', body: JSON.stringify({ rows })
+      });
+      const j = await res.json();
+      if (j.status === 'success') { toast(`${j.data.imported} data diimport`); loadSiswa(); }
+      else toast(j.message, false);
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- PENGUMUMAN ----
+  async function loadPengumuman() {
+    const res = await fetch(PENGUMUMAN_URL, { credentials: 'include' });
+    const j = await res.json();
+    const d = j.data;
+    if (!d) return;
+    document.getElementById('inputWaktu').value = d.tanggal_waktu?.slice(0, 16) ?? '';
+    setToggle(!!d.is_active);
+  }
+
+  function setToggle(active) {
+    const cb = document.getElementById('inputAktif');
+    const bg = document.getElementById('toggleBg');
+    const dot = document.getElementById('toggleDot');
+    cb.checked = active;
+    bg.className = `w-11 h-6 rounded-full transition-colors ${active ? 'bg-indigo-600' : 'bg-slate-600'}`;
+    dot.className = `absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${active ? 'translate-x-5' : 'translate-x-0.5'}`;
+  }
+
+  async function savePengumuman() {
+    const body = {
+      tanggal_waktu: document.getElementById('inputWaktu').value,
+      is_active: document.getElementById('inputAktif').checked ? 1 : 0,
+    };
+    const res = await fetch(PENGUMUMAN_URL, { method: 'POST', credentials: 'include', body: JSON.stringify(body) });
+    const j = await res.json();
+    const msg = document.getElementById('pengumumanMsg');
+    msg.textContent = j.status === 'success' ? 'Konfigurasi disimpan.' : j.message;
+    msg.className = `text-center text-sm ${j.status === 'success' ? 'text-emerald-400' : 'text-red-400'}`;
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
+  }
+
+  // ---- ALBUM ----
+  async function loadAlbum() {
+    const res = await fetch(ALBUM_URL, { credentials: 'include' });
+    const j = await res.json();
+    const grid = document.getElementById('albumGrid');
+    grid.innerHTML = (j.data ?? []).map(a => `
+      <div class="relative group rounded-xl overflow-hidden aspect-square bg-slate-800">
+        <img src="${a.foto_path}" alt="${a.judul ?? ''}" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col justify-end p-2">
+          <p class="text-xs text-white truncate">${a.judul ?? ''}</p>
+          <button onclick="hapusAlbum(${a.id})" class="text-xs text-red-300 mt-1">Hapus</button>
+        </div>
+      </div>
+    `).join('') || '<p class="text-slate-500 text-sm">Belum ada foto.</p>';
+  }
+
+  async function uploadAlbum() {
+    const files = document.getElementById('albumInput').files;
+    const judul = document.getElementById('albumJudul').value;
+    if (!files.length) { toast('Pilih file dulu', false); return; }
+
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('foto', file);
+      if (judul) fd.append('judul', judul);
+      await fetch(ALBUM_URL, { method: 'POST', credentials: 'include', body: fd });
+    }
+    toast(`${files.length} foto diupload`);
+    document.getElementById('albumInput').value = '';
+    document.getElementById('albumJudul').value = '';
+    loadAlbum();
+  }
+
+  window.hapusAlbum = async (id) => {
+    if (!confirm('Hapus foto ini?')) return;
+    await fetch(`${ALBUM_URL}?id=${id}`, { method: 'DELETE', credentials: 'include' });
+    toast('Foto dihapus'); loadAlbum();
+  };
+
+  // ---- GURU ----
+  async function loadGuru() {
+    const res = await fetch(GURU_URL, { credentials: 'include' });
+    const j = await res.json();
+    const grid = document.getElementById('guruGrid');
+    grid.innerHTML = (j.data ?? []).map(g => `
+      <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-4 flex gap-4 items-start">
+        ${g.foto_path ? `<img src="${g.foto_path}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0" />` : `<div class="w-16 h-16 rounded-xl bg-slate-700 flex-shrink-0"></div>`}
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold truncate">${g.nama}</p>
+          <p class="text-slate-400 text-xs mb-1">${g.jabatan ?? ''}</p>
+          <p class="text-slate-300 text-xs line-clamp-2">${g.kesan_pesan ?? ''}</p>
+        </div>
+        <button onclick="hapusGuru(${g.id})" class="text-red-400 hover:text-red-300 text-xs flex-shrink-0">Hapus</button>
+      </div>
+    `).join('') || '<p class="text-slate-500 text-sm">Belum ada data.</p>';
+  }
+
+  async function simpanGuru() {
+    const fd = new FormData();
+    fd.append('nama', document.getElementById('gNama').value);
+    fd.append('jabatan', document.getElementById('gJabatan').value);
+    fd.append('kesan_pesan', document.getElementById('gKesan').value);
+    const foto = document.getElementById('gFoto').files[0];
+    if (foto) fd.append('foto', foto);
+
+    const res = await fetch(GURU_URL, { method: 'POST', credentials: 'include', body: fd });
+    const j = await res.json();
+    if (j.status === 'success') {
+      document.getElementById('modalGuru').classList.add('hidden');
+      toast('Data guru ditambahkan'); loadGuru();
+    } else toast(j.message, false);
+  }
+
+  window.hapusGuru = async (id) => {
+    if (!confirm('Hapus data ini?')) return;
+    await fetch(`${GURU_URL}?id=${id}`, { method: 'DELETE', credentials: 'include' });
+    toast('Data dihapus'); loadGuru();
+  };
+
+  // ---- TESTIMONI ----
+  async function loadTestimoni() {
+    const res = await fetch(TESTIMONI_URL, { credentials: 'include' });
+    const j = await res.json();
+    const list = document.getElementById('testimoniList');
+    list.innerHTML = (j.data ?? []).map(t => `
+      <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4 flex justify-between items-start gap-4">
+        <div>
+          <p class="font-semibold text-sm">${t.nama} <span class="text-slate-500 text-xs font-mono">${t.nisn ? '· ' + t.nisn : ''}</span></p>
+          <p class="text-slate-300 text-sm mt-1">${t.isi}</p>
+          <p class="text-slate-500 text-xs mt-1">${new Date(t.created_at).toLocaleString('id-ID')}</p>
+        </div>
+        <button onclick="hapusTestimoni(${t.id})" class="text-red-400 hover:text-red-300 text-xs flex-shrink-0">Hapus</button>
+      </div>
+    `).join('') || '<p class="text-slate-500 text-sm">Belum ada testimoni.</p>';
+  }
+
+  window.hapusTestimoni = async (id) => {
+    if (!confirm('Hapus testimoni?')) return;
+    await fetch(`${TESTIMONI_URL}?id=${id}`, { method: 'DELETE', credentials: 'include' });
+    toast('Testimoni dihapus'); loadTestimoni();
+  };
+
+  // ---- INIT ----
+  (async () => {
+    const authed = await checkAuth();
+    if (authed) showDashboard();
+
+    document.getElementById('btnLogin').onclick = login;
+    document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('btnLogout').onclick = logout;
+
+    // Siswa events
+    document.getElementById('btnTambahSiswa').onclick = () => openModalSiswa();
+    document.getElementById('btnSimpanSiswa').onclick = simpanSiswa;
+    document.getElementById('btnBatalSiswa').onclick = () => document.getElementById('modalSiswa').classList.add('hidden');
+    document.getElementById('btnHapusSemua').onclick = hapusSemua;
+    document.getElementById('csvInput').onchange = e => { if (e.target.files[0]) handleCSV(e.target.files[0]); };
+
+    ['searchSiswa', 'filterKelas', 'filterJK', 'filterStatus', 'filterTP'].forEach(id => {
+      document.getElementById(id).addEventListener('input', loadSiswa);
+      document.getElementById(id).addEventListener('change', loadSiswa);
+    });
+
+    // Pengumuman events
+    document.getElementById('btnSavePengumuman').onclick = savePengumuman;
+    document.getElementById('inputAktif').addEventListener('change', e => setToggle(e.target.checked));
+
+    // Album events
+    document.getElementById('btnUploadAlbum').onclick = uploadAlbum;
+
+    // Guru events
+    document.getElementById('btnTambahGuru').onclick = () => document.getElementById('modalGuru').classList.remove('hidden');
+    document.getElementById('btnSimpanGuru').onclick = simpanGuru;
+    document.getElementById('btnBatalGuru').onclick = () => document.getElementById('modalGuru').classList.add('hidden');
+  })();
+</script>

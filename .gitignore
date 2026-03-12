@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+api/.env
+uploads/
+*.log
+.DS_Store
+.astro/

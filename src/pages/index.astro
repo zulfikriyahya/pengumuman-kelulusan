@@ -1,0 +1,718 @@
+---
+import Layout from "../layouts/Layout.astro";
+const API_BASE = import.meta.env.PUBLIC_API_BASE;
+---
+
+<Layout title="Pengumuman Kelulusan — Madrasah Universe">
+  <!-- ===================== SECTIONS ===================== -->
+
+  <!-- BERANDA -->
+  <section
+    id="sec-beranda"
+    class="section min-h-[100dvh] flex flex-col items-center justify-center px-6 py-24 text-center gap-6 relative overflow-hidden"
+  >
+    <div
+      class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,rgba(99,102,241,0.15),transparent_70%)]"
+    >
+    </div>
+
+    <img
+      id="logoMadrasah"
+      src="/favicon.svg"
+      alt="Logo"
+      class="w-24 h-24 object-contain drop-shadow-2xl"
+    />
+    <div>
+      <h1 id="namaMadrasah" class="text-2xl font-bold leading-tight">Madrasah Universe</h1>
+      <p class="text-slate-400 text-sm mt-1">Pengumuman Kelulusan</p>
+    </div>
+
+    <!-- Countdown -->
+    <div id="countdownWrapper" class="w-full max-w-sm">
+      <p class="text-slate-400 text-xs uppercase tracking-widest mb-3">Pengumuman dalam</p>
+      <div class="grid grid-cols-4 gap-2">
+        {
+          ["H", "Jam", "Menit", "Detik"].map((l, i) => (
+            <div class="bg-slate-800/80 border border-white/10 rounded-2xl py-4 flex flex-col items-center">
+              <span id={`cd-${["d", "h", "m", "s"][i]}`} class="text-3xl font-bold tabular-nums">
+                00
+              </span>
+              <span class="text-[10px] text-slate-400 mt-1">{l}</span>
+            </div>
+          ))
+        }
+      </div>
+      <p id="cdExpired" class="hidden mt-3 text-emerald-400 text-sm font-semibold animate-pulse">
+        Pengumuman sudah dibuka!
+      </p>
+    </div>
+
+    <!-- Quote -->
+    <blockquote
+      id="quoteText"
+      class="max-w-xs text-slate-400 text-sm italic leading-relaxed border-l-2 border-indigo-500 pl-4 text-left"
+    >
+      "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia."
+    </blockquote>
+
+    <button
+      onclick="goSection('cari')"
+      class="mt-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-500/25"
+    >
+      Cek Kelulusan Saya
+    </button>
+  </section>
+
+  <!-- CARI NISN -->
+  <section
+    id="sec-cari"
+    class="section hidden min-h-[100dvh] flex flex-col items-center justify-center px-6 py-24 gap-6"
+  >
+    <div class="w-full max-w-sm">
+      <h2 class="text-xl font-bold mb-1 text-center">Cari Kelulusan</h2>
+      <p class="text-slate-400 text-sm text-center mb-6">
+        Masukkan NISN untuk membuka amplop kelulusanmu
+      </p>
+
+      <div class="relative mb-3">
+        <input
+          id="nisnInput"
+          type="text"
+          inputmode="numeric"
+          maxlength="10"
+          placeholder="Masukkan NISN..."
+          class="w-full bg-slate-800 border border-white/10 rounded-2xl px-5 py-4 text-center text-lg font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+        />
+      </div>
+      <button
+        id="btnCariNisn"
+        class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-500/25"
+      >
+        Cari
+      </button>
+      <p id="cariErr" class="text-red-400 text-sm text-center mt-3 hidden"></p>
+
+      <!-- Hasil Cari -->
+      <div id="hasilCari" class="hidden mt-6">
+        <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 text-center">
+          <p id="hasilNama" class="font-bold text-lg mb-0.5"></p>
+          <p id="hasilKelas" class="text-slate-400 text-sm mb-4"></p>
+
+          <!-- Amplop -->
+          <button
+            id="btnBukaAmplop"
+            class="relative mx-auto flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed transition-all active:scale-95 group"
+          >
+            <div
+              id="amplopIcon"
+              class="text-6xl transition-transform group-hover:scale-110 duration-300"
+            >
+              ✉️
+            </div>
+            <span id="amplopLabel" class="text-sm font-semibold"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALBUM FOTO -->
+  <section id="sec-album" class="section hidden min-h-[100dvh] px-4 py-24 max-w-2xl mx-auto">
+    <h2 class="text-xl font-bold text-center mb-6">Album Kenangan</h2>
+    <div id="albumPublicGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div class="col-span-full text-center text-slate-500 text-sm py-10">Memuat...</div>
+    </div>
+  </section>
+
+  <!-- GURU & PEGAWAI -->
+  <section id="sec-guru" class="section hidden min-h-[100dvh] px-4 py-24 max-w-2xl mx-auto">
+    <h2 class="text-xl font-bold text-center mb-6">Pesan Guru & Pegawai</h2>
+    <div id="guruPublicList" class="space-y-4">
+      <div class="text-center text-slate-500 text-sm py-10">Memuat...</div>
+    </div>
+  </section>
+
+  <!-- TESTIMONI -->
+  <section id="sec-testimoni" class="section hidden min-h-[100dvh] px-4 py-24 max-w-lg mx-auto">
+    <h2 class="text-xl font-bold text-center mb-2">Kesan & Pesan</h2>
+    <p class="text-slate-400 text-sm text-center mb-6">Bagikan kenangan indahmu bersama madrasah</p>
+
+    <!-- Form -->
+    <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 mb-6 space-y-3">
+      <input id="tNama" type="text" placeholder="Nama kamu" class="inp w-full" />
+      <input
+        id="tNisn"
+        type="text"
+        inputmode="numeric"
+        placeholder="NISN (opsional)"
+        class="inp w-full"
+      />
+      <textarea
+        id="tIsi"
+        rows="4"
+        placeholder="Tulis kesan & pesanmu..."
+        class="inp w-full resize-none"></textarea>
+      <button
+        id="btnKirimTestimoni"
+        class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition active:scale-95"
+        >Kirim</button
+      >
+      <p id="testimoniMsg" class="text-center text-sm hidden"></p>
+    </div>
+
+    <!-- List -->
+    <div id="testimoniPublicList" class="space-y-3">
+      <div class="text-center text-slate-500 text-sm py-4">Memuat...</div>
+    </div>
+  </section>
+
+  <!-- ===================== BOTTOM NAV ===================== -->
+  <nav
+    class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur border-t border-white/10 safe-bottom"
+  >
+    <div class="flex max-w-lg mx-auto">
+      {
+        [
+          { id: "beranda", icon: "🏠", label: "Beranda" },
+          { id: "cari", icon: "🔍", label: "Cari" },
+          { id: "album", icon: "📷", label: "Album" },
+          { id: "guru", icon: "👨‍🏫", label: "Guru" },
+          { id: "testimoni", icon: "💬", label: "Pesan" },
+        ].map((n) => (
+          <button
+            data-nav={n.id}
+            onclick={`goSection('${n.id}')`}
+            class="nav-btn flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-slate-500 transition-colors"
+          >
+            <span class="text-xl leading-none">{n.icon}</span>
+            <span class="text-[10px] font-medium">{n.label}</span>
+          </button>
+        ))
+      }
+    </div>
+  </nav>
+
+  <!-- ===================== MODALS ===================== -->
+
+  <!-- Modal: Amplop Dibuka -->
+  <div
+    id="modalAmplop"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+  >
+    <div
+      id="modalAmplopBox"
+      class="bg-slate-800 border border-white/10 rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl transform scale-90 opacity-0 transition-all duration-500"
+    >
+      <div id="modalAmplopEmoji" class="text-7xl mb-4 transition-all duration-700">✉️</div>
+      <div id="modalAmplopStatus" class="text-4xl font-bold mb-2"></div>
+      <p id="modalAmplopNama" class="text-slate-300 text-lg font-semibold mb-1"></p>
+      <p id="modalAmplopKelas" class="text-slate-400 text-sm mb-6"></p>
+      <div id="modalAmplopBadge" class="inline-block px-6 py-2 rounded-full text-sm font-bold mb-6">
+      </div>
+      <button
+        onclick="closeModalAmplop()"
+        class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold transition"
+        >Tutup</button
+      >
+    </div>
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[-1]"></canvas>
+  </div>
+
+  <!-- Modal: Belum Waktunya -->
+  <div
+    id="modalBelumWaktu"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+  >
+    <div
+      class="bg-slate-800 border border-white/10 rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl"
+    >
+      <div class="text-6xl mb-4">🔒</div>
+      <h3 class="text-xl font-bold mb-2">Belum Waktunya</h3>
+      <p class="text-slate-400 text-sm mb-4">Pengumuman akan dibuka pada:</p>
+      <p id="waktuPengumuman" class="text-indigo-400 font-semibold mb-2"></p>
+      <div class="grid grid-cols-4 gap-2 mb-6">
+        {
+          ["H", "Jam", "Mnt", "Dtk"].map((l, i) => (
+            <div class="bg-slate-700/60 rounded-xl py-3 flex flex-col items-center">
+              <span id={`mcd-${["d", "h", "m", "s"][i]}`} class="text-2xl font-bold tabular-nums">
+                00
+              </span>
+              <span class="text-[10px] text-slate-400">{l}</span>
+            </div>
+          ))
+        }
+      </div>
+      <button
+        onclick="document.getElementById('modalBelumWaktu').classList.replace('flex','hidden')"
+        class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold transition"
+        >Mengerti</button
+      >
+    </div>
+  </div>
+
+  <!-- Lightbox Album -->
+  <div
+    id="lightbox"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-4"
+    onclick="this.classList.replace('flex','hidden')"
+  >
+    <img id="lightboxImg" src="" alt="" class="max-w-full max-h-full rounded-2xl object-contain" />
+  </div>
+</Layout>
+
+<style>
+  .inp {
+    @apply bg-slate-700/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full;
+  }
+  .nav-btn.active {
+    @apply text-indigo-400;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+</style>
+
+<script define:vars={{ API_BASE }}>
+  const SISWA_URL = `${API_BASE}/siswa/`;
+  const PENGUMUMAN_URL = `${API_BASE}/pengumuman/`;
+  const ALBUM_URL = `${API_BASE}/album/`;
+  const GURU_URL = `${API_BASE}/guru/`;
+  const TESTIMONI_URL = `${API_BASE}/testimoni/`;
+
+  const QUOTES = [
+    "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia.",
+    "Belajarlah seolah kamu akan hidup selamanya, hiduplah seolah kamu akan mati besok.",
+    "Kesuksesan bukan kunci kebahagiaan. Kebahagiaan adalah kunci kesuksesan.",
+    "Setiap ahli dulunya pernah menjadi pemula. Jangan takut untuk memulai.",
+    "Mimpi bukan yang kamu lihat saat tidur, melainkan yang tidak membiarkanmu tidur.",
+  ];
+
+  // ---- STATE ----
+  let pengumumanConfig = null;
+  let siswaFound = null;
+  let currentSection = "beranda";
+  let albumLoaded = false;
+  let guruLoaded = false;
+  let testimoniLoaded = false;
+  let countdownInterval = null;
+
+  // ---- NAVIGATION ----
+  window.goSection = function (id) {
+    document.querySelectorAll(".section").forEach((s) => s.classList.add("hidden"));
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+
+    document.getElementById(`sec-${id}`).classList.remove("hidden");
+    document.querySelector(`[data-nav="${id}"]`)?.classList.add("active");
+    currentSection = id;
+    window.scrollTo(0, 0);
+
+    if (id === "album" && !albumLoaded) {
+      loadAlbum();
+      albumLoaded = true;
+    }
+    if (id === "guru" && !guruLoaded) {
+      loadGuru();
+      guruLoaded = true;
+    }
+    if (id === "testimoni" && !testimoniLoaded) {
+      loadTestimoni();
+      testimoniLoaded = true;
+    }
+  };
+
+  // ---- COUNTDOWN ----
+  function parseDiff(target) {
+    const diff = Math.max(0, target - Date.now());
+    return {
+      d: Math.floor(diff / 86400000),
+      h: Math.floor((diff % 86400000) / 3600000),
+      m: Math.floor((diff % 3600000) / 60000),
+      s: Math.floor((diff % 60000) / 1000),
+      expired: diff === 0,
+    };
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function startCountdown(target) {
+    function tick() {
+      const t = parseDiff(target);
+      ["d", "h", "m", "s"].forEach((k) => {
+        document.getElementById(`cd-${k}`).textContent = pad(t[k]);
+        const mc = document.getElementById(`mcd-${k}`);
+        if (mc) mc.textContent = pad(t[k]);
+      });
+
+      if (t.expired) {
+        clearInterval(countdownInterval);
+        document.getElementById("countdownWrapper").querySelector("p").textContent = "";
+        document.getElementById("cdExpired").classList.remove("hidden");
+        updateAmplopState();
+      }
+    }
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+  }
+
+  function isAmplopOpen() {
+    if (!pengumumanConfig) return false;
+    if (!pengumumanConfig.is_active) return false;
+    return Date.now() >= new Date(pengumumanConfig.tanggal_waktu).getTime();
+  }
+
+  function updateAmplopState() {
+    if (!siswaFound) return;
+    const open = isAmplopOpen();
+    const btn = document.getElementById("btnBukaAmplop");
+    const label = document.getElementById("amplopLabel");
+
+    if (open) {
+      btn.className =
+        "relative mx-auto flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed border-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 cursor-pointer transition-all active:scale-95 group";
+      label.textContent = "Klik untuk membuka amplop!";
+      label.className = "text-sm font-semibold text-indigo-300 animate-pulse";
+    } else {
+      btn.className =
+        "relative mx-auto flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed border-slate-600 bg-slate-700/20 cursor-not-allowed transition-all group opacity-70";
+      label.textContent = "Amplop terkunci";
+      label.className = "text-sm font-semibold text-slate-500";
+    }
+  }
+
+  // ---- CONFETTI ----
+  function runConfetti() {
+    const canvas = document.getElementById("confettiCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = Array.from({ length: 120 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: ["#6366f1", "#a78bfa", "#34d399", "#fbbf24", "#f472b6"][Math.floor(Math.random() * 5)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 4 + 2,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 6,
+    }));
+
+    let frame;
+    let done = false;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.rotV;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      if (!done) frame = requestAnimationFrame(draw);
+    }
+    draw();
+    setTimeout(() => {
+      done = true;
+      cancelAnimationFrame(frame);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }, 4000);
+  }
+
+  // ---- MODAL AMPLOP ----
+  function openModalAmplop(siswa) {
+    const modal = document.getElementById("modalAmplop");
+    const box = document.getElementById("modalAmplopBox");
+
+    const cfg = {
+      Lulus: {
+        emoji: "🎉",
+        status: "LULUS",
+        badge: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+      },
+      "Tidak Lulus": {
+        emoji: "📋",
+        status: "TIDAK LULUS",
+        badge: "bg-red-500/20 text-red-300 border border-red-500/30",
+      },
+      "Lulus Bersyarat": {
+        emoji: "📌",
+        status: "LULUS BERSYARAT",
+        badge: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+      },
+    }[siswa.status_kelulusan] ?? {
+      emoji: "📄",
+      status: siswa.status_kelulusan,
+      badge: "bg-slate-600 text-slate-300",
+    };
+
+    document.getElementById("modalAmplopEmoji").textContent = "✉️";
+    document.getElementById("modalAmplopStatus").textContent = "";
+    document.getElementById("modalAmplopNama").textContent = siswa.nama_lengkap;
+    document.getElementById("modalAmplopKelas").textContent =
+      `${siswa.kelas} · ${siswa.tahun_pelajaran}`;
+    document.getElementById("modalAmplopBadge").textContent = cfg.status;
+    document.getElementById("modalAmplopBadge").className =
+      `inline-block px-6 py-2 rounded-full text-sm font-bold mb-6 ${cfg.badge}`;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    requestAnimationFrame(() => {
+      box.classList.remove("scale-90", "opacity-0");
+      box.classList.add("scale-100", "opacity-100");
+    });
+
+    // Animasi amplop buka
+    setTimeout(() => {
+      document.getElementById("modalAmplopEmoji").textContent = cfg.emoji;
+      document.getElementById("modalAmplopStatus").textContent = cfg.status;
+      if (siswa.status_kelulusan === "Lulus") runConfetti();
+    }, 600);
+  }
+
+  window.closeModalAmplop = function () {
+    const modal = document.getElementById("modalAmplop");
+    const box = document.getElementById("modalAmplopBox");
+    box.classList.add("scale-90", "opacity-0");
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      box.classList.remove("scale-100", "opacity-100");
+    }, 300);
+  };
+
+  function openModalBelumWaktu() {
+    const waktu = new Date(pengumumanConfig.tanggal_waktu);
+    document.getElementById("waktuPengumuman").textContent = waktu.toLocaleString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const modal = document.getElementById("modalBelumWaktu");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  // ---- CARI NISN ----
+  async function cariNisn() {
+    const nisn = document.getElementById("nisnInput").value.trim();
+    const errEl = document.getElementById("cariErr");
+    errEl.classList.add("hidden");
+
+    if (!nisn) {
+      errEl.textContent = "Masukkan NISN terlebih dahulu";
+      errEl.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${SISWA_URL}?id=nisn&nisn=${encodeURIComponent(nisn)}`);
+      const j = await res.json();
+
+      if (j.status !== "success") {
+        errEl.textContent = "NISN tidak ditemukan. Periksa kembali.";
+        errEl.classList.remove("hidden");
+        document.getElementById("hasilCari").classList.add("hidden");
+        return;
+      }
+
+      siswaFound = j.data;
+      document.getElementById("hasilNama").textContent = j.data.nama_lengkap;
+      document.getElementById("hasilKelas").textContent =
+        `${j.data.kelas} · ${j.data.tahun_pelajaran}`;
+      document.getElementById("hasilCari").classList.remove("hidden");
+      updateAmplopState();
+    } catch {
+      errEl.textContent = "Gagal terhubung ke server.";
+      errEl.classList.remove("hidden");
+    }
+  }
+
+  // ---- ALBUM ----
+  async function loadAlbum() {
+    const grid = document.getElementById("albumPublicGrid");
+    try {
+      const res = await fetch(ALBUM_URL);
+      const j = await res.json();
+      const data = j.data ?? [];
+      if (!data.length) {
+        grid.innerHTML =
+          '<p class="col-span-full text-center text-slate-500 py-10">Belum ada foto.</p>';
+        return;
+      }
+      grid.innerHTML = data
+        .map(
+          (a) => `
+        <button onclick="openLightbox('${a.foto_path}')" class="relative aspect-square rounded-xl overflow-hidden bg-slate-800 group">
+          <img src="${a.foto_path}" alt="${a.judul ?? ""}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+          ${a.judul ? `<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 px-3 py-2"><p class="text-xs text-white truncate">${a.judul}</p></div>` : ""}
+        </button>
+      `
+        )
+        .join("");
+    } catch {
+      grid.innerHTML =
+        '<p class="col-span-full text-center text-slate-500 py-10">Gagal memuat album.</p>';
+    }
+  }
+
+  window.openLightbox = function (src) {
+    document.getElementById("lightboxImg").src = src;
+    document.getElementById("lightbox").classList.remove("hidden");
+    document.getElementById("lightbox").classList.add("flex");
+  };
+
+  // ---- GURU ----
+  async function loadGuru() {
+    const list = document.getElementById("guruPublicList");
+    try {
+      const res = await fetch(GURU_URL);
+      const j = await res.json();
+      const data = j.data ?? [];
+      if (!data.length) {
+        list.innerHTML = '<p class="text-center text-slate-500 py-10">Belum ada data.</p>';
+        return;
+      }
+      list.innerHTML = data
+        .map(
+          (g) => `
+        <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 flex gap-4 items-start">
+          ${
+            g.foto_path
+              ? `<img src="${g.foto_path}" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />`
+              : `<div class="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center text-2xl flex-shrink-0">👤</div>`
+          }
+          <div>
+            <p class="font-semibold">${g.nama}</p>
+            <p class="text-indigo-400 text-xs mb-2">${g.jabatan ?? ""}</p>
+            <p class="text-slate-300 text-sm leading-relaxed">${g.kesan_pesan ?? '<em class="text-slate-500">Belum ada pesan.</em>'}</p>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+    } catch {
+      list.innerHTML = '<p class="text-center text-slate-500 py-10">Gagal memuat data.</p>';
+    }
+  }
+
+  // ---- TESTIMONI ----
+  async function loadTestimoni() {
+    const list = document.getElementById("testimoniPublicList");
+    try {
+      const res = await fetch(TESTIMONI_URL);
+      const j = await res.json();
+      const data = j.data ?? [];
+      if (!data.length) {
+        list.innerHTML = '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
+        return;
+      }
+      list.innerHTML = data
+        .map(
+          (t) => `
+        <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-semibold text-sm">${t.nama}</p>
+            <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+          </div>
+          <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
+        </div>
+      `
+        )
+        .join("");
+    } catch {
+      list.innerHTML = '<p class="text-center text-slate-500 py-4">Gagal memuat.</p>';
+    }
+  }
+
+  async function kirimTestimoni() {
+    const nama = document.getElementById("tNama").value.trim();
+    const nisn = document.getElementById("tNisn").value.trim();
+    const isi = document.getElementById("tIsi").value.trim();
+    const msg = document.getElementById("testimoniMsg");
+
+    if (!nama || !isi) {
+      msg.textContent = "Nama dan isi wajib diisi.";
+      msg.className = "text-center text-sm text-red-400";
+      msg.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      const res = await fetch(TESTIMONI_URL, {
+        method: "POST",
+        body: JSON.stringify({ nama, nisn, isi }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const j = await res.json();
+      if (j.status === "success") {
+        msg.textContent = "Terima kasih! Pesan kamu telah dikirim.";
+        msg.className = "text-center text-sm text-emerald-400";
+        document.getElementById("tNama").value = "";
+        document.getElementById("tNisn").value = "";
+        document.getElementById("tIsi").value = "";
+        testimoniLoaded = false;
+        loadTestimoni();
+      } else {
+        msg.textContent = j.message;
+        msg.className = "text-center text-sm text-red-400";
+      }
+    } catch {
+      msg.textContent = "Gagal mengirim. Coba lagi.";
+      msg.className = "text-center text-sm text-red-400";
+    }
+    msg.classList.remove("hidden");
+    setTimeout(() => msg.classList.add("hidden"), 4000);
+  }
+
+  // ---- INIT ----
+  (async () => {
+    // Quote acak
+    document.getElementById("quoteText").textContent =
+      `"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"`;
+
+    // Load config pengumuman
+    try {
+      const res = await fetch(PENGUMUMAN_URL);
+      const j = await res.json();
+      pengumumanConfig = j.data;
+      if (pengumumanConfig?.tanggal_waktu) {
+        const target = new Date(pengumumanConfig.tanggal_waktu).getTime();
+        startCountdown(target);
+      } else {
+        ["d", "h", "m", "s"].forEach((k) => {
+          document.getElementById(`cd-${k}`).textContent = "00";
+        });
+      }
+    } catch {
+      ["d", "h", "m", "s"].forEach((k) => {
+        document.getElementById(`cd-${k}`).textContent = "--";
+      });
+    }
+
+    // Events
+    document.getElementById("btnCariNisn").onclick = cariNisn;
+    document.getElementById("nisnInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") cariNisn();
+    });
+    document.getElementById("btnKirimTestimoni").onclick = kirimTestimoni;
+
+    document.getElementById("btnBukaAmplop").onclick = () => {
+      if (isAmplopOpen()) openModalAmplop(siswaFound);
+      else openModalBelumWaktu();
+    };
+
+    // Aktifkan beranda
+    goSection("beranda");
+  })();
+</script>
