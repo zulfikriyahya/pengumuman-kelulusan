@@ -5,8 +5,8 @@ setCorsHeaders();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? null;
-$db = getDB();
+$id     = $_GET['id'] ?? null;
+$db     = getDB();
 
 if ($method === 'GET') {
     $stmt = $db->query('SELECT * FROM guru ORDER BY nama ASC');
@@ -16,21 +16,27 @@ if ($method === 'GET') {
 if ($method === 'POST' && ($_GET['action'] ?? '') === 'import') {
     requireAdmin();
 
-    $uploadDir = realpath(__DIR__ . '/../../uploads/guru') . '/';
+    $uploadDir = __DIR__ . '/../../uploads/guru/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    $uploadDir = realpath($uploadDir) . '/';
+    $publicUrl = rtrim($_ENV['PUBLIC_URL'], '/');
 
-    $rows = [];
-    $files = $_FILES['foto'] ?? [];
     $fotoMap = [];
+    $files   = $_FILES['foto'] ?? [];
 
-    // Proses upload foto jika ada (multifile, key = index baris)
     if (!empty($files['name'])) {
         foreach ($files['name'] as $i => $name) {
             if ($files['error'][$i] !== UPLOAD_ERR_OK || !$name) continue;
-            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $singleFile = [
+                'tmp_name' => $files['tmp_name'][$i],
+                'name'     => $name,
+                'size'     => $files['size'][$i],
+                'error'    => $files['error'][$i],
+            ];
+            $ext      = validateImageUpload($singleFile);
             $filename = uniqid('guru_') . '.' . $ext;
             if (move_uploaded_file($files['tmp_name'][$i], $uploadDir . $filename)) {
-                $fotoMap[$i] = $_ENV['PUBLIC_URL'] . 'guru/' . $filename;
+                $fotoMap[$i] = $publicUrl . '/guru/' . $filename;
             }
         }
     }
@@ -45,6 +51,7 @@ if ($method === 'POST' && ($_GET['action'] ?? '') === 'import') {
         ON DUPLICATE KEY UPDATE jabatan = VALUES(jabatan), kesan_pesan = VALUES(kesan_pesan)');
 
     $db->beginTransaction();
+    $count = 0;
     foreach ($namaList as $i => $nama) {
         if (!trim($nama)) continue;
         $stmt->execute([
@@ -53,25 +60,27 @@ if ($method === 'POST' && ($_GET['action'] ?? '') === 'import') {
             $fotoMap[$i] ?? null,
             trim($kesanList[$i] ?? ''),
         ]);
-        $rows[] = $nama;
+        $count++;
     }
     $db->commit();
 
-    ok(['imported' => count($rows)]);
+    ok(['imported' => $count]);
 }
 
-if ($method === 'POST') {
+if ($method === 'POST' && !$id) {
     requireAdmin();
 
-    $uploadDir = realpath(__DIR__ . '/../../uploads/guru') . '/';
+    $uploadDir = __DIR__ . '/../../uploads/guru/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    $uploadDir = realpath($uploadDir) . '/';
 
     $fotoUrl = null;
     if (!empty($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-        $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+        $ext      = validateImageUpload($_FILES['foto']);
         $filename = uniqid('guru_') . '.' . $ext;
         if (move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $filename)) {
-            $fotoUrl = $_ENV['PUBLIC_URL'] . 'guru/' . $filename;
+            $publicUrl = rtrim($_ENV['PUBLIC_URL'], '/');
+            $fotoUrl   = $publicUrl . '/guru/' . $filename;
         }
     }
 
@@ -85,15 +94,56 @@ if ($method === 'POST') {
     ok(['id' => $db->lastInsertId(), 'foto_path' => $fotoUrl]);
 }
 
+if ($method === 'PUT' && $id) {
+    requireAdmin();
+
+    $uploadDir = __DIR__ . '/../../uploads/guru/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    $uploadDir = realpath($uploadDir) . '/';
+
+    $stmt = $db->prepare('SELECT foto_path FROM guru WHERE id = ?');
+    $stmt->execute([$id]);
+    $existing = $stmt->fetch();
+    if (!$existing) err('Data tidak ditemukan', 404);
+
+    $fotoUrl = $existing['foto_path'];
+
+    if (!empty($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        if ($fotoUrl) {
+            $old = $uploadDir . basename($fotoUrl);
+            if (is_file($old)) unlink($old);
+        }
+        $ext      = validateImageUpload($_FILES['foto']);
+        $filename = uniqid('guru_') . '.' . $ext;
+        if (move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $filename)) {
+            $publicUrl = rtrim($_ENV['PUBLIC_URL'], '/');
+            $fotoUrl   = $publicUrl . '/guru/' . $filename;
+        }
+    }
+
+    $stmt = $db->prepare('UPDATE guru SET nama = ?, jabatan = ?, foto_path = ?, kesan_pesan = ? WHERE id = ?');
+    $stmt->execute([
+        $_POST['nama'] ?? '',
+        $_POST['jabatan'] ?? null,
+        $fotoUrl,
+        $_POST['kesan_pesan'] ?? null,
+        $id,
+    ]);
+    ok(['updated' => $stmt->rowCount(), 'foto_path' => $fotoUrl]);
+}
+
 if ($method === 'DELETE' && $id) {
     requireAdmin();
+
     $stmt = $db->prepare('SELECT foto_path FROM guru WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
+
     if ($row && $row['foto_path']) {
         $filePath = realpath(__DIR__ . '/../../uploads/guru') . '/' . basename($row['foto_path']);
         if (is_file($filePath)) unlink($filePath);
     }
+
     $stmt = $db->prepare('DELETE FROM guru WHERE id = ?');
     $stmt->execute([$id]);
     ok(['deleted' => $stmt->rowCount()]);

@@ -1,7 +1,7 @@
 {
-  "name": "Sistem Presensi RFID",
-  "short_name": "Presensi RFID",
-  "description": "Aplikasi Presensi RFID Sekolah dan Sholat",
+  "name": "Madrasah Universe",
+  "short_name": "Kelulusan",
+  "description": "Pengumuman Kelulusan Madrasah Universe",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

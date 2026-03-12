@@ -1,11 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 const API_BASE = import.meta.env.PUBLIC_API_BASE;
+const UPLOAD_BASE = import.meta.env.PUBLIC_UPLOAD_BASE;
 ---
 
-<Layout title="Pengumuman Kelulusan — Madrasah Universe">
-  <!-- ===================== SECTIONS ===================== -->
-
+<Layout title="Pengumuman Kelulusan — Madrasah Tsanawiyah Negeri 1 Pandeglang">
   <!-- BERANDA -->
   <section
     id="sec-beranda"
@@ -16,18 +15,12 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     >
     </div>
 
-    <img
-      id="logoMadrasah"
-      src="/favicon.svg"
-      alt="Logo"
-      class="w-24 h-24 object-contain drop-shadow-2xl"
-    />
+    <img src="/favicon.png" alt="Logo" class="w-24 h-24 object-contain drop-shadow-2xl" />
     <div>
-      <h1 id="namaMadrasah" class="text-2xl font-bold leading-tight">Madrasah Universe</h1>
+      <h1 class="text-2xl font-bold leading-tight">Madrasah Tsanawiyah Negeri 1 Pandeglang</h1>
       <p class="text-slate-400 text-sm mt-1">Pengumuman Kelulusan</p>
     </div>
 
-    <!-- Countdown -->
     <div id="countdownWrapper" class="w-full max-w-sm">
       <p class="text-slate-400 text-xs uppercase tracking-widest mb-3">Pengumuman dalam</p>
       <div class="grid grid-cols-4 gap-2">
@@ -47,12 +40,10 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       </p>
     </div>
 
-    <!-- Quote -->
     <blockquote
       id="quoteText"
       class="max-w-xs text-slate-400 text-sm italic leading-relaxed border-l-2 border-indigo-500 pl-4 text-left"
     >
-      "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia."
     </blockquote>
 
     <button
@@ -86,19 +77,16 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       </div>
       <button
         id="btnCariNisn"
-        class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-500/25"
+        class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         Cari
       </button>
       <p id="cariErr" class="text-red-400 text-sm text-center mt-3 hidden"></p>
 
-      <!-- Hasil Cari -->
       <div id="hasilCari" class="hidden mt-6">
         <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 text-center">
           <p id="hasilNama" class="font-bold text-lg mb-0.5"></p>
           <p id="hasilKelas" class="text-slate-400 text-sm mb-4"></p>
-
-          <!-- Amplop -->
           <button
             id="btnBukaAmplop"
             class="relative mx-auto flex flex-col items-center justify-center gap-2 w-full py-6 rounded-2xl border-2 border-dashed transition-all active:scale-95 group"
@@ -137,7 +125,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     <h2 class="text-xl font-bold text-center mb-2">Kesan & Pesan</h2>
     <p class="text-slate-400 text-sm text-center mb-6">Bagikan kenangan indahmu bersama madrasah</p>
 
-    <!-- Form -->
     <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 mb-6 space-y-3">
       <input id="tNama" type="text" placeholder="Nama kamu" class="inp w-full" />
       <input
@@ -154,13 +141,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
         class="inp w-full resize-none"></textarea>
       <button
         id="btnKirimTestimoni"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition active:scale-95"
-        >Kirim</button
+        class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
       >
+        Kirim
+      </button>
       <p id="testimoniMsg" class="text-center text-sm hidden"></p>
     </div>
 
-    <!-- Filter -->
     <div class="flex gap-2 mb-4">
       <input
         id="pubSearchTestimoni"
@@ -174,14 +161,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       </select>
     </div>
 
-    <!-- List -->
     <div id="testimoniPublicList" class="space-y-3">
       <div class="text-center text-slate-500 text-sm py-4">Memuat...</div>
     </div>
     <div id="testimoniPublicPagination"></div>
   </section>
 
-  <!-- INFORMASI — ganti seluruh section ini -->
+  <!-- INFORMASI -->
   <section id="sec-info" class="section hidden min-h-[100dvh] px-4 py-24 max-w-2xl mx-auto">
     <h2 class="text-xl font-bold text-center mb-6">Informasi</h2>
     <div id="infoPublicList" class="space-y-4">
@@ -189,7 +175,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     </div>
   </section>
 
-  <!-- ===================== BOTTOM NAV ===================== -->
+  <!-- BOTTOM NAV -->
   <nav
     class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur border-t border-white/10 safe-bottom"
   >
@@ -216,9 +202,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     </div>
   </nav>
 
-  <!-- ===================== MODALS ===================== -->
-
-  <!-- Modal: Amplop Dibuka -->
+  <!-- MODAL: AMPLOP DIBUKA -->
   <div
     id="modalAmplop"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
@@ -236,13 +220,14 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       <button
         onclick="closeModalAmplop()"
         class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold transition"
-        >Tutup</button
       >
+        Tutup
+      </button>
     </div>
     <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[-1]"></canvas>
   </div>
 
-  <!-- Modal: Belum Waktunya -->
+  <!-- MODAL: BELUM WAKTUNYA -->
   <div
     id="modalBelumWaktu"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4"
@@ -253,7 +238,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       <div class="text-6xl mb-4">🔒</div>
       <h3 class="text-xl font-bold mb-2">Belum Waktunya</h3>
       <p class="text-slate-400 text-sm mb-4">Pengumuman akan dibuka pada:</p>
-      <p id="waktuPengumuman" class="text-indigo-400 font-semibold mb-2"></p>
+      <p id="waktuPengumuman" class="text-indigo-400 font-semibold mb-4"></p>
       <div class="grid grid-cols-4 gap-2 mb-6">
         {
           ["H", "Jam", "Mnt", "Dtk"].map((l, i) => (
@@ -269,12 +254,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       <button
         onclick="document.getElementById('modalBelumWaktu').classList.replace('flex','hidden')"
         class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold transition"
-        >Mengerti</button
       >
+        Mengerti
+      </button>
     </div>
   </div>
 
-  <!-- Lightbox Album -->
+  <!-- LIGHTBOX -->
   <div
     id="lightbox"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-4"
@@ -284,13 +270,24 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   </div>
 </Layout>
 
-<script define:vars={{ API_BASE }}>
+<script define:vars={{ API_BASE, UPLOAD_BASE }}>
   const SISWA_URL = `${API_BASE}/siswa/`;
   const PENGUMUMAN_URL = `${API_BASE}/pengumuman/`;
   const ALBUM_URL = `${API_BASE}/album/`;
   const GURU_URL = `${API_BASE}/guru/`;
   const TESTIMONI_URL = `${API_BASE}/testimoni/`;
   const INFO_URL = `${API_BASE}/informasi/`;
+
+  function resolveImgUrl(path) {
+    if (!path) return null;
+    try {
+      const u = new URL(path);
+      const base = UPLOAD_BASE.replace(/\/+$/, "");
+      return base + u.pathname;
+    } catch {
+      return path;
+    }
+  }
 
   const QUOTES = [
     "Pendidikan adalah senjata paling ampuh yang bisa kamu gunakan untuk mengubah dunia.",
@@ -303,20 +300,19 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   // ---- STATE ----
   let pengumumanConfig = null;
   let siswaFound = null;
-  let currentSection = "beranda";
+  let amplopSudahDibuka = false;
+  let countdownInterval = null;
   let albumLoaded = false;
   let guruLoaded = false;
   let testimoniLoaded = false;
-  let countdownInterval = null;
+  let infoLoaded = false;
 
   // ---- NAVIGATION ----
   window.goSection = function (id) {
     document.querySelectorAll(".section").forEach((s) => s.classList.add("hidden"));
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-
     document.getElementById(`sec-${id}`).classList.remove("hidden");
     document.querySelector(`[data-nav="${id}"]`)?.classList.add("active");
-    currentSection = id;
     window.scrollTo(0, 0);
 
     if (id === "album" && !albumLoaded) {
@@ -374,8 +370,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   }
 
   function isAmplopOpen() {
-    if (!pengumumanConfig) return false;
-    if (!pengumumanConfig.is_active) return false;
+    if (!pengumumanConfig?.is_active) return false;
     return Date.now() >= new Date(pengumumanConfig.tanggal_waktu).getTime();
   }
 
@@ -486,7 +481,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       box.classList.add("scale-100", "opacity-100");
     });
 
-    // Animasi amplop buka
     setTimeout(() => {
       document.getElementById("modalAmplopEmoji").textContent = cfg.emoji;
       document.getElementById("modalAmplopStatus").textContent = cfg.status;
@@ -522,6 +516,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
 
   // ---- CARI NISN ----
   async function cariNisn() {
+    const btn = document.getElementById("btnCariNisn");
     const nisn = document.getElementById("nisnInput").value.trim();
     const errEl = document.getElementById("cariErr");
     errEl.classList.add("hidden");
@@ -531,6 +526,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       errEl.classList.remove("hidden");
       return;
     }
+
+    btn.disabled = true;
+    btn.textContent = "Mencari...";
 
     try {
       const res = await fetch(`${SISWA_URL}?id=nisn&nisn=${encodeURIComponent(nisn)}`);
@@ -544,14 +542,19 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       }
 
       siswaFound = j.data;
+      amplopSudahDibuka = false;
       document.getElementById("hasilNama").textContent = j.data.nama_lengkap;
       document.getElementById("hasilKelas").textContent =
         `${j.data.kelas} · ${j.data.tahun_pelajaran}`;
       document.getElementById("hasilCari").classList.remove("hidden");
       updateAmplopState();
-    } catch {
+    } catch (e) {
+      console.error(e);
       errEl.textContent = "Gagal terhubung ke server.";
       errEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Cari";
     }
   }
 
@@ -570,68 +573,28 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       grid.innerHTML = data
         .map(
           (a) => `
-        <button onclick="openLightbox('${a.foto_path}')" class="relative aspect-square rounded-xl overflow-hidden bg-slate-800 group">
-          <img src="${a.foto_path}" alt="${a.judul ?? ""}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-          ${a.judul ? `<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 px-3 py-2"><p class="text-xs text-white truncate">${a.judul}</p></div>` : ""}
+        <button onclick="openLightbox('${resolveImgUrl(a.foto_path)}')"
+          class="relative aspect-square rounded-xl overflow-hidden bg-slate-800 group">
+          <img src="${resolveImgUrl(a.foto_path)}" alt="${a.judul ?? ""}"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+          ${
+            a.judul
+              ? `
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 px-3 py-2">
+              <p class="text-xs text-white truncate">${a.judul}</p>
+            </div>`
+              : ""
+          }
         </button>
       `
         )
         .join("");
-    } catch {
+    } catch (e) {
+      console.error(e);
       grid.innerHTML =
         '<p class="col-span-full text-center text-slate-500 py-10">Gagal memuat album.</p>';
     }
   }
-
-  // ---- INFORMASI ----
-  let infoLoaded = false;
-
-  async function loadInfo() {
-    const list = document.getElementById("infoPublicList");
-    try {
-      const res = await fetch(INFO_URL);
-      const j = await res.json();
-      const data = j.data ?? [];
-      if (!data.length) {
-        list.innerHTML = '<p class="text-center text-slate-500 py-10">Belum ada informasi.</p>';
-        return;
-      }
-      list.innerHTML = data
-        .map(
-          (d) => `
-      <div class="bg-slate-800/60 border border-white/10 rounded-2xl overflow-hidden">
-        ${
-          d.foto_path
-            ? `
-          <div class="relative">
-            <img src="${d.foto_path}" class="w-full h-48 object-cover" />
-            ${d.foto_caption ? `<p class="absolute bottom-0 inset-x-0 bg-black/60 text-xs text-white px-3 py-1">${d.foto_caption}</p>` : ""}
-          </div>`
-            : ""
-        }
-        <div class="p-4">
-          <p class="font-bold mb-1">${d.judul}</p>
-          ${d.isi ? `<p class="text-slate-300 text-sm leading-relaxed mb-3">${d.isi}</p>` : ""}
-          <div class="flex flex-wrap gap-3">
-            ${d.file_path ? `<a href="${d.file_path}" target="_blank" class="inline-flex items-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition">📎 ${d.file_name ?? "Unduh File"}</a>` : ""}
-            ${d.link_eksternal ? `<a href="${d.link_eksternal}" target="_blank" class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/50 px-3 py-1.5 rounded-lg transition text-indigo-300">🔗 Selengkapnya</a>` : ""}
-          </div>
-          <p class="text-slate-500 text-xs mt-3">${new Date(d.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
-        </div>
-      </div>
-    `
-        )
-        .join("");
-    } catch {
-      list.innerHTML = '<p class="text-center text-slate-500 py-10">Gagal memuat informasi.</p>';
-    }
-  }
-
-  window.openLightbox = function (src) {
-    document.getElementById("lightboxImg").src = src;
-    document.getElementById("lightbox").classList.remove("hidden");
-    document.getElementById("lightbox").classList.add("flex");
-  };
 
   // ---- GURU ----
   async function loadGuru() {
@@ -650,29 +613,96 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
         <div class="bg-slate-800/60 border border-white/10 rounded-2xl p-5 flex gap-4 items-start">
           ${
             g.foto_path
-              ? `<img src="${g.foto_path}" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />`
+              ? `<img src="${resolveImgUrl(g.foto_path)}" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0" loading="lazy" />`
               : `<div class="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center text-2xl flex-shrink-0">👤</div>`
           }
           <div>
             <p class="font-semibold">${g.nama}</p>
             <p class="text-indigo-400 text-xs mb-2">${g.jabatan ?? ""}</p>
-            <p class="text-slate-300 text-sm leading-relaxed">${g.kesan_pesan ?? '<em class="text-slate-500">Belum ada pesan.</em>'}</p>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              ${g.kesan_pesan ?? '<em class="text-slate-500">Belum ada pesan.</em>'}
+            </p>
           </div>
         </div>
       `
         )
         .join("");
-    } catch {
+    } catch (e) {
+      console.error(e);
       list.innerHTML = '<p class="text-center text-slate-500 py-10">Gagal memuat data.</p>';
     }
   }
 
+  // ---- INFO ----
+  async function loadInfo() {
+    const list = document.getElementById("infoPublicList");
+    try {
+      const res = await fetch(INFO_URL);
+      const j = await res.json();
+      const data = j.data ?? [];
+      if (!data.length) {
+        list.innerHTML = '<p class="text-center text-slate-500 py-10">Belum ada informasi.</p>';
+        return;
+      }
+      list.innerHTML = data
+        .map(
+          (d) => `
+        <div class="bg-slate-800/60 border border-white/10 rounded-2xl overflow-hidden">
+          ${
+            d.foto_path
+              ? `
+            <div class="relative">
+              <img src="${resolveImgUrl(d.foto_path)}" class="w-full h-48 object-cover" loading="lazy" />
+              ${d.foto_caption ? `<p class="absolute bottom-0 inset-x-0 bg-black/60 text-xs text-white px-3 py-1">${d.foto_caption}</p>` : ""}
+            </div>`
+              : ""
+          }
+          <div class="p-4">
+            <p class="font-bold mb-1">${d.judul}</p>
+            ${d.isi ? `<p class="text-slate-300 text-sm leading-relaxed mb-3">${d.isi}</p>` : ""}
+            <div class="flex flex-wrap gap-3">
+              ${
+                d.file_path
+                  ? `<a href="${d.file_path}" target="_blank"
+                class="inline-flex items-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition">
+                📎 ${d.file_name ?? "Unduh File"}</a>`
+                  : ""
+              }
+              ${
+                d.link_eksternal
+                  ? `<a href="${d.link_eksternal}" target="_blank"
+                class="inline-flex items-center gap-1 text-xs bg-indigo-600/30 hover:bg-indigo-600/50 px-3 py-1.5 rounded-lg transition text-indigo-300">
+                🔗 Selengkapnya</a>`
+                  : ""
+              }
+            </div>
+            <p class="text-slate-500 text-xs mt-3">
+              ${new Date(d.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = '<p class="text-center text-slate-500 py-10">Gagal memuat informasi.</p>';
+    }
+  }
+
+  window.openLightbox = function (src) {
+    document.getElementById("lightboxImg").src = src;
+    const lb = document.getElementById("lightbox");
+    lb.classList.remove("hidden");
+    lb.classList.add("flex");
+  };
+
   // ---- TESTIMONI PUBLIK ----
   let testimoniPubData = [];
   let testimoniPubPage = 1;
-  const TESTIMONI_PUB_LIMIT = 5;
   let testimoniPubSort = "desc";
   let testimoniPubQ = "";
+  const TESTIMONI_PUB_LIMIT = 5;
 
   async function loadTestimoni() {
     const params = new URLSearchParams({ q: testimoniPubQ, sort: testimoniPubSort });
@@ -683,7 +713,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       testimoniPubData = j.data ?? [];
       testimoniPubPage = 1;
       renderTestimoniPublic();
-    } catch {
+    } catch (e) {
+      console.error(e);
       list.innerHTML = '<p class="text-center text-slate-500 py-4">Gagal memuat.</p>';
     }
   }
@@ -696,19 +727,20 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     const start = (testimoniPubPage - 1) * TESTIMONI_PUB_LIMIT;
     const pageData = testimoniPubData.slice(start, start + TESTIMONI_PUB_LIMIT);
 
-    const list = document.getElementById("testimoniPublicList");
-    list.innerHTML =
+    document.getElementById("testimoniPublicList").innerHTML =
       pageData
         .map(
           (t) => `
-    <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
-      <div class="flex justify-between items-start mb-2">
-        <p class="font-semibold text-sm">${t.nama}</p>
-        <span class="text-slate-500 text-xs">${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+      <div class="bg-slate-800/60 border border-white/10 rounded-xl p-4">
+        <div class="flex justify-between items-start mb-2">
+          <p class="font-semibold text-sm">${t.nama}</p>
+          <span class="text-slate-500 text-xs">
+            ${new Date(t.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+        </div>
+        <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
       </div>
-      <p class="text-slate-300 text-sm leading-relaxed">${t.isi}</p>
-    </div>
-  `
+    `
         )
         .join("") || '<p class="text-center text-slate-500 py-4">Belum ada testimoni.</p>';
 
@@ -723,11 +755,11 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     }
 
     const pageBtn = (n) => `
-    <button onclick="goTestimoniPubPage(${n})"
-      class="w-8 h-8 rounded-lg text-xs font-medium transition
-        ${n === testimoniPubPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
-      ${n}
-    </button>`;
+      <button onclick="goTestimoniPubPage(${n})"
+        class="w-8 h-8 rounded-lg text-xs font-medium transition
+          ${n === testimoniPubPage ? "bg-indigo-600 text-white" : "bg-slate-700 hover:bg-slate-600 text-slate-300"}">
+        ${n}
+      </button>`;
 
     const btns = [];
     const delta = 1;
@@ -744,14 +776,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
     }
 
     container.innerHTML = `
-    <div class="flex items-center justify-center gap-1 mt-4">
-      <button onclick="goTestimoniPubPage(${testimoniPubPage - 1})" ${testimoniPubPage === 1 ? "disabled" : ""}
-        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
-      ${btns.join("")}
-      <button onclick="goTestimoniPubPage(${testimoniPubPage + 1})" ${testimoniPubPage === totalPages ? "disabled" : ""}
-        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
-    </div>
-  `;
+      <div class="flex items-center justify-center gap-1 mt-4">
+        <button onclick="goTestimoniPubPage(${testimoniPubPage - 1})" ${testimoniPubPage === 1 ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">‹</button>
+        ${btns.join("")}
+        <button onclick="goTestimoniPubPage(${testimoniPubPage + 1})" ${testimoniPubPage === totalPages ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-xs transition">›</button>
+      </div>`;
   }
 
   window.goTestimoniPubPage = (n) => {
@@ -762,6 +793,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   };
 
   async function kirimTestimoni() {
+    const btn = document.getElementById("btnKirimTestimoni");
     const nama = document.getElementById("tNama").value.trim();
     const nisn = document.getElementById("tNisn").value.trim();
     const isi = document.getElementById("tIsi").value.trim();
@@ -774,6 +806,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       return;
     }
 
+    btn.disabled = true;
+    btn.textContent = "Mengirim...";
+
     try {
       const res = await fetch(TESTIMONI_URL, {
         method: "POST",
@@ -782,7 +817,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       });
       const j = await res.json();
       if (j.status === "success") {
-        msg.textContent = "Terima kasih! Pesan kamu telah dikirim.";
+        msg.textContent = "Terima kasih! Pesan kamu sedang ditinjau.";
         msg.className = "text-center text-sm text-emerald-400";
         document.getElementById("tNama").value = "";
         document.getElementById("tNisn").value = "";
@@ -793,52 +828,63 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
         msg.textContent = j.message;
         msg.className = "text-center text-sm text-red-400";
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       msg.textContent = "Gagal mengirim. Coba lagi.";
       msg.className = "text-center text-sm text-red-400";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Kirim";
     }
+
     msg.classList.remove("hidden");
     setTimeout(() => msg.classList.add("hidden"), 4000);
   }
 
   // ---- INIT ----
   (async () => {
-    // Quote acak
     document.getElementById("quoteText").textContent =
       `"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"`;
 
-    // Load config pengumuman
     try {
       const res = await fetch(PENGUMUMAN_URL);
       const j = await res.json();
       pengumumanConfig = j.data;
       if (pengumumanConfig?.tanggal_waktu) {
-        const target = new Date(pengumumanConfig.tanggal_waktu).getTime();
-        startCountdown(target);
+        startCountdown(new Date(pengumumanConfig.tanggal_waktu).getTime());
       } else {
         ["d", "h", "m", "s"].forEach((k) => {
           document.getElementById(`cd-${k}`).textContent = "00";
         });
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       ["d", "h", "m", "s"].forEach((k) => {
         document.getElementById(`cd-${k}`).textContent = "--";
       });
     }
 
-    // Events
     document.getElementById("btnCariNisn").onclick = cariNisn;
     document.getElementById("nisnInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") cariNisn();
     });
-    document.getElementById("btnKirimTestimoni").onclick = kirimTestimoni;
 
     document.getElementById("btnBukaAmplop").onclick = () => {
-      if (isAmplopOpen()) openModalAmplop(siswaFound);
-      else openModalBelumWaktu();
+      if (!siswaFound) return;
+      if (amplopSudahDibuka) {
+        openModalAmplop(siswaFound);
+        return;
+      }
+      if (isAmplopOpen()) {
+        amplopSudahDibuka = true;
+        openModalAmplop(siswaFound);
+      } else {
+        openModalBelumWaktu();
+      }
     };
 
-    // Testimoni
+    document.getElementById("btnKirimTestimoni").onclick = kirimTestimoni;
+
     document.getElementById("pubSearchTestimoni").addEventListener("input", (e) => {
       testimoniPubQ = e.target.value;
       loadTestimoni();
@@ -848,7 +894,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
       loadTestimoni();
     });
 
-    // Aktifkan beranda
     goSection("beranda");
   })();
 </script>

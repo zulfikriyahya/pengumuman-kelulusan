@@ -1,8 +1,32 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+
+# Build output
 dist/
-.env
-api/.env
-uploads/
-*.log
-.DS_Store
 .astro/
+
+# Environment — JANGAN PERNAH DI-COMMIT
+api/.env
+.env
+.env.local
+.env.production
+
+# Uploads (opsional, tergantung kebijakan)
+uploads/album/*
+uploads/guru/*
+uploads/informasi/foto/*
+uploads/informasi/file/*
+!uploads/album/.gitkeep
+!uploads/guru/.gitkeep
+!uploads/informasi/foto/.gitkeep
+!uploads/informasi/file/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

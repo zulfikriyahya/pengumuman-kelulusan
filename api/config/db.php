@@ -13,6 +13,17 @@ function loadEnv(string $path): void
 
 loadEnv(__DIR__ . '/../.env');
 
+set_exception_handler(function (Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    exit;
+});
+
+set_error_handler(function (int $errno, string $errstr) {
+    throw new \ErrorException($errstr, $errno);
+});
+
 function getDB(): PDO
 {
     static $pdo = null;
@@ -43,10 +54,13 @@ function setCorsHeaders(): void
     header('Content-Type: application/json');
 
     if (session_status() === PHP_SESSION_NONE) {
+        $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+
         session_set_cookie_params([
             'lifetime' => 86400,
             'path'     => '/',
-            'secure'   => false,
+            'secure'   => $isSecure,
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
@@ -81,4 +95,52 @@ function requireAdmin(): void
     if (empty($_SESSION['admin'])) {
         err('Unauthorized', 401);
     }
+}
+
+function validateImageUpload(array $file): string
+{
+    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    $finfo   = new \finfo(FILEINFO_MIME_TYPE);
+    $mime    = $finfo->file($file['tmp_name']);
+
+    if (!in_array($mime, $allowed, true)) {
+        err('Tipe file tidak diizinkan. Gunakan JPG, PNG, WEBP, atau GIF.');
+    }
+
+    $maxSize = 5 * 1024 * 1024;
+    if ($file['size'] > $maxSize) {
+        err('Ukuran file maksimal 5MB.');
+    }
+
+    return match ($mime) {
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+        'image/gif'  => 'gif',
+    };
+}
+
+function validateFileUpload(array $file): string
+{
+    $allowed = [
+        'application/pdf'                                                        => 'pdf',
+        'application/msword'                                                     => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/vnd.ms-excel'                                               => 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'      => 'xlsx',
+    ];
+
+    $finfo = new \finfo(FILEINFO_MIME_TYPE);
+    $mime  = $finfo->file($file['tmp_name']);
+
+    if (!isset($allowed[$mime])) {
+        err('Tipe file tidak diizinkan. Gunakan PDF, DOC, DOCX, XLS, atau XLSX.');
+    }
+
+    $maxSize = 10 * 1024 * 1024;
+    if ($file['size'] > $maxSize) {
+        err('Ukuran file maksimal 10MB.');
+    }
+
+    return $allowed[$mime];
 }

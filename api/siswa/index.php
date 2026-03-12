@@ -5,28 +5,27 @@ setCorsHeaders();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? null;
-
-$db = getDB();
+$id     = $_GET['id'] ?? null;
+$db     = getDB();
 
 if ($method === 'GET' && !$id) {
-    $where = ['1=1'];
+    $where  = ['1=1'];
     $params = [];
 
     foreach (['jenis_kelamin', 'tahun_pelajaran', 'status_kelulusan', 'kelas'] as $col) {
-        if (!empty($_GET[$col])) {
-            $where[] = "$col = ?";
+        if (isset($_GET[$col]) && $_GET[$col] !== '') {
+            $where[]  = "$col = ?";
             $params[] = $_GET[$col];
         }
     }
 
-    if (!empty($_GET['q'])) {
-        $where[] = '(nama_lengkap LIKE ? OR nisn LIKE ?)';
+    if (isset($_GET['q']) && $_GET['q'] !== '') {
+        $where[]  = '(nama_lengkap LIKE ? OR nisn LIKE ?)';
         $params[] = '%' . $_GET['q'] . '%';
         $params[] = '%' . $_GET['q'] . '%';
     }
 
-    $sql = 'SELECT * FROM siswa WHERE ' . implode(' AND ', $where) . ' ORDER BY nama_lengkap ASC';
+    $sql  = 'SELECT * FROM siswa WHERE ' . implode(' AND ', $where) . ' ORDER BY nama_lengkap ASC';
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     ok($stmt->fetchAll());
@@ -53,10 +52,10 @@ if ($method === 'POST' && ($_GET['action'] ?? '') === 'import') {
     $stmt = $db->prepare('INSERT INTO siswa (nama_lengkap, nisn, kelas, jenis_kelamin, tahun_pelajaran, status_kelulusan)
         VALUES (?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-            nama_lengkap = VALUES(nama_lengkap),
-            kelas = VALUES(kelas),
-            jenis_kelamin = VALUES(jenis_kelamin),
-            tahun_pelajaran = VALUES(tahun_pelajaran),
+            nama_lengkap     = VALUES(nama_lengkap),
+            kelas            = VALUES(kelas),
+            jenis_kelamin    = VALUES(jenis_kelamin),
+            tahun_pelajaran  = VALUES(tahun_pelajaran),
             status_kelulusan = VALUES(status_kelulusan)
     ');
 

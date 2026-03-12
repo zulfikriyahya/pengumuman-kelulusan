@@ -1,18 +1,20 @@
-// public/sw.js
-const CACHE_NAME = "presensi-rfid-v1";
-const OFFLINE_URL = "/";
+const CACHE_NAME = "madrasah-kelulusan-v1";
 
-self.addEventListener("install", (event) => {
-  self.skipWaiting(); // Langsung aktifkan SW baru
+self.addEventListener("install", () => {
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(clients.claim()); // Ambil alih kontrol klien segera
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      )
+      .then(() => clients.claim())
+  );
 });
 
 self.addEventListener("fetch", (event) => {
-  // Strategi: Network Only (Karena ini aplikasi realtime presensi)
-  // Kita tidak ingin meng-cache request API presensi.
-  // Jika offline, browser akan menangani fallback lewat manifest.
   event.respondWith(fetch(event.request));
 });

@@ -10,13 +10,15 @@ export default defineConfig({
         "/api": {
           target: "http://localhost:3000",
           changeOrigin: true,
-          rewrite: (path) => {
-            const rewritten = path.replace(/^\/api/, "") || "/";
-            console.log(`[proxy] ${path} -> ${rewritten}`);
-            return rewritten;
-          },
+          rewrite: (path) => path.replace(/^\/api/, "") || "/",
+        },
+        "/uploads": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
         },
       },
     },
   },
+  // Build ke static — semua data fetching terjadi di browser (client-side)
+  output: "static",
 });

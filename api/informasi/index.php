@@ -5,12 +5,12 @@ setCorsHeaders();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? null;
-$db = getDB();
+$id     = $_GET['id'] ?? null;
+$db     = getDB();
 
 if ($method === 'GET') {
     $adminMode = !empty($_SESSION['admin']);
-    $sql = $adminMode
+    $sql       = $adminMode
         ? 'SELECT * FROM informasi ORDER BY created_at DESC'
         : 'SELECT * FROM informasi WHERE is_published = 1 ORDER BY created_at DESC';
     $stmt = $db->query($sql);
@@ -26,22 +26,22 @@ if ($method === 'POST' && !$id) {
     if (!empty($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
         $dir = $uploadBase . 'informasi/foto/';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+        $ext      = validateImageUpload($_FILES['foto']);
         $filename = uniqid('info_foto_') . '.' . $ext;
         if (move_uploaded_file($_FILES['foto']['tmp_name'], $dir . $filename)) {
             $fotoPath = $_ENV['PUBLIC_URL'] . 'informasi/foto/' . $filename;
         }
     }
 
-    $filePath = null;
+    $filePath    = null;
     $fileOrigName = null;
     if (!empty($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
         $dir = $uploadBase . 'informasi/file/';
         if (!is_dir($dir)) mkdir($dir, 0755, true);
-        $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+        $ext      = validateFileUpload($_FILES['file']);
         $filename = uniqid('info_file_') . '.' . $ext;
         if (move_uploaded_file($_FILES['file']['tmp_name'], $dir . $filename)) {
-            $filePath = $_ENV['PUBLIC_URL'] . 'informasi/file/' . $filename;
+            $filePath     = $_ENV['PUBLIC_URL'] . 'informasi/file/' . $filename;
             $fileOrigName = $_FILES['file']['name'];
         }
     }
@@ -78,6 +78,7 @@ if ($method === 'PUT' && $id) {
 
 if ($method === 'DELETE' && $id) {
     requireAdmin();
+
     $stmt = $db->prepare('SELECT foto_path, file_path FROM informasi WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();

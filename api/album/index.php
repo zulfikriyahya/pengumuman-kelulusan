@@ -5,8 +5,8 @@ setCorsHeaders();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id = $_GET['id'] ?? null;
-$db = getDB();
+$id     = $_GET['id'] ?? null;
+$db     = getDB();
 
 if ($method === 'GET') {
     $stmt = $db->query('SELECT * FROM album ORDER BY created_at DESC');
@@ -23,14 +23,14 @@ if ($method === 'POST') {
     $uploadDir = realpath(__DIR__ . '/../../uploads/album') . '/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-    $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+    $ext      = validateImageUpload($_FILES['foto']);
     $filename = uniqid('album_') . '.' . $ext;
-    $dest = $uploadDir . $filename;
+    $dest     = $uploadDir . $filename;
 
     if (!move_uploaded_file($_FILES['foto']['tmp_name'], $dest)) err('Upload gagal');
 
     $publicUrl = $_ENV['PUBLIC_URL'] . 'album/' . $filename;
-    $judul = $_POST['judul'] ?? null;
+    $judul     = $_POST['judul'] ?? null;
 
     $stmt = $db->prepare('INSERT INTO album (judul, foto_path) VALUES (?, ?)');
     $stmt->execute([$judul, $publicUrl]);
@@ -39,13 +39,13 @@ if ($method === 'POST') {
 
 if ($method === 'DELETE' && $id) {
     requireAdmin();
+
     $stmt = $db->prepare('SELECT foto_path FROM album WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
 
     if ($row) {
-        $filename = basename($row['foto_path']);
-        $filePath = realpath(__DIR__ . '/../../uploads/album') . '/' . $filename;
+        $filePath = realpath(__DIR__ . '/../../uploads/album') . '/' . basename($row['foto_path']);
         if (is_file($filePath)) unlink($filePath);
     }
 
