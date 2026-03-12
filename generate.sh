@@ -18,6 +18,10 @@ EXCLUDE_NAMES=(
   "README.md"
   "tree.txt"
   ".gitignore"
+  "pnpm-lock.yaml"
+  "pnpm-workspace.yaml"
+  "todo.md"
+  ".env-example"
 )
 
 # 🧹 Bersihkan file output

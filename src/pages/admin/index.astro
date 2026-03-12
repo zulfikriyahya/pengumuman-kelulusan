@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-const API = import.meta.env.PUBLIC_API_URL;
+const API = import.meta.env.PUBLIC_API_BASE;
 ---
 
 <Layout title="Admin — Madrasah Universe">
@@ -191,23 +191,14 @@ const API = import.meta.env.PUBLIC_API_URL;
   </div>
 </Layout>
 
-<style>
-  .inp {
-    @apply bg-slate-700/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500;
-  }
-  .tab-btn.active {
-    @apply text-indigo-400 border-indigo-500;
-  }
-</style>
-
 <script define:vars={{ API }}>
   const BASE = API.replace(/\/+$/, '');
-  const SISWA_URL      = `${BASE}/../api/siswa/`;
-  const PENGUMUMAN_URL = `${BASE}/../api/pengumuman/`;
-  const ALBUM_URL      = `${BASE}/../api/album/`;
-  const GURU_URL       = `${BASE}/../api/guru/`;
-  const TESTIMONI_URL  = `${BASE}/../api/testimoni/`;
-  const AUTH_URL       = `${BASE}/../api/auth/`;
+  const SISWA_URL      = `${BASE}/siswa/`;
+  const PENGUMUMAN_URL = `${BASE}/pengumuman/`;
+  const ALBUM_URL      = `${BASE}/album/`;
+  const GURU_URL       = `${BASE}/guru/`;
+  const TESTIMONI_URL  = `${BASE}/testimoni/`;
+  const AUTH_URL       = `${BASE}/auth/`;
 
   // ---- TOAST ----
   function toast(msg, ok = true) {

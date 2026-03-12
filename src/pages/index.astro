@@ -260,18 +260,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE;
   </div>
 </Layout>
 
-<style>
-  .inp {
-    @apply bg-slate-700/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full;
-  }
-  .nav-btn.active {
-    @apply text-indigo-400;
-  }
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-</style>
-
 <script define:vars={{ API_BASE }}>
   const SISWA_URL = `${API_BASE}/siswa/`;
   const PENGUMUMAN_URL = `${API_BASE}/pengumuman/`;

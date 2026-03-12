@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+@reference "tailwindcss";
+
+@layer components {
+  .inp {
+    @apply bg-slate-700/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm
+           focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full;
+  }
+
+  .tab-btn {
+    @apply whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-400
+           border-b-2 border-transparent hover:text-white transition-colors;
+  }
+
+  .tab-btn.active {
+    @apply text-indigo-400 border-indigo-500;
+  }
+
+  .nav-btn {
+    @apply flex-1 flex flex-col items-center justify-center py-3 gap-0.5
+           text-slate-500 transition-colors;
+  }
+
+  .nav-btn.active {
+    @apply text-indigo-400;
+  }
+
+  .section {
+    animation: fadeIn 0.2s ease;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
