@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Imports;
 
 use App\Models\Siswa;
@@ -11,14 +12,17 @@ class SiswaImport implements ToModel, WithHeadingRow, WithUpserts
     public function model(array $row): Siswa
     {
         return new Siswa([
-            'nama'         => $row['nama'],
-            'nama_orangtua'=> $row['nama_orangtua'] ?? null,
-            'nisn'         => $row['nisn'],
-            'telepon'      => $row['telepon'] ?? null,
-            'status'       => $row['status'] ?? 'Lulus',
+            'nama' => $row['nama'],
+            'nama_orangtua' => $row['nama_orangtua'] ?? null,
+            'nisn' => $row['nisn'],
+            'telepon' => $row['telepon'] ?? null,
+            'status' => $row['status'] ?? 'Lulus',
         ]);
     }
 
     /** Upsert key: nisn */
-    public function uniqueBy(): string { return 'nisn'; }
+    public function uniqueBy(): string
+    {
+        return 'nisn';
+    }
 }

@@ -17,11 +17,11 @@ class AlumniImport implements ToModel, WithHeadingRow, WithUpserts
         }
 
         return new Alumni([
-            'nama'        => $row['nama'],
-            'nisn'        => $row['nisn'],
+            'nama' => $row['nama'],
+            'nisn' => $row['nisn'],
             'tahun_lulus' => $row['tahun_lulus'],
-            'avatar'      => $row['avatar'] ?? null, // fix: field ada di model tapi tidak di-map
-            'quote'       => $row['quote'] ?? null,
+            'avatar' => $row['avatar'] ?? null, // fix: field ada di model tapi tidak di-map
+            'quote' => $row['quote'] ?? null,
         ]);
     }
 

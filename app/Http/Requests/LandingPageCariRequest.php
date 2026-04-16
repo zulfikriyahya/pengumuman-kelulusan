@@ -23,8 +23,8 @@ class LandingPageCariRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nisn.required_without'     => 'Masukkan NISN atau nomor telepon.',
-            'telepon.required_without'  => 'Masukkan NISN atau nomor telepon.',
+            'nisn.required_without' => 'Masukkan NISN atau nomor telepon.',
+            'telepon.required_without' => 'Masukkan NISN atau nomor telepon.',
         ];
     }
 

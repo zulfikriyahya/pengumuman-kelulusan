@@ -31,7 +31,7 @@ class LandingPageController extends Controller
             ->first();
 
         return view('landing.hasil', [
-            'siswa'   => $siswa,
+            'siswa' => $siswa,
             'keyword' => $keyword,
         ]);
     }
@@ -40,7 +40,7 @@ class LandingPageController extends Controller
     public function hasil(Siswa $siswa): View
     {
         return view('landing.hasil', [
-            'siswa'   => $siswa,
+            'siswa' => $siswa,
             'keyword' => $siswa->nisn,
         ]);
     }
@@ -50,7 +50,7 @@ class LandingPageController extends Controller
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         return view('landing.skl', [
-            'siswa'          => $siswa,
+            'siswa' => $siswa,
             'tahunPelajaran' => $tahunPelajaran,
         ]);
     }
@@ -58,7 +58,7 @@ class LandingPageController extends Controller
     // fix: method baru — render PDF SKL via DomPDF
     public function cetakSklPdf(Siswa $siswa): Response
     {
-        $instansi       = Instansi::first();
+        $instansi = Instansi::first();
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         $pdf = Pdf::loadView('pdf.skl', compact('siswa', 'instansi', 'tahunPelajaran'))
@@ -74,7 +74,7 @@ class LandingPageController extends Controller
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         return view('landing.undangan', [
-            'siswa'          => $siswa,
+            'siswa' => $siswa,
             'tahunPelajaran' => $tahunPelajaran,
         ]);
     }
@@ -84,7 +84,7 @@ class LandingPageController extends Controller
     {
         abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak mendapatkan surat undangan.');
 
-        $instansi       = Instansi::first();
+        $instansi = Instansi::first();
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         $pdf = Pdf::loadView('pdf.undangan', compact('siswa', 'instansi', 'tahunPelajaran'))

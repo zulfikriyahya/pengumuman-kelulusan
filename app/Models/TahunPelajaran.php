@@ -23,11 +23,11 @@ class TahunPelajaran extends Model
     protected function casts(): array
     {
         return [
-            'jadwal_pengumuman_mulai'  => 'datetime',
+            'jadwal_pengumuman_mulai' => 'datetime',
             'jadwal_pengumuman_selesai' => 'datetime',
-            'jadwal_kelulusan_mulai'   => 'datetime',
+            'jadwal_kelulusan_mulai' => 'datetime',
             'jadwal_kelulusan_selesai' => 'datetime',
-            'status'                   => 'boolean',
+            'status' => 'boolean',
         ];
     }
 
@@ -35,6 +35,7 @@ class TahunPelajaran extends Model
     public function isPengumumanAktif(): bool
     {
         $now = now();
+
         return $this->status
             && $now->gte($this->jadwal_pengumuman_mulai)
             && $now->lte($this->jadwal_pengumuman_selesai);
@@ -43,10 +44,11 @@ class TahunPelajaran extends Model
     // Apakah rentang acara kelulusan sedang aktif
     public function isKelulusanAktif(): bool
     {
-        if (!$this->jadwal_kelulusan_mulai || !$this->jadwal_kelulusan_selesai) {
+        if (! $this->jadwal_kelulusan_mulai || ! $this->jadwal_kelulusan_selesai) {
             return false;
         }
         $now = now();
+
         return $now->gte($this->jadwal_kelulusan_mulai)
             && $now->lte($this->jadwal_kelulusan_selesai);
     }

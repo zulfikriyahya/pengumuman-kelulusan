@@ -20,7 +20,7 @@ class TamuUndanganStoreRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('siswas', 'id')->where(
-                    fn($q) => $q->whereIn('status', ['Lulus', 'Lulus Bersyarat'])
+                    fn ($q) => $q->whereIn('status', ['Lulus', 'Lulus Bersyarat'])
                 ),
             ],
             'jumlah_tamu' => ['nullable', 'integer', 'min:1', 'max:10'],
@@ -31,10 +31,10 @@ class TamuUndanganStoreRequest extends FormRequest
     {
         return [
             'siswa_id.required' => 'QR Code tidak valid.',
-            'siswa_id.uuid'     => 'QR Code tidak valid.',
-            'siswa_id.exists'   => 'Siswa tidak ditemukan atau tidak berhak hadir.',
-            'jumlah_tamu.min'   => 'Jumlah tamu minimal 1 orang.',
-            'jumlah_tamu.max'   => 'Jumlah tamu maksimal 10 orang.',
+            'siswa_id.uuid' => 'QR Code tidak valid.',
+            'siswa_id.exists' => 'Siswa tidak ditemukan atau tidak berhak hadir.',
+            'jumlah_tamu.min' => 'Jumlah tamu minimal 1 orang.',
+            'jumlah_tamu.max' => 'Jumlah tamu maksimal 10 orang.',
         ];
     }
 }

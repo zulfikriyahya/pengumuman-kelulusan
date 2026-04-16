@@ -36,8 +36,8 @@ return [
     ],
 
     'wapi' => [
-      'url'   => env('WAPI_URL', 'https://wapi.zedlabs.id/send/messages'),
-      'token' => env('WAPI_TOKEN'),
+        'url' => env('WAPI_URL', 'https://wapi.zedlabs.id/send/messages'),
+        'token' => env('WAPI_TOKEN'),
     ],
 
 ];

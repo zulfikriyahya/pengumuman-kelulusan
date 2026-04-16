@@ -29,6 +29,7 @@ class ImportDokumenSkl
             if (! preg_match('/^\d{10}$/', $nisn)) {
                 $log[] = "❌ Dilewati — nama file tidak valid: {$file->getClientOriginalName()}";
                 $gagal++;
+
                 continue;
             }
 
@@ -37,6 +38,7 @@ class ImportDokumenSkl
             if (! $siswa) {
                 $log[] = "⚠️  Siswa dengan NISN {$nisn} tidak ditemukan.";
                 $dilewati++;
+
                 continue;
             }
 

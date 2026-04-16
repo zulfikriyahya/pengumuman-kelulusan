@@ -17,12 +17,12 @@ class PersonilImport implements ToModel, WithHeadingRow, WithUpserts
         }
 
         return new Personil([
-            'nama'         => $row['nama'],
-            'nip'          => filled($row['nip'] ?? null) ? $row['nip'] : null,
-            'jabatan'      => $row['jabatan'],
-            'telepon'      => $row['telepon'] ?? null,
+            'nama' => $row['nama'],
+            'nip' => filled($row['nip'] ?? null) ? $row['nip'] : null,
+            'jabatan' => $row['jabatan'],
+            'telepon' => $row['telepon'] ?? null,
             'sosial_media' => $row['sosial_media'] ?? null,
-            'quote'        => $row['quote'] ?? null,
+            'quote' => $row['quote'] ?? null,
         ]);
     }
 

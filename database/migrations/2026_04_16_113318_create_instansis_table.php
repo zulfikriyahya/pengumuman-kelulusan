@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('nama_ketua')->nullable();
             $table->string('nip_ketua')->nullable();
             $table->string('tte_ketua')->nullable();
-            $table->enum('jenjang', ["SD","MI","SMP","MTS","SMA","SMK","MA"]);
-            $table->enum('akreditasi', ["A","B","C","D","TT"]);
+            $table->enum('jenjang', ['SD', 'MI', 'SMP', 'MTS', 'SMA', 'SMK', 'MA']);
+            $table->enum('akreditasi', ['A', 'B', 'C', 'D', 'TT']);
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

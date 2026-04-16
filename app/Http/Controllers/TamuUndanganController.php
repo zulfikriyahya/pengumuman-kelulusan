@@ -18,13 +18,13 @@ class TamuUndanganController extends Controller
             ->paginate(20);
 
         // fix: hitung total PAX dari DB, bukan dari paginator (yang hanya halaman aktif)
-        $totalPax    = TamuUndangan::sum('jumlah_tamu');
-        $totalSiswa  = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
+        $totalPax = TamuUndangan::sum('jumlah_tamu');
+        $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
         return view('tamu.index', [
             'tamuUndangans' => $tamus,
-            'totalPax'      => $totalPax,
-            'totalSiswa'    => $totalSiswa,
+            'totalPax' => $totalPax,
+            'totalSiswa' => $totalSiswa,
         ]);
     }
 
@@ -40,7 +40,7 @@ class TamuUndanganController extends Controller
             'kode' => ['required', 'string'],
         ]);
 
-        $kode  = $request->input('kode');
+        $kode = $request->input('kode');
         $siswa = Siswa::where('id', $kode)
             ->orWhere('nisn', $kode)
             ->first();
@@ -58,8 +58,8 @@ class TamuUndanganController extends Controller
         $sudahHadir = TamuUndangan::where('siswa_id', $siswa->id)->exists();
 
         return view('tamu.konfirmasi', [
-            'siswa'       => $siswa,
-            'sudahHadir'  => $sudahHadir,
+            'siswa' => $siswa,
+            'sudahHadir' => $sudahHadir,
         ]);
     }
 
@@ -68,7 +68,7 @@ class TamuUndanganController extends Controller
         $data = $request->validated();
 
         TamuUndangan::updateOrCreate(
-            ['siswa_id'    => $data['siswa_id']],
+            ['siswa_id' => $data['siswa_id']],
             ['jumlah_tamu' => $data['jumlah_tamu'] ?? 1],
         );
 
@@ -84,7 +84,7 @@ class TamuUndanganController extends Controller
             ->get();
 
         return view('tamu.cetak-hadir', [
-            'tamus'    => $tamus,
+            'tamus' => $tamus,
             'totalPax' => $tamus->sum('jumlah_tamu'),
         ]);
     }

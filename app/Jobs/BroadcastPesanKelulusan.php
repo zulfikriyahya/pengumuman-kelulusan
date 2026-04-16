@@ -16,7 +16,8 @@ class BroadcastPesanKelulusan implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $backoff = 60; // detik antar retry otomatis Laravel
 
     public function __construct(
@@ -30,18 +31,18 @@ class BroadcastPesanKelulusan implements ShouldQueue
             return;
         }
 
-        $pesan    = $this->buildPesan();
+        $pesan = $this->buildPesan();
         $response = Http::withToken(config('services.wapi.token'))
             ->timeout(15)
             ->post(config('services.wapi.url'), [
-                'phone'   => $this->siswa->telepon,
+                'phone' => $this->siswa->telepon,
                 'message' => $pesan,
             ]);
 
         // Lempar exception agar Laravel retry otomatis via $tries & $backoff
         // Jangan pakai $this->release() sekaligus $tries — akan double-count attempt
         if ($response->failed()) {
-            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): " . $response->body());
+            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): ".$response->body());
 
             throw new \RuntimeException("Gagal kirim WA ke {$this->siswa->nisn}: HTTP {$response->status()}");
         }
@@ -51,10 +52,10 @@ class BroadcastPesanKelulusan implements ShouldQueue
 
     private function buildPesan(): string
     {
-        $tp  = $this->tahunPelajaran;
+        $tp = $this->tahunPelajaran;
         $url = config('app.url');
 
-        $pesan  = "Assalamu'alaikum, {$this->siswa->nama}.\n\n";
+        $pesan = "Assalamu'alaikum, {$this->siswa->nama}.\n\n";
         $pesan .= "Pengumuman Kelulusan sudah dapat diakses pada:\n";
         $pesan .= "🔗 {$url}\n\n";
 
@@ -63,7 +64,7 @@ class BroadcastPesanKelulusan implements ShouldQueue
             && $tp->jadwal_kelulusan_tempat;
 
         if ($adaJadwal) {
-            $mulai   = $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y H:i');
+            $mulai = $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y H:i');
             $selesai = $tp->jadwal_kelulusan_selesai->translatedFormat('H:i');
 
             $pesan .= "📅 Acara Kelulusan:\n";
@@ -71,13 +72,13 @@ class BroadcastPesanKelulusan implements ShouldQueue
             $pesan .= "Tempat  : {$tp->jadwal_kelulusan_tempat}\n\n";
         }
 
-        $pesan .= "Selamat & semoga sukses! 🎓";
+        $pesan .= 'Selamat & semoga sukses! 🎓';
 
         return $pesan;
     }
 
     public function failed(\Throwable $e): void
     {
-        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: " . $e->getMessage());
+        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: ".$e->getMessage());
     }
 }

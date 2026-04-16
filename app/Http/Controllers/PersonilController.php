@@ -28,7 +28,7 @@ class PersonilController extends Controller
 
         return view('personil.index', [
             'personils' => $personils,
-            'keyword'   => $keyword,
+            'keyword' => $keyword,
         ]);
     }
 }

@@ -23,8 +23,8 @@ class InstansiFactory extends Factory
             'nama_ketua' => fake()->word(),
             'nip_ketua' => fake()->word(),
             'tte_ketua' => fake()->word(),
-            'jenjang' => fake()->randomElement(["SD","MI","SMP","MTS","SMA","SMK","MA"]),
-            'akreditasi' => fake()->randomElement(["A","B","C","D","TT"]),
+            'jenjang' => fake()->randomElement(['SD', 'MI', 'SMP', 'MTS', 'SMA', 'SMK', 'MA']),
+            'akreditasi' => fake()->randomElement(['A', 'B', 'C', 'D', 'TT']),
             'status' => fake()->boolean(),
         ];
     }

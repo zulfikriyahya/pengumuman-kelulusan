@@ -23,8 +23,8 @@ class TamuUndanganScanQrRequest extends FormRequest
     {
         return [
             'siswa_id.required' => 'QR Code tidak terbaca.',
-            'siswa_id.uuid'     => 'QR Code tidak valid.',
-            'siswa_id.exists'   => 'Data siswa tidak ditemukan.',
+            'siswa_id.uuid' => 'QR Code tidak valid.',
+            'siswa_id.exists' => 'Data siswa tidak ditemukan.',
         ];
     }
 }

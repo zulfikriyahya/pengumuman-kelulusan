@@ -15,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $instansiArray = Cache::remember('instansi.aktif', now()->addHour(), function () {
             $data = Instansi::first();
+
             return $data ? $data->toArray() : null;
         });
         $instansi = $instansiArray ? (object) $instansiArray : null;

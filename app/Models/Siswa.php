@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusSiswa;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ class Siswa extends Model
     protected function casts(): array
     {
         return [
-            'status' => \App\Enums\StatusSiswa::class,
+            'status' => StatusSiswa::class,
         ];
     }
 
@@ -36,8 +37,8 @@ class Siswa extends Model
     public function isLulus(): bool
     {
         return in_array($this->status, [
-            \App\Enums\StatusSiswa::Lulus,
-            \App\Enums\StatusSiswa::LulusBersyarat,
+            StatusSiswa::Lulus,
+            StatusSiswa::LulusBersyarat,
         ]);
     }
 }

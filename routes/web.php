@@ -4,6 +4,7 @@ use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PersonilController;
 use App\Http\Controllers\TamuUndanganController;
+use App\Http\Middleware\JadwalKelulusanAktif;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,7 +50,7 @@ Route::get('/alumni/cari', [AlumniController::class, 'cari'])->name('alumni.cari
 | Tamu Undangan (hanya aktif dalam rentang jadwal kelulusan)
 |--------------------------------------------------------------------------
 */
-Route::middleware(\App\Http\Middleware\JadwalKelulusanAktif::class)
+Route::middleware(JadwalKelulusanAktif::class)
     ->prefix('tamu')
     ->name('tamu.')
     ->group(function () {

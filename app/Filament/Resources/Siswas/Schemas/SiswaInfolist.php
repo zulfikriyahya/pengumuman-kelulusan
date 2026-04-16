@@ -19,7 +19,7 @@ class SiswaInfolist
             // fix: badge berwarna sesuai status
             TextEntry::make('status')
                 ->badge()
-                ->color(fn($state) => $state?->color()),
+                ->color(fn ($state) => $state?->color()),
             TextEntry::make('barcode_url')->placeholder('-'),
             TextEntry::make('created_at')->dateTime()->placeholder('-'),
             TextEntry::make('updated_at')->dateTime()->placeholder('-'),
