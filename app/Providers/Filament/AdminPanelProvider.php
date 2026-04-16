@@ -10,6 +10,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -31,7 +32,10 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->breadcrumbs()
             ->topNavigation()
-            ->maxContentWidth('full')
+            ->maxContentWidth(Width::Full)
+            ->simplePageMaxContentWidth(Width::Small)
+            ->profile()
+            ->registration()
             ->globalSearch(false)
             ->databaseNotifications()
             ->colors([
