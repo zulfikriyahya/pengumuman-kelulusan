@@ -1,79 +1,197 @@
 @extends('layouts.app')
 @section('title', 'Tamu Undangan')
 
-@section('content')
+@push('styles')
+    <style>
+        .tamu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.6rem
+        }
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <h1 class="text-xl font-bold text-green-700">Tamu Undangan</h1>
-        <div class="flex gap-2">
-            <a href="{{ route('tamu.scan') }}"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                  text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm shadow-green-200">
-                📷 Scan QR
-            </a>
-            <a href="{{ route('tamu.cetak-hadir') }}" target="_blank"
-                class="flex items-center gap-2 bg-white border border-green-300 text-green-700
-                  hover:bg-green-50 active:scale-[0.98]
-                  text-sm font-semibold px-4 py-2 rounded-xl transition">
-                🖨️ Cetak Hadir
-            </a>
+        .tamu-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
+            font-family: var(--font-display)
+        }
+
+        .tamu-actions {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .9rem;
+            margin-bottom: 1.6rem
+        }
+
+        .stat-tile {
+            padding: 1.4rem 1.1rem;
+            text-align: center;
+            border-radius: var(--radius)
+        }
+
+        .stat-val {
+            font-size: 1.9rem;
+            font-weight: 900;
+            font-family: var(--font-display);
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1
+        }
+
+        .stat-lbl {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-top: .4rem;
+            font-weight: 500
+        }
+
+        .tamu-table-wrap {
+            border-radius: var(--radius);
+            overflow: hidden
+        }
+
+        .tamu-tbl {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .tamu-tbl thead th {
+            padding: .8rem 1.05rem;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .tamu-tbl tbody tr {
+            border-bottom: 1px solid var(--border2);
+            transition: background .15s
+        }
+
+        .tamu-tbl tbody tr:hover {
+            background: rgba(13, 148, 136, .035)
+        }
+
+        .tamu-tbl tbody td {
+            padding: .8rem 1.05rem;
+            font-size: .82rem
+        }
+
+        .tamu-tbl tbody tr:last-child {
+            border-bottom: none
+        }
+
+        .pax-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .2);
+            color: var(--teal-xl);
+            border-radius: 999px;
+            min-width: 28px;
+            height: 22px;
+            padding: 0 .45rem;
+            font-size: .7rem;
+            font-weight: 700
+        }
+
+        .time-cell {
+            font-size: .7rem;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums
+        }
+
+        .empty-tbl {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            color: var(--muted)
+        }
+
+        .empty-tbl-sub {
+            font-size: .82rem;
+            margin-top: .4rem
+        }
+
+        @media(max-width:640px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .tamu-hide {
+                display: none
+            }
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="tamu-header">
+        <h1 class="tamu-title">Tamu Undangan</h1>
+        <div class="tamu-actions">
+            <a href="{{ route('tamu.scan') }}" class="btn btn-primary" style="font-size:.8rem;padding:.52rem 1rem;">Scan QR</a>
+            <a href="{{ route('tamu.cetak-hadir') }}" class="btn btn-ghost" style="font-size:.8rem;padding:.52rem 1rem;"
+                target="_blank">Cetak Hadir</a>
         </div>
     </div>
 
-    {{-- Statistik --}}
-    <div class="grid grid-cols-2 {{ isset($totalSiswa) ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }} gap-4 mb-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-            <p class="text-3xl font-bold text-green-700">{{ $tamuUndangans->total() }}</p>
-            <p class="text-xs text-gray-400 mt-1">Siswa Hadir</p>
+    <div class="stats-grid">
+        <div class="card stat-tile reveal">
+            <div class="stat-val">{{ $tamuUndangans->total() }}</div>
+            <div class="stat-lbl">Siswa Hadir</div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-            <p class="text-3xl font-bold text-green-700">{{ $tamuUndangans->sum('jumlah_tamu') }}</p>
-            <p class="text-xs text-gray-400 mt-1">Total PAX</p>
+        <div class="card stat-tile reveal reveal-delay-1">
+            <div class="stat-val">{{ $tamuUndangans->sum('jumlah_tamu') }}</div>
+            <div class="stat-lbl">Total PAX</div>
         </div>
         @isset($totalSiswa)
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-                @php $pct = $totalSiswa > 0 ? round($tamuUndangans->total() / $totalSiswa * 100) : 0; @endphp
-                <p class="text-3xl font-bold text-green-700">{{ $pct }}%</p>
-                <p class="text-xs text-gray-400 mt-1">Kehadiran</p>
+            @php $pct = $totalSiswa > 0 ? round($tamuUndangans->total() / $totalSiswa * 100) : 0; @endphp
+            <div class="card stat-tile reveal reveal-delay-2">
+                <div class="stat-val">{{ $pct }}%</div>
+                <div class="stat-lbl">Kehadiran</div>
             </div>
         @endisset
     </div>
 
-    {{-- Tabel --}}
-    <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-                <tr class="text-xs text-gray-400 uppercase tracking-wider">
-                    <th class="px-4 py-3 text-left w-10">#</th>
-                    <th class="px-4 py-3 text-left">Nama Siswa</th>
-                    <th class="px-4 py-3 text-left hidden sm:table-cell">Nama Orang Tua</th>
-                    <th class="px-4 py-3 text-center">PAX</th>
-                    <th class="px-4 py-3 text-right">Waktu</th>
+    <div class="card tamu-table-wrap reveal">
+        <table class="tamu-tbl">
+            <thead>
+                <tr>
+                    <th style="width:2.25rem">#</th>
+                    <th>Nama Siswa</th>
+                    <th class="tamu-hide">Nama Orang Tua</th>
+                    <th style="text-align:center">PAX</th>
+                    <th style="text-align:right">Waktu</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody>
                 @forelse($tamuUndangans as $i => $t)
-                    <tr class="hover:bg-gray-50/70 transition">
-                        <td class="px-4 py-3 text-gray-300 text-xs">{{ $tamuUndangans->firstItem() + $i }}</td>
-                        <td class="px-4 py-3 font-medium">{{ $t->siswa?->nama ?? '-' }}</td>
-                        <td class="px-4 py-3 text-gray-400 hidden sm:table-cell">{{ $t->siswa?->nama_orangtua ?? '-' }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <span
-                                class="inline-flex items-center justify-center bg-green-100 text-green-700
-                                 font-semibold text-xs px-2.5 py-1 rounded-full min-w-[28px]">
-                                {{ $t->jumlah_tamu }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-gray-400 text-xs text-right tabular-nums">
-                            {{ $t->created_at->format('H:i') }}
-                        </td>
+                    <tr>
+                        <td style="color:var(--muted2);font-size:.7rem;">{{ $tamuUndangans->firstItem() + $i }}</td>
+                        <td style="font-weight:600">{{ $t->siswa?->nama ?? '-' }}</td>
+                        <td class="tamu-hide" style="color:var(--muted)">{{ $t->siswa?->nama_orangtua ?? '-' }}</td>
+                        <td style="text-align:center"><span class="pax-badge">{{ $t->jumlah_tamu }}</span></td>
+                        <td style="text-align:right" class="time-cell">{{ $t->created_at->format('H:i') }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-14 text-gray-400">
-                            <p class="text-3xl mb-2">👥</p>
-                            <p class="text-sm">Belum ada tamu yang hadir.</p>
+                        <td colspan="5" class="empty-tbl">
+                            <div style="font-size:1.5rem;margin-bottom:.5rem;opacity:.3">—</div>
+                            <div class="empty-tbl-sub">Belum ada tamu yang hadir.</div>
                         </td>
                     </tr>
                 @endforelse
@@ -81,6 +199,5 @@
         </table>
     </div>
 
-    <div class="mt-4">{{ $tamuUndangans->links() }}</div>
-
+    <div style="margin-top:1.1rem">{{ $tamuUndangans->links() }}</div>
 @endsection

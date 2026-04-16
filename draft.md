@@ -5728,90 +5728,29 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Alumni')
 
+@push('styles')
+    @include('partials._people-styles')
+@endpush
+
 @section('content')
+    @include('partials._page-header', [
+        'title' => 'Alumni',
+        'searchRoute' => 'alumni.cari',
+        'clearRoute' => 'alumni.index',
+        'placeholder' => 'Nama atau NISN&hellip;',
+        'keyword' => $keyword ?? null,
+        'totalFound' => $alumnis->total() ?? null,
+    ])
 
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-            <h1 class="text-xl font-bold text-green-700">Alumni</h1>
-            @if (isset($keyword))
-                <p class="text-sm text-gray-400 mt-0.5">
-                    Hasil pencarian untuk <span class="font-semibold text-gray-600">"{{ $keyword }}"</span>
-                    &mdash; {{ $alumnis->total() }} data
-                </p>
-            @endif
-        </div>
-
-        <form action="{{ route('alumni.cari') }}" method="GET" class="flex gap-2">
-            <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm pointer-events-none">🔎</span>
-                <input type="text" name="nama" value="{{ request('nama', $keyword ?? '') }}"
-                    placeholder="Nama atau NISN…"
-                    class="border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm w-52
-                          focus:outline-none focus:ring-2 focus:ring-green-500 transition">
-            </div>
-            <button
-                class="bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                       text-white px-4 py-2 rounded-xl text-sm transition">
-                Cari
-            </button>
-            @if (isset($keyword))
-                <a href="{{ route('alumni.index') }}"
-                    class="px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-gray-600
-                      border border-gray-200 hover:border-gray-300 transition">
-                    ✕
-                </a>
-            @endif
-        </form>
-    </div>
-
-    @if ($alumnis->isEmpty())
-        <div class="text-center py-16 text-gray-400">
-            <p class="text-4xl mb-3">🔍</p>
-            <p class="text-sm">
-                Tidak ada data alumni{{ isset($keyword) ? ' untuk "' . $keyword . '"' : '' }}.
-            </p>
-            @if (isset($keyword))
-                <a href="{{ route('alumni.index') }}" class="inline-block mt-3 text-xs text-green-600 hover:underline">
-                    Lihat semua alumni
-                </a>
-            @endif
-        </div>
-    @else
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            @foreach ($alumnis as $a)
-                <div
-                    class="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100
-                transition-all duration-200 hover:-translate-y-0.5 p-5 text-center group">
-                    @if ($a->avatar)
-                        <img src="{{ Storage::url($a->avatar) }}" alt="{{ $a->nama }}"
-                            class="w-16 h-16 rounded-full object-cover mx-auto mb-3
-                        ring-2 ring-blue-100 group-hover:ring-blue-300 transition">
-                    @else
-                        <div
-                            class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center
-                        mx-auto mb-3 ring-2 ring-blue-100 group-hover:ring-blue-300 transition">
-                            <span class="text-blue-600 font-bold text-xl">
-                                {{ strtoupper(substr($a->nama, 0, 1)) }}
-                            </span>
-                        </div>
-                    @endif
-
-                    <p class="font-semibold text-sm leading-tight">{{ $a->nama }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">Lulus {{ $a->tahun_lulus }}</p>
-                    <p class="text-xs text-gray-300 font-mono mt-0.5">{{ $a->nisn }}</p>
-
-                    @if ($a->quote)
-                        <p class="text-xs text-gray-400 italic mt-2 line-clamp-2 leading-relaxed">
-                            "{{ $a->quote }}"
-                        </p>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-
-        <div class="mt-6">{{ $alumnis->links() }}</div>
-    @endif
-
+    @include('partials._people-grid', [
+        'items' => $alumnis,
+        'photoKey' => 'avatar',
+        'subKey' => 'tahun_lulus',
+        'subPrefix' => 'Lulus ',
+        'subColor' => '',
+        'monoKey' => 'nisn',
+        'keyword' => $keyword ?? null,
+    ])
 @endsection
 
 ```
@@ -5824,127 +5763,303 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', $siswa ? 'Hasil — ' . $siswa->nama : 'Siswa Tidak Ditemukan')
 
+@push('styles')
+    <style>
+        .hasil-wrap {
+            max-width: 500px;
+            margin: 0 auto
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: .8rem;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color .2s
+        }
+
+        .back-link:hover {
+            color: var(--teal-xl)
+        }
+
+        .back-link span {
+            transition: transform .2s
+        }
+
+        .back-link:hover span {
+            transform: translateX(-2px)
+        }
+
+        /* Not found */
+        .notfound-card {
+            padding: 3rem 2rem;
+            text-align: center
+        }
+
+        .notfound-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: .45rem;
+            font-family: var(--font-display)
+        }
+
+        .notfound-sub {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.75;
+            margin-bottom: 1.4rem
+        }
+
+        /* Result */
+        .result-header {
+            padding: 1.5rem 1.6rem;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: .9rem
+        }
+
+        .status-icon-wrap {
+            width: 50px;
+            height: 50px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            font-family: var(--font-display)
+        }
+
+        .status-label-sm {
+            font-size: .62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            opacity: .7;
+            margin-bottom: .18rem
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            line-height: 1.1;
+            font-family: var(--font-display)
+        }
+
+        .result-info {
+            padding: 1.1rem 1.6rem;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            padding: .5rem 0;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .info-row:last-child {
+            border-bottom: none
+        }
+
+        .info-label {
+            font-size: .73rem;
+            color: var(--muted);
+            flex-shrink: 0;
+            font-weight: 500
+        }
+
+        .info-val {
+            font-size: .83rem;
+            font-weight: 600;
+            text-align: right
+        }
+
+        .result-actions {
+            padding: 1.1rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem
+        }
+
+        .doc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .8rem 1.1rem;
+            border-radius: 11px;
+            font-size: .82rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .22s;
+            border: none
+        }
+
+        .doc-btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-d));
+            color: #fff;
+            box-shadow: 0 0 24px rgba(13, 148, 136, .22)
+        }
+
+        .doc-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(13, 148, 136, .38)
+        }
+
+        .doc-btn-outline {
+            background: transparent;
+            border: 1px solid rgba(20, 184, 166, .28);
+            color: var(--teal-xl)
+        }
+
+        .doc-btn-outline:hover {
+            background: rgba(20, 184, 166, .07);
+            border-color: rgba(20, 184, 166, .5)
+        }
+
+        .doc-btn-disabled {
+            background: rgba(255, 255, 255, .02);
+            border: 1px dashed var(--border);
+            color: var(--muted2);
+            cursor: default;
+            pointer-events: none
+        }
+
+        .result-footer-note {
+            text-align: center;
+            font-size: .72rem;
+            color: var(--muted2);
+            margin-top: .85rem;
+            letter-spacing: .01em
+        }
+
+        /* Themes */
+        .theme-lulus .status-icon-wrap {
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .2);
+            color: var(--teal-xl)
+        }
+
+        .theme-lulus .status-text {
+            color: var(--teal-xl)
+        }
+
+        .theme-tidak .status-icon-wrap {
+            background: rgba(220, 38, 38, .08);
+            border: 1px solid rgba(220, 38, 38, .18);
+            color: #f87171
+        }
+
+        .theme-tidak .status-text {
+            color: #f87171
+        }
+
+        .theme-syarat .status-icon-wrap {
+            background: rgba(245, 158, 11, .09);
+            border: 1px solid rgba(245, 158, 11, .2);
+            color: #fbbf24
+        }
+
+        .theme-syarat .status-text {
+            color: #fbbf24
+        }
+    </style>
+@endpush
+
 @section('content')
-    <div class="max-w-lg mx-auto">
+    <div class="hasil-wrap reveal visible">
+        <a href="{{ route('landing') }}" class="back-link"><span>&larr;</span> Kembali ke Pencarian</a>
 
-        {{-- Kembali --}}
-        <a href="{{ route('landing') }}"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-700 mb-5 transition group">
-            <span class="group-hover:-translate-x-0.5 transition-transform">←</span>
-            Kembali ke Pencarian
-        </a>
-
-        {{-- ══ Tidak ditemukan ══ --}}
         @if (!$siswa)
-            <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center">
-                <p class="text-5xl mb-4">🔍</p>
-                <h2 class="font-bold text-gray-700 text-lg mb-1">Data Tidak Ditemukan</h2>
-                <p class="text-sm text-gray-400 mb-6">
+            <div class="card notfound-card">
+                <div class="notfound-title">Data Tidak Ditemukan</div>
+                <div class="notfound-sub">
                     Tidak ada siswa dengan NISN atau nomor telepon
-                    <span class="font-mono font-semibold text-gray-600">"{{ $keyword }}"</span>.
-                </p>
-                <a href="{{ route('landing') }}"
-                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700
-                      text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition active:scale-[0.98]">
-                    ← Coba Lagi
+                    <strong style="color:var(--text)">&ldquo;{{ $keyword }}&rdquo;</strong>.
+                    Pastikan data yang dimasukkan sudah benar.
+                </div>
+                <a href="{{ route('landing') }}" class="btn btn-primary" style="margin:0 auto;">
+                    &larr; Coba Lagi
                 </a>
             </div>
-
-            {{-- ══ Ditemukan ══ --}}
         @else
             @php
-                [$bgCard, $bgBadge, $textColor, $icon] = match ($siswa->status) {
-                    \App\Enums\StatusSiswa::Lulus => ['from-green-50 to-white', 'bg-green-600', 'text-green-700', '🎓'],
-                    \App\Enums\StatusSiswa::TidakLulus => ['from-red-50 to-white', 'bg-red-500', 'text-red-700', '📋'],
-                    \App\Enums\StatusSiswa::LulusBersyarat => [
-                        'from-yellow-50 to-white',
-                        'bg-yellow-500',
-                        'text-yellow-700',
-                        '⚠️',
-                    ],
+                use App\Enums\StatusSiswa;
+                [$themeClass, $iconLabel, $statusLabel] = match ($siswa->status) {
+                    StatusSiswa::Lulus => ['theme-lulus', 'LULUS', $siswa->status->label()],
+                    StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK', $siswa->status->label()],
+                    StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT', $siswa->status->label()],
                 };
             @endphp
 
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-
-                {{-- Header --}}
-                <div class="bg-gradient-to-br {{ $bgCard }} px-6 py-6 border-b border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="{{ $bgBadge }} text-white rounded-2xl h-14 w-14 flex items-center justify-center text-2xl shadow-md flex-shrink-0">
-                            {{ $icon }}
-                        </div>
+            <div class="card {{ $themeClass }}" style="overflow:hidden;">
+                <div class="result-header">
+                    <div class="eyebrow" style="margin-bottom:.9rem;">Hasil Seleksi Kelulusan</div>
+                    <div class="status-row">
+                        <div class="status-icon-wrap">{{ $iconLabel }}</div>
                         <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-0.5">Status Kelulusan</p>
-                            <p class="text-xl font-bold {{ $textColor }}">{{ $siswa->status->label() }}</p>
+                            <div class="status-label-sm">Status</div>
+                            <div class="status-text">{{ $statusLabel }}</div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Info Siswa --}}
-                <div class="px-6 py-5 space-y-3 text-sm">
+                <div class="result-info">
                     @foreach ([
-            'Nama Siswa' => $siswa->nama,
-            'NISN' => $siswa->nisn,
-            'Nama Orang Tua' => $siswa->nama_orangtua,
-        ] as $label => $val)
+            'Nama Siswa' => [$siswa->nama, false],
+            'NISN' => [$siswa->nisn, true],
+            'Nama Orang Tua' => [$siswa->nama_orangtua, false],
+        ] as $label => [$val, $mono])
                         @if ($val)
-                            <div class="flex justify-between items-baseline gap-4">
-                                <span class="text-gray-400 flex-shrink-0">{{ $label }}</span>
-                                <span
-                                    class="font-medium text-right {{ $label === 'NISN' ? 'font-mono' : '' }}">{{ $val }}</span>
+                            <div class="info-row">
+                                <span class="info-label">{{ $label }}</span>
+                                <span class="info-val"
+                                    @if ($mono) style="font-family:monospace;" @endif>{{ $val }}</span>
                             </div>
                         @endif
                     @endforeach
                 </div>
 
-                <div class="mx-6 border-t border-dashed border-gray-100"></div>
-
-                {{-- Aksi --}}
-                <div class="px-6 py-5 flex flex-col gap-2.5">
-
-                    {{-- SKL --}}
+                <div class="result-actions">
                     @if ($siswa->berkas_skl)
-                        <a href="{{ route('landing.skl', $siswa) }}" target="_blank"
-                            class="flex items-center justify-center gap-2
-                          bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                          text-white font-semibold py-3 rounded-xl text-sm transition-all
-                          shadow-sm shadow-green-200">
-                            <span>📄</span> Unduh Surat Keterangan Lulus
+                        <a href="{{ route('landing.skl', $siswa) }}" target="_blank" class="doc-btn doc-btn-primary">
+                            Unduh Surat Keterangan Lulus
                         </a>
                     @else
-                        <div
-                            class="flex items-center gap-2 justify-center bg-gray-50 border border-dashed
-                            border-gray-200 rounded-xl py-3 text-xs text-gray-400">
-                            <span>🕐</span> Dokumen SKL belum tersedia — hubungi sekolah
-                        </div>
+                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi sekolah</div>
                     @endif
 
-                    {{-- Surat Undangan (Lulus & Lulus Bersyarat) --}}
                     @if ($siswa->isLulus())
-                        <a href="{{ route('landing.undangan', $siswa) }}" target="_blank"
-                            class="flex items-center justify-center gap-2
-                          bg-white border border-green-300 text-green-700
-                          hover:bg-green-50 active:scale-[0.98]
-                          font-semibold py-3 rounded-xl text-sm transition-all">
-                            <span>🎟️</span> Cetak Surat Undangan Kelulusan
+                        <a href="{{ route('landing.undangan', $siswa) }}" target="_blank" class="doc-btn doc-btn-outline">
+                            Cetak Surat Undangan Kelulusan
                         </a>
                     @endif
-
                 </div>
             </div>
 
-            @if ($siswa->status === \App\Enums\StatusSiswa::Lulus)
-                <p class="text-center text-xs text-gray-400 mt-4">
-                    🎉 Selamat! Semoga sukses di jenjang berikutnya.
-                </p>
-            @elseif($siswa->status === \App\Enums\StatusSiswa::LulusBersyarat)
-                <p class="text-center text-xs text-yellow-500 mt-4">
-                    ⚠️ Segera hubungi sekolah untuk informasi lebih lanjut.
+            @if ($siswa->status === StatusSiswa::Lulus)
+                <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
+            @elseif ($siswa->status === StatusSiswa::LulusBersyarat)
+                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi sekolah untuk informasi lebih lanjut.
                 </p>
             @endif
         @endif
-
     </div>
 @endsection
 
@@ -5958,6 +6073,309 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Pengumuman Kelulusan')
 
+@push('styles')
+    <style>
+        .hero-section {
+            min-height: calc(100svh - var(--nav-h));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-inner {
+            max-width: 620px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-logo {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            margin: 0 auto 1.4rem;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(13, 148, 136, .07);
+            padding: 6px;
+            box-shadow: 0 0 36px rgba(13, 148, 136, .16);
+            animation: fade-up .6s ease both .1s;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 2.9rem);
+            font-weight: 900;
+            letter-spacing: -.03em;
+            line-height: 1.08;
+            font-family: var(--font-display);
+            animation: fade-up .7s ease both .2s;
+        }
+
+        .grad {
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: .86rem;
+            color: var(--muted);
+            margin-top: .8rem;
+            line-height: 1.7;
+            animation: fade-up .7s ease both .3s;
+        }
+
+        /* Countdown */
+        .cd-card {
+            max-width: 400px;
+            margin: 2.25rem auto 0;
+            padding: 1.6rem;
+            border-radius: 20px;
+            background: rgba(13, 148, 136, .07);
+            border: 1px solid rgba(20, 184, 166, .16);
+            backdrop-filter: blur(16px);
+            animation: fade-up .8s ease both .4s;
+        }
+
+        .cd-label {
+            font-size: .67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--gold-l);
+            text-align: center;
+            margin-bottom: .8rem;
+        }
+
+        .cd-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .55rem;
+        }
+
+        .cd-box {
+            background: rgba(13, 148, 136, .09);
+            border: 1px solid rgba(20, 184, 166, .13);
+            border-radius: 11px;
+            padding: .85rem .35rem;
+            text-align: center;
+        }
+
+        .cd-n {
+            font-size: 1.9rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .cd-l {
+            font-size: .56rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-top: .25rem;
+            font-weight: 600;
+        }
+
+        .cd-footer-note {
+            margin-top: .9rem;
+            font-size: .71rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* State cards */
+        .state-card {
+            max-width: 400px;
+            margin: 2rem auto 0;
+            padding: 2.25rem;
+            border-radius: 20px;
+            text-align: center;
+            animation: fade-up .7s ease both .3s;
+        }
+
+        .state-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+            font-family: var(--font-display);
+        }
+
+        .state-sub {
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* Envelope */
+        .amplop-section {
+            display: flex;
+            justify-content: center;
+            padding: 1.25rem 2rem 0;
+            animation: fade-up .8s ease both .35s;
+        }
+
+        .amplop-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .7rem;
+        }
+
+        .amplop-hint {
+            font-size: .7rem;
+            color: var(--muted);
+            letter-spacing: .04em;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Search card */
+        .search-card {
+            max-width: 460px;
+            margin: 1.4rem auto 0;
+            padding: 1.75rem;
+            border-radius: 20px;
+            background: rgba(13, 148, 136, .06);
+            border: 1px solid rgba(20, 184, 166, .16);
+            backdrop-filter: blur(16px);
+        }
+
+        .search-card-head {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            margin-bottom: 1.35rem;
+        }
+
+        .search-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 11px;
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .72rem;
+            font-weight: 800;
+            color: var(--teal-xl);
+            font-family: var(--font-display);
+            letter-spacing: .03em;
+        }
+
+        .search-card-title {
+            font-size: .94rem;
+            font-weight: 700;
+            line-height: 1.2;
+            font-family: var(--font-display);
+        }
+
+        .search-card-sub {
+            font-size: .73rem;
+            color: var(--muted);
+            margin-top: .18rem;
+        }
+
+        .search-field {
+            position: relative;
+            margin-bottom: .9rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: .72rem .9rem;
+            font-size: .86rem;
+            font-family: var(--font-body);
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--muted2);
+        }
+
+        .search-input:focus {
+            border-color: rgba(20, 184, 166, .45);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1);
+        }
+
+        .search-input.is-error {
+            border-color: rgba(220, 38, 38, .42);
+        }
+
+        .search-error {
+            font-size: .73rem;
+            color: #f87171;
+            margin-bottom: .7rem;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .42rem 1rem;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 700;
+            margin-top: 1.4rem;
+            animation: fade-up .7s ease both .35s;
+        }
+
+        .status-badge-warn {
+            background: rgba(245, 158, 11, .08);
+            border: 1px solid rgba(245, 158, 11, .22);
+            color: #fbbf24;
+        }
+
+        .animate-fade-slide-up {
+            animation: fade-up .4s ease both;
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         $tp = $tahunPelajaran ?? null;
@@ -5967,166 +6385,116 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         $sudahTutup = $tp && $now->gt($tp->jadwal_pengumuman_selesai);
     @endphp
 
-    {{-- ── Hero ──────────────────────────────────────────────── --}}
-    <section class="text-center py-10 px-4">
-        @if ($instansi?->logo_institusi)
-            <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo"
-                class="h-24 w-24 object-contain mx-auto mb-5 drop-shadow">
-        @endif
-        <h1 class="text-2xl md:text-3xl font-bold text-green-700 tracking-tight">
-            Pengumuman Kelulusan
-        </h1>
-        <p class="text-gray-400 mt-2 text-sm">
-            {{ $instansi?->nama }} &bull; Tahun Pelajaran {{ $tp?->name ?? '-' }}
-        </p>
-    </section>
+    <div style="margin-top:-2.5rem">
+        <section class="hero-section">
+            <div class="hero-inner">
+                @if ($instansi?->logo_institusi)
+                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo" class="hero-logo">
+                @endif
 
-    {{-- ══ STATE: Belum ada konfigurasi ══ --}}
-    @if (!$tp)
-        <section class="flex justify-center py-12 px-4">
-            <div class="bg-gray-50 border border-gray-200 rounded-2xl px-8 py-8 max-w-sm text-center shadow-sm">
-                <p class="text-4xl mb-3">🏫</p>
-                <p class="text-gray-600 font-semibold">Informasi belum tersedia.</p>
-                <p class="text-sm text-gray-400 mt-1">Hubungi sekolah untuk informasi lebih lanjut.</p>
-            </div>
-        </section>
-
-        {{-- ══ STATE 1: Belum buka → Countdown ══ --}}
-    @elseif($belumBuka)
-        <section class="text-center py-8 px-4">
-            <div class="inline-block bg-white rounded-2xl shadow-md px-8 py-6 mb-8 border border-gray-100">
-                <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Pengumuman dibuka pada</p>
-                <p class="font-semibold text-green-700 text-sm">
-                    {{ $tp->jadwal_pengumuman_mulai->translatedFormat('l, d F Y · H:i') }} WIB
+                <h1 class="hero-title">Pengumuman<br><span class="grad">Kelulusan</span></h1>
+                <p class="hero-sub">
+                    {{ $instansi?->nama }}
+                    @if ($tp)
+                        &nbsp;&middot;&nbsp; Tahun Pelajaran {{ $tp->name }}
+                    @endif
                 </p>
-            </div>
 
-            <div class="flex justify-center gap-3">
-                @foreach (['days' => 'Hari', 'hours' => 'Jam', 'minutes' => 'Menit', 'seconds' => 'Detik'] as $key => $label)
-                    <div class="bg-white shadow-md rounded-2xl px-5 py-4 min-w-[72px] border border-gray-100">
-                        <span id="cd-{{ $key }}" class="text-3xl font-bold text-green-700 tabular-nums">00</span>
-                        <p class="text-xs text-gray-400 mt-1">{{ $label }}</p>
+                @if (!$tp)
+                    <div class="card state-card" style="margin-top:2.25rem;">
+                        <div class="state-title">Informasi Belum Tersedia</div>
+                        <div class="state-sub">Hubungi pihak sekolah untuk informasi lebih lanjut mengenai pengumuman
+                            kelulusan.</div>
                     </div>
-                @endforeach
-            </div>
-
-            <p class="text-xs text-gray-400 mt-6">
-                Pastikan kamu kembali tepat waktu ya 😊
-            </p>
-        </section>
-
-        {{-- ══ STATE 2: Sudah tutup ══ --}}
-    @elseif($sudahTutup)
-        <section class="flex justify-center py-12 px-4">
-            <div class="bg-yellow-50 border border-yellow-200 rounded-2xl px-8 py-8 max-w-sm text-center shadow-sm">
-                <p class="text-4xl mb-3">📋</p>
-                <p class="text-yellow-700 font-semibold">Periode pengumuman telah berakhir.</p>
-                <p class="text-sm text-gray-500 mt-1">Hubungi sekolah untuk informasi lebih lanjut.</p>
-            </div>
-        </section>
-
-        {{-- ══ STATE 3: Sedang buka → Amplop + Pencarian ══ --}}
-    @elseif($sudahBuka)
-        {{-- Amplop --}}
-        <section class="flex justify-center my-4 px-4" id="amplop-section">
-            <div class="flex flex-col items-center">
-                <button onclick="bukaAmplop()" id="amplop-btn" class="group focus:outline-none"
-                    aria-label="Klik untuk membuka amplop">
-                    <div id="amplop"
-                        class="relative w-72 h-48 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1 drop-shadow-xl">
-                        <svg viewBox="0 0 288 192" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                            <rect width="288" height="192" rx="14" fill="#16a34a" />
-                            <path d="M0 192 L144 112 L288 192Z" fill="#15803d" />
-                            <path d="M288 20 L288 192 L144 112Z" fill="#14532d" fill-opacity="0.3" />
-                            <path d="M0 20 L0 192 L144 112Z" fill="#14532d" fill-opacity="0.2" />
-                            <path id="amplop-lid" d="M0 20 L144 108 L288 20 L288 0 L0 0 Z" fill="#166534"
-                                style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
-                            <path d="M0 20 L144 108 L288 20" stroke="#bbf7d0" stroke-width="1.5" fill="none"
-                                opacity="0.5" />
-                            <text x="144" y="158" text-anchor="middle" fill="white" font-size="12"
-                                font-family="Inter,sans-serif" font-weight="600" opacity="0.9">
-                                ✉ Klik untuk membuka
-                            </text>
-                        </svg>
+                @elseif ($belumBuka)
+                    <div class="status-badge status-badge-warn">
+                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y &middot; H:i') }}
+                        WIB
                     </div>
-                </button>
-                <p class="text-xs text-gray-400 mt-3 animate-bounce">↑ ketuk amplop</p>
-            </div>
-        </section>
-
-        {{-- Form Pencarian --}}
-        <section id="cari-section" class="hidden px-4">
-            <div class="bg-white rounded-2xl shadow-md p-6 max-w-lg mx-auto border border-gray-100">
-                <div class="flex items-center gap-3 mb-5">
-                    <div
-                        class="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 text-lg flex-shrink-0">
-                        🎓
+                    <div class="cd-card">
+                        <div class="cd-label">Hitung Mundur Pembukaan</div>
+                        <div class="cd-grid">
+                            @foreach (['days' => 'Hari', 'hours' => 'Jam', 'minutes' => 'Menit', 'seconds' => 'Detik'] as $k => $l)
+                                <div class="cd-box">
+                                    <div class="cd-n" id="cd-{{ $k }}">00</div>
+                                    <div class="cd-l">{{ $l }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="cd-footer-note">Pastikan kamu kembali tepat waktu.</div>
                     </div>
-                    <div>
-                        <h2 class="font-semibold text-green-700 text-base leading-tight">Cek Status Kelulusan</h2>
-                        <p class="text-xs text-gray-400">Masukkan NISN atau nomor telepon terdaftar</p>
+                @elseif ($sudahTutup)
+                    <div class="card state-card"
+                        style="margin-top:2.25rem;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.18);">
+                        <div class="state-title" style="color:#fbbf24;">Periode Pengumuman Telah Berakhir</div>
+                        <div class="state-sub">Hubungi sekolah untuk informasi lebih lanjut.</div>
                     </div>
-                </div>
-
-                <form action="{{ route('landing.cari') }}" method="POST" class="flex flex-col gap-3">
-                    @csrf
-                    <div class="relative">
-                        <span
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">🔎</span>
-                        <input type="text" name="nisn" placeholder="NISN (10 digit) atau Nomor Telepon"
-                            value="{{ old('nisn') }}"
-                            class="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                                  transition placeholder:text-gray-300 @error('nisn') border-red-300 @enderror"
-                            maxlength="15" autofocus>
+                @elseif ($sudahBuka)
+                    <div class="amplop-section" id="amplop-section">
+                        <button onclick="bukaAmplop()" id="amplop-btn" class="amplop-btn" aria-label="Buka amplop">
+                            <div id="amplop"
+                                style="position:relative;width:270px;height:180px;transition:all .5s ease;filter:drop-shadow(0 14px 36px rgba(13,148,136,.28))">
+                                <svg viewBox="0 0 270 180" fill="none" xmlns="http://www.w3.org/2000/svg"
+                                    style="width:100%;height:100%">
+                                    <rect width="270" height="180" rx="15" fill="#0d9488" />
+                                    <rect width="270" height="180" rx="15" fill="url(#eg)" />
+                                    <path d="M0 180 L135 104 L270 180Z" fill="#0f766e" />
+                                    <path id="amplop-lid" d="M0 20 L135 102 L270 20 L270 0 L0 0Z" fill="#14b8a6"
+                                        style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
+                                    <path d="M0 20 L135 102 L270 20" stroke="rgba(94,234,212,.35)" stroke-width="1.5"
+                                        fill="none" />
+                                    <text x="135" y="150" text-anchor="middle" fill="rgba(255,255,255,.75)" font-size="10"
+                                        font-family="var(--font-body),sans-serif" font-weight="600"
+                                        letter-spacing="0.5">Ketuk untuk membuka</text>
+                                    <defs>
+                                        <linearGradient id="eg" x1="0" y1="0" x2="270"
+                                            y2="180" gradientUnits="userSpaceOnUse">
+                                            <stop offset="0%" stop-color="rgba(20,184,166,.28)" />
+                                            <stop offset="100%" stop-color="rgba(13,148,136,0)" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <span class="amplop-hint">Ketuk amplop &uarr;</span>
+                        </button>
                     </div>
 
-                    @error('nisn')
-                        <p class="text-red-500 text-xs flex items-center gap-1">
-                            <span>⚠</span> {{ $message }}
-                        </p>
-                    @enderror
-                    @error('telepon')
-                        <p class="text-red-500 text-xs flex items-center gap-1">
-                            <span>⚠</span> {{ $message }}
-                        </p>
-                    @enderror
-
-                    <button type="submit"
-                        class="bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-semibold
-                               py-2.5 rounded-xl text-sm transition-all shadow-sm shadow-green-200">
-                        Cari Kelulusan
-                    </button>
-                </form>
+                    <div id="cari-section" class="hidden" style="padding:0 1rem">
+                        <div class="search-card">
+                            <div class="search-card-head">
+                                <div class="search-icon-wrap">SKL</div>
+                                <div>
+                                    <div class="search-card-title">Cek Status Kelulusan</div>
+                                    <div class="search-card-sub">Masukkan NISN atau nomor telepon terdaftar</div>
+                                </div>
+                            </div>
+                            <form action="{{ route('landing.cari') }}" method="POST">
+                                @csrf
+                                <div class="search-field">
+                                    <input type="text" name="nisn" placeholder="NISN (10 digit) atau Nomor Telepon"
+                                        value="{{ old('nisn') }}"
+                                        class="search-input {{ $errors->hasAny(['nisn', 'telepon']) ? 'is-error' : '' }}"
+                                        maxlength="15" autofocus>
+                                </div>
+                                @error('nisn')
+                                    <div class="search-error"><span>&times;</span> {{ $message }}</div>
+                                @enderror
+                                @error('telepon')
+                                    <div class="search-error"><span>&times;</span> {{ $message }}</div>
+                                @enderror
+                                <button type="submit" class="btn btn-primary"
+                                    style="width:100%;justify-content:center;">Cari Kelulusan</button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
-
-    @endif
+    </div>
 @endsection
-
-@push('styles')
-    <style>
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-slide-up {
-            animation: fadeSlideUp .4s ease forwards;
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>
-        // ── Countdown ────────────────────────────────────────
         const cdTarget = new Date("{{ $tp?->jadwal_pengumuman_mulai?->toIso8601String() }}");
         const pad = n => String(n).padStart(2, '0');
 
@@ -6136,27 +6504,21 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 location.reload();
                 return;
             }
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
             [
-                ['days', d],
-                ['hours', h],
-                ['minutes', m],
-                ['seconds', s]
+                ['days', Math.floor(diff / 86400000)],
+                ['hours', Math.floor((diff % 86400000) / 3600000)],
+                ['minutes', Math.floor((diff % 3600000) / 60000)],
+                ['seconds', Math.floor((diff % 60000) / 1000)]
             ].forEach(([k, v]) => {
                 const el = document.getElementById('cd-' + k);
                 if (el) el.textContent = pad(v);
             });
         }
-
         if (document.getElementById('cd-seconds')) {
             tickCountdown();
             setInterval(tickCountdown, 1000);
         }
 
-        // ── Buka Amplop ──────────────────────────────────────
         function tampilkanForm() {
             document.getElementById('amplop-section')?.classList.add('hidden');
             const cari = document.getElementById('cari-section');
@@ -6171,31 +6533,24 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             const btn = document.getElementById('amplop-btn');
             if (!lid || btn.disabled) return;
             btn.disabled = true;
-
             lid.style.transform = 'rotateX(-180deg)';
             lid.style.opacity = '0';
-
             setTimeout(() => {
-                const amplop = document.getElementById('amplop');
-                if (amplop) {
-                    amplop.style.transform = 'scale(0.8)';
-                    amplop.style.opacity = '0';
-                    amplop.style.transition = 'all .4s ease';
+                const a = document.getElementById('amplop');
+                if (a) {
+                    a.style.transform = 'scale(.8)';
+                    a.style.opacity = '0';
                 }
             }, 400);
-
             setTimeout(tampilkanForm, 750);
             try {
                 localStorage.setItem('amplop_dibuka', '1');
             } catch (e) {}
         }
 
-        // Auto-buka jika sudah pernah
         try {
             if (localStorage.getItem('amplop_dibuka') === '1') tampilkanForm();
         } catch (e) {}
-
-        // Auto-buka jika ada error validasi (form sudah disubmit)
         @if ($errors->any())
             tampilkanForm();
         @endif
@@ -6212,79 +6567,64 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'SKL — ' . $siswa->nama)
 
-@section('content')
-    <div class="max-w-2xl mx-auto">
+@push('styles')
+    @include('partials._doc-styles')
+@endpush
 
-        {{-- Toolbar --}}
-        <div class="flex items-center justify-between mb-5 gap-3 flex-wrap print:hidden">
-            <a href="{{ route('landing.hasil', $siswa) }}"
-                class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-700 transition group">
-                <span class="group-hover:-translate-x-0.5 transition-transform">←</span> Kembali
+@section('content')
+    <div class="doc-wrap">
+        <div class="doc-toolbar print:hidden">
+            <a href="{{ route('landing.hasil', $siswa) }}" class="doc-back">
+                <span>&larr;</span> Kembali
             </a>
-            <a href="{{ route('landing.skl.pdf', $siswa) }}" target="_blank"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                  text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm shadow-green-200">
-                ⬇ Unduh PDF
+            <a href="{{ route('landing.skl.pdf', $siswa) }}" target="_blank" class="btn btn-primary"
+                style="font-size:.82rem;padding:.55rem 1.1rem;">
+                Unduh PDF
             </a>
         </div>
 
-        {{-- Preview Card --}}
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-
-            {{-- Kop Surat --}}
-            <div class="flex items-center gap-4 px-8 pt-8 pb-5 border-b-4 border-double border-gray-800">
-                @if ($instansi?->logo_institusi)
-                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt=""
-                        class="h-20 w-20 object-contain flex-shrink-0">
-                @endif
-                <div class="flex-1 text-center">
-                    <h1 class="text-xl font-bold uppercase tracking-wide">{{ $instansi?->nama }}</h1>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        NPSN: {{ $instansi?->npsn ?? '-' }}
-                        @if ($instansi?->akreditasi)
-                            &nbsp;·&nbsp; Akreditasi: {{ $instansi->akreditasi }}
-                        @endif
-                    </p>
-                </div>
+        <div class="doc-card">
+            <div class="kop-surat">
+                @include('partials._kop-surat')
             </div>
 
-            {{-- Isi SKL --}}
-            <div class="px-8 py-6 font-serif text-[13px] leading-relaxed">
-
-                <h2 class="text-center text-base font-bold uppercase underline underline-offset-4 tracking-wider mb-6">
-                    Surat Keterangan Lulus
-                </h2>
-
-                {{-- Nomor --}}
-                <table class="mb-4 text-sm">
+            <div class="doc-body">
+                <table class="doc-meta">
                     <tr>
-                        <td class="pr-2 text-gray-500 w-24 align-top">Nomor</td>
-                        <td class="pr-1 align-top">:</td>
-                        <td>{{ $instansi?->nomor_surat ?? '-' }}</td>
+                        <td class="lbl">Nomor</td>
+                        <td class="sep">:</td>
+                        <td>{{ $instansi?->nomor_surat ?? '&mdash;' }}</td>
                     </tr>
                 </table>
 
-                <p class="mb-4 text-justify indent-8">
-                    Yang bertanda tangan di bawah ini, Kepala {{ $instansi?->nama }},
-                    menerangkan bahwa siswa berikut:
-                </p>
+                <h2 class="doc-title">Surat Keterangan Lulus</h2>
 
-                {{-- Data Siswa --}}
-                <table class="mb-4 w-full text-sm">
-                    @php
-                        $rows = [
-                            'Nama Lengkap' => $siswa->nama,
-                            'NISN' => $siswa->nisn,
-                            'Tahun Pelajaran' => $tahunPelajaran?->name ?? '-',
-                        ];
-                    @endphp
-                    @foreach ($rows as $lbl => $val)
+                <p class="doc-para">Yang bertanda tangan di bawah ini, Kepala {{ $instansi?->nama }}, menerangkan bahwa
+                    siswa berikut:</p>
+
+                <table class="doc-data">
+                    <tr>
+                        <td class="lbl">Nama Lengkap</td>
+                        <td class="sep">:</td>
+                        <td class="val">{{ $siswa->nama }}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">NISN</td>
+                        <td class="sep">:</td>
+                        <td class="val">{{ $siswa->nisn }}</td>
+                    </tr>
+                    @if ($siswa->nama_orangtua)
                         <tr>
-                            <td class="py-0.5 text-gray-500 w-44 align-top">{{ $lbl }}</td>
-                            <td class="py-0.5 w-3 align-top">:</td>
-                            <td class="py-0.5 font-medium">{{ $val }}</td>
+                            <td class="lbl">Nama Orang Tua</td>
+                            <td class="sep">:</td>
+                            <td class="val">{{ $siswa->nama_orangtua }}</td>
                         </tr>
-                    @endforeach
+                    @endif
+                    <tr>
+                        <td class="lbl">Tahun Pelajaran</td>
+                        <td class="sep">:</td>
+                        <td class="val">{{ $tahunPelajaran?->name ?? '&mdash;' }}</td>
+                    </tr>
                 </table>
 
                 @php
@@ -6297,39 +6637,26 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                     };
                 @endphp
 
-                <p class="mb-4 text-justify indent-8">
-                    Telah mengikuti dan menyelesaikan seluruh program pendidikan, dan
-                    {!! $statusText !!} {{ $instansi?->nama }} Tahun Pelajaran {{ $tahunPelajaran?->name ?? '-' }}.
+                <p class="doc-para">
+                    Telah mengikuti dan menyelesaikan seluruh program pendidikan, dan {!! $statusText !!}
+                    {{ $instansi?->nama }} Tahun Pelajaran {{ $tahunPelajaran?->name ?? '&mdash;' }}.
                 </p>
 
-                <p class="mb-6 text-justify indent-8">
-                    Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk
-                    dapat digunakan sebagaimana mestinya.
-                </p>
+                <p class="doc-para">Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk dapat digunakan
+                    sebagaimana mestinya.</p>
 
-                {{-- TTD --}}
-                <div class="flex justify-end mt-6">
-                    <div class="text-center w-56">
-                        <p>{{ $instansi?->nama }},
-                            {{ now()->translatedFormat('d F Y') }}</p>
-                        @if ($instansi?->tte_pimpinan)
-                            <img src="{{ Storage::url($instansi->tte_pimpinan) }}" alt="TTD"
-                                class="h-16 mx-auto my-2 object-contain">
-                        @else
-                            <div class="h-16"></div>
-                        @endif
-                        <p class="font-bold underline">{{ $instansi?->nama_pimpinan }}</p>
-                        @if ($instansi?->nip_pimpinan)
-                            <p class="text-xs text-gray-500">NIP. {{ $instansi->nip_pimpinan }}</p>
-                        @endif
+                @include('partials._ttd')
+
+                @if ($siswa->barcode_url)
+                    <div class="qr-block">
+                        <img src="{{ $siswa->barcode_url }}" alt="QR Code">
+                        <p>Scan untuk verifikasi</p>
                     </div>
-                </div>
-
+                @endif
             </div>
         </div>
 
-        <p class="text-center text-xs text-gray-400 mt-4 print:hidden">
-            Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
+        <p class="doc-note print:hidden">Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
         </p>
     </div>
 @endsection
@@ -6344,72 +6671,49 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Surat Undangan — ' . $siswa->nama)
 
-@section('content')
-    <div class="max-w-2xl mx-auto">
+@push('styles')
+    @include('partials._doc-styles')
+@endpush
 
-        {{-- Toolbar --}}
-        <div class="flex items-center justify-between mb-5 gap-3 flex-wrap print:hidden">
-            <a href="{{ route('landing.hasil', $siswa) }}"
-                class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-700 transition group">
-                <span class="group-hover:-translate-x-0.5 transition-transform">←</span> Kembali
+@section('content')
+    <div class="doc-wrap">
+        <div class="doc-toolbar print:hidden">
+            <a href="{{ route('landing.hasil', $siswa) }}" class="doc-back">
+                <span>&larr;</span> Kembali
             </a>
-            <a href="{{ route('landing.undangan.pdf', $siswa) }}" target="_blank"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                  text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm shadow-green-200">
-                ⬇ Unduh PDF
+            <a href="{{ route('landing.undangan.pdf', $siswa) }}" target="_blank" class="btn btn-primary"
+                style="font-size:.82rem;padding:.55rem 1.1rem;">
+                Unduh PDF
             </a>
         </div>
 
-        {{-- Preview Card --}}
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-
-            {{-- Kop Surat --}}
-            <div class="flex items-center gap-4 px-8 pt-8 pb-5 border-b-4 border-double border-gray-800">
-                @if ($instansi?->logo_institusi)
-                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt=""
-                        class="h-20 w-20 object-contain flex-shrink-0">
-                @endif
-                <div class="flex-1 text-center">
-                    <h1 class="text-xl font-bold uppercase tracking-wide">{{ $instansi?->nama }}</h1>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        NPSN: {{ $instansi?->npsn ?? '-' }}
-                        @if ($instansi?->akreditasi)
-                            &nbsp;·&nbsp; Akreditasi: {{ $instansi->akreditasi }}
-                        @endif
-                    </p>
-                </div>
+        <div class="doc-card">
+            <div class="kop-surat">
+                @include('partials._kop-surat')
             </div>
 
-            {{-- Isi --}}
-            <div class="px-8 py-6 font-serif text-[13px] leading-relaxed">
-
-                {{-- Nomor & Hal --}}
-                <table class="mb-5 text-sm">
+            <div class="doc-body">
+                <table class="doc-meta">
                     <tr>
-                        <td class="pr-2 text-gray-500 w-24 align-top">Nomor</td>
-                        <td class="pr-1 align-top">:</td>
-                        <td>{{ $instansi?->nomor_surat ?? '-' }}</td>
+                        <td class="lbl">Nomor</td>
+                        <td class="sep">:</td>
+                        <td>{{ $instansi?->nomor_surat ?? '&mdash;' }}</td>
                     </tr>
                     <tr>
-                        <td class="pr-2 text-gray-500 align-top">Hal</td>
-                        <td class="pr-1 align-top">:</td>
+                        <td class="lbl">Hal</td>
+                        <td class="sep">:</td>
                         <td>Undangan Wisuda &amp; Pengambilan Ijazah</td>
                     </tr>
                 </table>
 
-                <h2 class="text-center text-base font-bold uppercase underline underline-offset-4 tracking-wider mb-6">
-                    Surat Undangan
-                </h2>
+                <h2 class="doc-title">Surat Undangan</h2>
 
-                <p class="mb-4 text-justify indent-8">
-                    Assalamu'alaikum Warahmatullahi Wabarakatuh.
-                </p>
+                <p class="doc-para">Assalamu&rsquo;alaikum Warahmatullahi Wabarakatuh.</p>
 
-                <p class="mb-4 text-justify indent-8">
+                <p class="doc-para">
                     Dengan hormat, kami mengundang Bapak/Ibu
                     <strong>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</strong>
-                    beserta putra/putri atas nama
-                    <strong>{{ $siswa->nama }}</strong> (NISN: {{ $siswa->nisn }})
+                    beserta putra/putri atas nama <strong>{{ $siswa->nama }}</strong> (NISN: {{ $siswa->nisn }})
                     untuk menghadiri acara Wisuda &amp; Pengambilan Ijazah yang akan dilaksanakan pada:
                 </p>
 
@@ -6420,70 +6724,43 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 @endphp
 
                 @if ($adaJadwal)
-                    <table class="mb-5 text-sm ml-8">
+                    <table class="doc-jadwal">
                         <tr>
-                            <td class="pr-2 text-gray-500 w-36 align-top">Hari / Tanggal</td>
-                            <td class="pr-1 align-top">:</td>
+                            <td class="lbl">Hari / Tanggal</td>
+                            <td>:</td>
                             <td>{{ $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y') }}</td>
                         </tr>
                         <tr>
-                            <td class="pr-2 text-gray-500 align-top">Waktu</td>
-                            <td class="pr-1 align-top">:</td>
-                            <td>
-                                {{ $tp->jadwal_kelulusan_mulai->format('H:i') }} –
-                                {{ $tp->jadwal_kelulusan_selesai->format('H:i') }} WIB
-                            </td>
+                            <td class="lbl">Waktu</td>
+                            <td>:</td>
+                            <td>{{ $tp->jadwal_kelulusan_mulai->format('H:i') }} &ndash;
+                                {{ $tp->jadwal_kelulusan_selesai->format('H:i') }} WIB</td>
                         </tr>
                         <tr>
-                            <td class="pr-2 text-gray-500 align-top">Tempat</td>
-                            <td class="pr-1 align-top">:</td>
+                            <td class="lbl">Tempat</td>
+                            <td>:</td>
                             <td>{{ $tp->jadwal_kelulusan_tempat }}</td>
                         </tr>
                     </table>
                 @else
-                    <div class="mb-5 ml-8 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
-                        Jadwal acara belum ditentukan. Pantau informasi dari sekolah.
-                    </div>
+                    <div class="doc-alert">Jadwal acara belum ditentukan. Pantau informasi dari sekolah.</div>
                 @endif
 
-                <p class="mb-4 text-justify indent-8">
-                    Atas kehadiran Bapak/Ibu, kami ucapkan terima kasih.
-                </p>
-                <p class="mb-6 text-justify">
-                    Wassalamu'alaikum Warahmatullahi Wabarakatuh.
-                </p>
+                <p class="doc-para">Atas kehadiran Bapak/Ibu, kami ucapkan terima kasih.</p>
+                <p class="doc-para">Wassalamu&rsquo;alaikum Warahmatullahi Wabarakatuh.</p>
 
-                {{-- TTD --}}
-                <div class="flex justify-end mt-6">
-                    <div class="text-center w-56">
-                        <p>{{ $instansi?->nama }},
-                            {{ now()->translatedFormat('d F Y') }}</p>
-                        @if ($instansi?->tte_pimpinan)
-                            <img src="{{ Storage::url($instansi->tte_pimpinan) }}" alt="TTD"
-                                class="h-16 mx-auto my-2 object-contain">
-                        @else
-                            <div class="h-16"></div>
-                        @endif
-                        <p class="font-bold underline">{{ $instansi?->nama_pimpinan }}</p>
-                        @if ($instansi?->nip_pimpinan)
-                            <p class="text-xs text-gray-500">NIP. {{ $instansi->nip_pimpinan }}</p>
-                        @endif
-                    </div>
-                </div>
+                @include('partials._ttd')
 
-                {{-- QR Code --}}
                 @if ($siswa->barcode_url)
-                    <div class="mt-8 pt-6 border-t border-dashed border-gray-200 flex flex-col items-center gap-2">
-                        <img src="{{ $siswa->barcode_url }}" alt="QR Code" class="w-24 h-24 object-contain">
-                        <p class="text-xs text-gray-400">Scan QR untuk verifikasi kehadiran di lokasi</p>
+                    <div class="qr-block">
+                        <img src="{{ $siswa->barcode_url }}" alt="QR Code">
+                        <p>Scan QR untuk verifikasi kehadiran di lokasi</p>
                     </div>
                 @endif
-
             </div>
         </div>
 
-        <p class="text-center text-xs text-gray-400 mt-4 print:hidden">
-            Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
+        <p class="doc-note print:hidden">Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
         </p>
     </div>
 @endsection
@@ -6502,99 +6779,776 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Layanan SKL') — {{ $instansi?->nama ?? config('app.name') }}</title>
+    <title>@yield('title', 'Layanan SKL') &mdash; {{ $instansi?->nama ?? config('app.name') }}</title>
 
     @if ($instansi?->logo_institusi)
         <link rel="icon" href="{{ Storage::url($instansi->logo_institusi) }}">
     @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap"
         rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        /* RESET */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --teal: #0d9488;
+            --teal-l: #14b8a6;
+            --teal-d: #0f766e;
+            --teal-xl: #5eead4;
+            --gold: #d4a843;
+            --gold-l: #f0c96a;
+            --bg: #060d0c;
+            --bg2: #091210;
+            --surface: #0e1a18;
+            --card: rgba(20, 184, 166, .05);
+            --card2: rgba(255, 255, 255, .03);
+            --border: rgba(20, 184, 166, .11);
+            --border2: rgba(255, 255, 255, .05);
+            --text: #dff0ec;
+            --muted: #6aada3;
+            --muted2: #4a8078;
+            --radius: 14px;
+            --nav-h: 62px;
+            --font-display: 'Lexend', system-ui, sans-serif;
+            --font-body: 'Lexend', system-ui, sans-serif;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100svh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--teal);
+            border-radius: 3px;
+        }
+
+        /* AMBIENT */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(160px);
+            opacity: .065;
+            pointer-events: none;
+            z-index: 0;
+            animation: orb-drift 20s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 680px;
+            height: 680px;
+            background: radial-gradient(circle, var(--teal), transparent 70%);
+            top: -260px;
+            left: -220px;
+        }
+
+        .orb-2 {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, var(--gold), transparent 70%);
+            bottom: -160px;
+            right: -180px;
+            animation-delay: -10s;
+        }
+
+        @keyframes orb-drift {
+            to {
+                transform: translate(28px, 18px) scale(1.07);
+            }
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(13, 148, 136, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(13, 148, 136, .035) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(ellipse 80% 55% at 50% 0%, black 35%, transparent 100%);
+        }
+
+        /* NAV */
+        nav#mainNav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            height: var(--nav-h);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: rgba(6, 13, 12, .85);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(28px) saturate(160%);
+            transition: background .3s, box-shadow .3s;
+        }
+
+        nav#mainNav.scrolled {
+            background: rgba(6, 13, 12, .96);
+            box-shadow: 0 1px 0 var(--border), 0 4px 32px rgba(13, 148, 136, .1);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            text-decoration: none;
+            color: inherit;
+            flex-shrink: 0;
+        }
+
+        .nav-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 148, 136, .1);
+        }
+
+        .nav-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .nav-logo-fallback {
+            font-size: .7rem;
+            font-weight: 800;
+            color: var(--teal-xl);
+            font-family: var(--font-display);
+        }
+
+        .nav-name {
+            font-size: .84rem;
+            font-weight: 700;
+            letter-spacing: -.01em;
+            white-space: nowrap;
+            font-family: var(--font-display);
+        }
+
+        .nav-sub {
+            font-size: .6rem;
+            font-weight: 500;
+            color: var(--teal-l);
+            margin-top: 1px;
+            letter-spacing: .02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: .1rem;
+            list-style: none;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .76rem;
+            font-weight: 600;
+            padding: .35rem .7rem;
+            border-radius: 8px;
+            transition: all .2s;
+            white-space: nowrap;
+            letter-spacing: .01em;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--teal-xl);
+            background: rgba(20, 184, 166, .09);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            flex-shrink: 0;
+        }
+
+        .n-btn {
+            height: 34px;
+            padding: 0 .95rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .76rem;
+            color: inherit;
+            transition: all .2s;
+            white-space: nowrap;
+            font-weight: 600;
+            font-family: var(--font-body);
+            text-decoration: none;
+            letter-spacing: .01em;
+        }
+
+        .n-btn:hover {
+            border-color: var(--teal);
+            color: var(--teal-xl);
+            background: rgba(20, 184, 166, .09);
+        }
+
+        .n-btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-d));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 0 18px rgba(13, 148, 136, .22);
+        }
+
+        .n-btn-primary:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 22px rgba(13, 148, 136, .38);
+        }
+
+        #menuBtn {
+            width: 34px;
+            height: 34px;
+            flex-direction: column;
+            gap: 5px;
+            display: none;
+        }
+
+        #menuBtn span {
+            display: block;
+            width: 16px;
+            height: 1.5px;
+            background: currentColor;
+            border-radius: 2px;
+            transition: all .3s;
+            margin: 0 auto;
+        }
+
+        #menuBtn.open span:nth-child(1) {
+            transform: translateY(6.5px) rotate(45deg);
+        }
+
+        #menuBtn.open span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        #menuBtn.open span:nth-child(3) {
+            transform: translateY(-6.5px) rotate(-45deg);
+        }
+
+        /* DRAWER */
+        .drawer {
+            position: fixed;
+            top: var(--nav-h);
+            left: 0;
+            right: 0;
+            z-index: 190;
+            flex-direction: column;
+            background: rgba(6, 13, 12, .97);
+            border-bottom: 1px solid transparent;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .35s cubic-bezier(.4, 0, .2, 1), padding .3s, border-color .3s;
+            display: flex;
+            backdrop-filter: blur(20px);
+        }
+
+        .drawer.open {
+            max-height: 380px;
+            padding: .9rem 1.5rem 1.75rem;
+            border-color: var(--border);
+        }
+
+        .drawer a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: .86rem;
+            font-weight: 600;
+            padding: .55rem .85rem;
+            border-radius: 9px;
+            transition: all .2s;
+        }
+
+        .drawer a:hover {
+            color: var(--teal-xl);
+            background: rgba(20, 184, 166, .07);
+        }
+
+        /* PAGE */
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            padding-top: var(--nav-h);
+        }
+
+        .content-wrap {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        /* FLASH */
+        .flash-area {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .flash-msg {
+            margin-top: .85rem;
+        }
+
+        .flash-inner {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: .7rem;
+            padding: .8rem 1rem;
+            border-radius: 11px;
+            font-size: .8rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity .3s, transform .3s;
+        }
+
+        .flash-inner button {
+            opacity: .45;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: inherit;
+            font-size: 1rem;
+            line-height: 1;
+            flex-shrink: 0;
+            padding: 0;
+            transition: opacity .2s;
+        }
+
+        .flash-inner button:hover {
+            opacity: 1;
+        }
+
+        .flash-success {
+            background: rgba(20, 184, 166, .09);
+            border: 1px solid rgba(20, 184, 166, .22);
+            color: var(--teal-xl);
+        }
+
+        .flash-error {
+            background: rgba(220, 38, 38, .08);
+            border: 1px solid rgba(220, 38, 38, .2);
+            color: #f87171;
+        }
+
+        .flash-warning {
+            background: rgba(245, 158, 11, .08);
+            border: 1px solid rgba(245, 158, 11, .2);
+            color: #fbbf24;
+        }
+
+        .flash-info {
+            background: rgba(96, 165, 250, .08);
+            border: 1px solid rgba(96, 165, 250, .2);
+            color: #93c5fd;
+        }
+
+        /* COMPONENTS */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(12px);
+            transition: border-color .3s, transform .3s, box-shadow .3s;
+        }
+
+        .card-hover:hover {
+            border-color: rgba(20, 184, 166, .3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 36px rgba(13, 148, 136, .12);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: .2rem .75rem;
+            border-radius: 999px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .28rem .85rem;
+            border-radius: 999px;
+            font-size: .66rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            background: rgba(20, 184, 166, .09);
+            color: var(--teal-xl);
+            border: 1px solid rgba(20, 184, 166, .22);
+            margin-bottom: .8rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .65rem 1.5rem;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all .22s;
+            white-space: nowrap;
+            letter-spacing: -.005em;
+            font-family: var(--font-body);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-d));
+            color: #fff;
+            box-shadow: 0 0 24px rgba(13, 148, 136, .24);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 32px rgba(13, 148, 136, .4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border2);
+        }
+
+        .btn-ghost:hover {
+            color: var(--teal-xl);
+            border-color: rgba(20, 184, 166, .4);
+            background: rgba(20, 184, 166, .06);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), #b8882a);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(212, 168, 67, .2);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(212, 168, 67, .34);
+        }
+
+        /* FORM */
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .field label {
+            font-size: .76rem;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: .01em;
+        }
+
+        .input {
+            width: 100%;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: .62rem .95rem;
+            font-size: .86rem;
+            font-family: var(--font-body);
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+
+        .input::placeholder {
+            color: var(--muted2);
+        }
+
+        .input:focus {
+            border-color: rgba(20, 184, 166, .42);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1);
+        }
+
+        .input-error {
+            border-color: rgba(220, 38, 38, .4);
+        }
+
+        .error-msg {
+            font-size: .72rem;
+            color: #f87171;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        /* TABLE */
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tbl thead th {
+            padding: .8rem 1rem;
+            font-size: .66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tbl tbody tr {
+            border-bottom: 1px solid var(--border2);
+            transition: background .15s;
+        }
+
+        .tbl tbody tr:hover {
+            background: rgba(13, 148, 136, .035);
+        }
+
+        .tbl tbody td {
+            padding: .8rem 1rem;
+            font-size: .83rem;
+        }
+
+        .tbl tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        /* REVEAL */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity .5s ease, transform .5s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .reveal-delay-1 {
+            transition-delay: .1s;
+        }
+
+        .reveal-delay-2 {
+            transition-delay: .18s;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border2);
+            margin: 1.25rem 0;
+        }
+
+        /* FOOTER */
+        footer.site-footer {
+            border-top: 1px solid var(--border);
+            padding: 1.75rem 2rem;
+            text-align: center;
+            font-size: .7rem;
+            color: var(--muted2);
+            position: relative;
+            z-index: 1;
+            letter-spacing: .01em;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 960px) {
+            .nav-links {
+                display: none !important;
+            }
+
+            #menuBtn {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --nav-h: 54px;
+            }
+
+            .content-wrap {
+                padding: 2rem 1.1rem;
+            }
+        }
+
+        @media (max-width: 540px) {
+            :root {
+                --nav-h: 50px;
+            }
+        }
+    </style>
+
     @stack('styles')
 </head>
 
-<body class="min-h-screen bg-gray-50 font-[Inter] text-gray-800 antialiased">
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="grid-bg"></div>
 
-    {{-- ── Navbar ─────────────────────────────────────────────── --}}
-    <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="{{ route('landing') }}" class="flex items-center gap-3 group">
+    <nav id="mainNav">
+        <a href="{{ route('landing') }}" class="nav-brand">
+            <div class="nav-logo">
                 @if ($instansi?->logo_institusi)
-                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo"
-                        class="h-9 w-9 object-contain transition group-hover:scale-105">
+                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo">
                 @else
-                    <div
-                        class="h-9 w-9 rounded-lg bg-green-600 flex items-center justify-center text-white font-bold text-sm">
-                        SKL
-                    </div>
+                    <span class="nav-logo-fallback">SKL</span>
                 @endif
-                <div class="leading-tight">
-                    <p class="font-bold text-sm text-green-700 group-hover:text-green-800 transition">
-                        {{ $instansi?->nama ?? config('app.name') }}
-                    </p>
-                    <p class="text-xs text-gray-400">Layanan Surat Keterangan Lulus</p>
-                </div>
-            </a>
-
-            <div class="flex items-center gap-1 text-sm font-medium">
-                @foreach ([['route' => 'personil.index', 'label' => 'Personil'], ['route' => 'alumni.index', 'label' => 'Alumni']] as $nav)
-                    <a href="{{ route($nav['route']) }}"
-                        class="px-3 py-1.5 rounded-lg transition
-                      {{ request()->routeIs(Str::before($nav['route'], '.') . '*')
-                          ? 'bg-green-50 text-green-700 font-semibold'
-                          : 'text-gray-500 hover:text-green-700 hover:bg-gray-50' }}">
-                        {{ $nav['label'] }}
-                    </a>
-                @endforeach
             </div>
+            <div>
+                <div class="nav-name">{{ $instansi?->nama ?? config('app.name') }}</div>
+                <div class="nav-sub">Layanan Surat Keterangan Lulus</div>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="{{ route('personil.index') }}"
+                    class="{{ request()->routeIs('personil*') ? 'active' : '' }}">Personil</a></li>
+            <li><a href="{{ route('alumni.index') }}"
+                    class="{{ request()->routeIs('alumni*') ? 'active' : '' }}">Alumni</a></li>
+        </ul>
+
+        <div class="nav-right">
+            <button class="n-btn" id="menuBtn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="{{ route('landing') }}" class="n-btn n-btn-primary">Beranda</a>
         </div>
     </nav>
 
-    {{-- ── Flash Messages ─────────────────────────────────────── --}}
-    @foreach (['error' => 'red', 'info' => 'blue', 'success' => 'green', 'warning' => 'yellow'] as $type => $color)
-        @if (session($type))
-            <div class="max-w-5xl mx-auto px-4 mt-4 flash-msg" data-color="{{ $color }}">
-                <div
-                    class="flash-inner flex items-start justify-between gap-3
-                    bg-{{ $color }}-50 border border-{{ $color }}-200
-                    text-{{ $color }}-700 px-4 py-3 rounded-xl text-sm shadow-sm
-                    opacity-0 translate-y-1 transition-all duration-300">
-                    <span>{{ session($type) }}</span>
-                    <button onclick="this.closest('.flash-msg').remove()"
-                        class="opacity-50 hover:opacity-100 transition text-lg leading-none mt-0.5 flex-shrink-0">
-                        ×
-                    </button>
-                </div>
-            </div>
-        @endif
-    @endforeach
+    <div class="drawer" id="drawer">
+        <a href="{{ route('landing') }}">Beranda</a>
+        <a href="{{ route('personil.index') }}">Personil</a>
+        <a href="{{ route('alumni.index') }}">Alumni</a>
+    </div>
 
-    {{-- ── Main ───────────────────────────────────────────────── --}}
-    <main class="max-w-5xl mx-auto px-4 py-8">
-        @yield('content')
-    </main>
+    <div class="page-wrap">
+        <div class="flash-area">
+            @foreach (['success', 'error', 'warning', 'info'] as $type)
+                @if (session($type))
+                    <div class="flash-msg" data-type="{{ $type }}">
+                        <div class="flash-inner flash-{{ $type }}">
+                            <span>{{ session($type) }}</span>
+                            <button onclick="this.closest('.flash-msg').remove()" aria-label="Tutup">&times;</button>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+        </div>
 
-    {{-- ── Footer ─────────────────────────────────────────────── --}}
-    <footer class="border-t mt-16 py-6 text-center text-xs text-gray-400">
-        &copy; {{ date('Y') }} {{ $instansi?->nama ?? config('app.name') }} &nbsp;·&nbsp; Layanan SKL Digital
-    </footer>
+        <main class="content-wrap">@yield('content')</main>
+
+        <footer class="site-footer">
+            &copy; {{ date('Y') }} {{ $instansi?->nama ?? config('app.name') }}
+            &nbsp;&middot;&nbsp; Layanan SKL Digital
+        </footer>
+    </div>
 
     <script>
-        // Animate flash messages in, auto-dismiss after 4s
+        // Nav scroll
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), {
+            passive: true
+        });
+
+        // Drawer
+        const menuBtn = document.getElementById('menuBtn');
+        const drawer = document.getElementById('drawer');
+        menuBtn.addEventListener('click', () => {
+            const o = drawer.classList.toggle('open');
+            menuBtn.classList.toggle('open', o);
+        });
+        [...drawer.querySelectorAll('a'), ...document.querySelectorAll('.d-link')].forEach(a =>
+            a.addEventListener('click', () => {
+                drawer.classList.remove('open');
+                menuBtn.classList.remove('open');
+            })
+        );
+        document.addEventListener('click', e => {
+            if (!drawer.contains(e.target) && !menuBtn.contains(e.target)) {
+                drawer.classList.remove('open');
+                menuBtn.classList.remove('open');
+            }
+        });
+
+        // Flash
         document.querySelectorAll('.flash-msg .flash-inner').forEach(el => {
             requestAnimationFrame(() => {
-                el.classList.remove('opacity-0', 'translate-y-1');
+                el.style.opacity = '1';
+                el.style.transform = 'none';
             });
             setTimeout(() => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(-4px)';
                 setTimeout(() => el.closest('.flash-msg')?.remove(), 300);
-            }, 4000);
+            }, 4200);
         });
+
+        // Reveal
+        const revealObs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    revealObs.unobserve(e.target);
+                }
+            });
+        }, {
+            threshold: .1,
+            rootMargin: '0px 0px -36px 0px'
+        });
+        document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
     </script>
 
     @stack('scripts')
@@ -6606,205 +7560,662 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 ---
 
+### 📄 File: `./resources/views/partials/_doc-styles.blade.php`
+
+```blade
+{{-- resources/views/partials/_doc-styles.blade.php --}}
+<style>
+    .doc-wrap {
+        max-width: 680px;
+        margin: 0 auto
+    }
+
+    .doc-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        gap: .75rem;
+        flex-wrap: wrap
+    }
+
+    .doc-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        font-size: .8rem;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color .2s
+    }
+
+    .doc-back:hover {
+        color: var(--teal-xl)
+    }
+
+    .doc-back span {
+        transition: transform .2s
+    }
+
+    .doc-back:hover span {
+        transform: translateX(-2px)
+    }
+
+    .doc-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 24px rgba(0, 0, 0, .12);
+        border: 1px solid rgba(0, 0, 0, .06);
+        overflow: hidden;
+        color: #1a1a1a
+    }
+
+    .kop-surat {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.75rem 2rem 1.25rem;
+        border-bottom: 3px double #1a1a1a
+    }
+
+    .kop-surat img {
+        height: 72px;
+        width: 72px;
+        object-fit: contain;
+        flex-shrink: 0
+    }
+
+    .kop-text {
+        flex: 1;
+        text-align: center
+    }
+
+    .kop-text h1 {
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #111;
+        font-family: 'Times New Roman', serif
+    }
+
+    .kop-text p {
+        font-size: .7rem;
+        color: #666;
+        margin-top: .2rem
+    }
+
+    .doc-body {
+        padding: 1.5rem 2rem 2rem;
+        font-family: 'Times New Roman', Georgia, serif;
+        font-size: .82rem;
+        line-height: 1.75;
+        color: #1a1a1a
+    }
+
+    .doc-title {
+        text-align: center;
+        font-size: .94rem;
+        font-weight: 700;
+        text-decoration: underline;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin: .5rem 0 1.25rem
+    }
+
+    .doc-meta {
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        font-size: .8rem
+    }
+
+    .doc-meta td {
+        padding: 2px 4px 2px 0;
+        vertical-align: top
+    }
+
+    .doc-meta .lbl {
+        width: 5rem;
+        color: #666;
+        white-space: nowrap
+    }
+
+    .doc-meta .sep {
+        width: .5rem
+    }
+
+    .doc-data {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        font-size: .8rem
+    }
+
+    .doc-data td {
+        padding: 3px 4px 3px 0;
+        vertical-align: top
+    }
+
+    .doc-data .lbl {
+        width: 9rem;
+        color: #666
+    }
+
+    .doc-data .sep {
+        width: .5rem
+    }
+
+    .doc-data .val {
+        font-weight: 600
+    }
+
+    .doc-para {
+        text-indent: 2rem;
+        margin-bottom: .75rem;
+        text-align: justify
+    }
+
+    .ttd-block {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2rem
+    }
+
+    .ttd-inner {
+        text-align: center;
+        width: 11rem;
+        font-size: .8rem
+    }
+
+    .ttd-inner img {
+        height: 60px;
+        margin: .5rem auto;
+        display: block;
+        object-fit: contain
+    }
+
+    .ttd-space {
+        height: 60px
+    }
+
+    .ttd-nama {
+        font-weight: 700;
+        text-decoration: underline
+    }
+
+    .ttd-nip {
+        font-size: .72rem;
+        color: #555;
+        margin-top: .15rem
+    }
+
+    .doc-note {
+        text-align: center;
+        font-size: .7rem;
+        color: var(--muted2);
+        margin-top: .85rem
+    }
+
+    .doc-jadwal {
+        border-collapse: collapse;
+        margin: .25rem 0 1rem 2rem;
+        font-size: .8rem
+    }
+
+    .doc-jadwal td {
+        padding: 3px 4px 3px 0;
+        vertical-align: top
+    }
+
+    .doc-jadwal .lbl {
+        width: 7rem;
+        color: #666
+    }
+
+    .qr-block {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #d1d5db;
+        text-align: center
+    }
+
+    .qr-block img {
+        width: 84px;
+        height: 84px;
+        object-fit: contain;
+        margin: 0 auto
+    }
+
+    .qr-block p {
+        font-size: .68rem;
+        color: #9ca3af;
+        margin-top: .3rem
+    }
+
+    .doc-alert {
+        padding: .65rem .85rem;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        color: #92400e;
+        font-size: .75rem;
+        margin: .5rem 0 1rem 2rem
+    }
+</style>
+
+```
+
+---
+
+### 📄 File: `./resources/views/partials/_kop-surat.blade.php`
+
+```blade
+{{--
+    resources/views/partials/_kop-surat.blade.php
+    Digunakan oleh: landing/skl, landing/undangan
+--}}
+<div class="kop-surat">
+    @if ($instansi?->logo_institusi)
+        <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="">
+    @endif
+    <div class="kop-text">
+        <h1>{{ $instansi?->nama }}</h1>
+        <p>
+            NPSN: {{ $instansi?->npsn ?? '&mdash;' }}
+            @if ($instansi?->akreditasi)
+                &nbsp;&middot;&nbsp; Akreditasi: {{ $instansi->akreditasi }}
+            @endif
+        </p>
+    </div>
+</div>
+
+```
+
+---
+
+### 📄 File: `./resources/views/partials/_page-header.blade.php`
+
+```blade
+{{--
+    resources/views/partials/_page-header.blade.php
+
+    Props:
+      $title        — judul halaman
+      $searchRoute  — route name untuk form action
+      $clearRoute   — route name untuk tombol clear
+      $placeholder  — placeholder input
+      $keyword      — keyword aktif (optional)
+      $totalFound   — jumlah data ditemukan (optional)
+--}}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ $title }}</h1>
+        @if (isset($keyword) && isset($totalFound))
+            <p class="page-meta">
+                Hasil untuk <strong>&ldquo;{{ $keyword }}&rdquo;</strong>
+                &mdash; {{ $totalFound }} data ditemukan
+            </p>
+        @endif
+    </div>
+
+    <form action="{{ route($searchRoute) }}" method="GET" class="search-form">
+        <div class="search-field-wrap">
+            <input type="text" name="nama" value="{{ request('nama', $keyword ?? '') }}"
+                placeholder="{{ $placeholder ?? 'Cari nama' }}" class="search-field-input">
+        </div>
+        <button type="submit" class="search-btn">Cari</button>
+        @if (isset($keyword))
+            <a href="{{ route($clearRoute) }}" class="clear-btn" aria-label="Hapus pencarian">&times;</a>
+        @endif
+    </form>
+</div>
+
+```
+
+---
+
+### 📄 File: `./resources/views/partials/_people-grid.blade.php`
+
+```blade
+{{--
+    resources/views/partials/_people-grid.blade.php
+    Digunakan oleh: alumni/index & personil/index
+
+    Props (via @include):
+      $items       — collection (alumni / personil)
+      $photoKey    — field name untuk foto ('avatar' | 'foto')
+      $subKey      — field name untuk sub-title ('tahun_lulus' | 'jabatan')
+      $subPrefix   — string prefix ('Lulus ' | '')
+      $subColor    — CSS color string ('' | 'var(--teal-xl)')
+      $monoKey     — field untuk monospace ('nisn' | 'nip')
+      $routePrefix — untuk pagination links, jika perlu
+      $keyword     — search keyword (optional)
+--}}
+
+@if ($items->isEmpty())
+    <div class="empty-state">
+        <p class="empty-title">Tidak ada data{{ isset($keyword) ? ' untuk &ldquo;' . e($keyword) . '&rdquo;' : '' }}.</p>
+        @if (isset($keyword))
+            <a href="{{ url()->current() }}" class="empty-link">Lihat semua &rarr;</a>
+        @endif
+    </div>
+@else
+    <div class="people-grid">
+        @foreach ($items as $p)
+            @php $photo = $p->{$photoKey} ?? null; @endphp
+            <div class="card card-hover person-card reveal">
+                <div class="avatar-wrap">
+                    @if ($photo)
+                        <img src="{{ Storage::url($photo) }}" alt="{{ $p->nama }}" class="avatar-img">
+                    @else
+                        <div class="avatar-fallback">{{ strtoupper(mb_substr($p->nama, 0, 1)) }}</div>
+                    @endif
+                </div>
+
+                <div class="person-name">{{ $p->nama }}</div>
+
+                <div class="person-sub" @if (!empty($subColor)) style="color:{{ $subColor }}" @endif>
+                    {{ $subPrefix ?? '' }}{{ $p->{$subKey} ?? '' }}
+                </div>
+
+                @if (!empty($monoKey) && $p->{$monoKey})
+                    <div class="person-mono">{{ $p->{$monoKey} }}</div>
+                @endif
+
+                @if ($p->quote ?? null)
+                    <div class="person-quote">&ldquo;{{ $p->quote }}&rdquo;</div>
+                @endif
+
+                @if ($p->sosial_media ?? null)
+                    <a href="{{ $p->sosial_media }}" target="_blank" rel="noopener" class="person-link">Sosial
+                        Media</a>
+                @endif
+            </div>
+        @endforeach
+    </div>
+
+    @if (method_exists($items, 'links'))
+        <div class="pagination-wrap">{{ $items->links() }}</div>
+    @endif
+@endif
+
+```
+
+---
+
+### 📄 File: `./resources/views/partials/_people-styles.blade.php`
+
+```blade
+{{-- resources/views/partials/_people-styles.blade.php --}}
+<style>
+    .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem
+    }
+
+    .page-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        font-family: var(--font-display)
+    }
+
+    .page-meta {
+        font-size: .76rem;
+        color: var(--muted);
+        margin-top: .25rem
+    }
+
+    .page-meta strong {
+        color: var(--text)
+    }
+
+    .search-form {
+        display: flex;
+        gap: .45rem;
+        align-items: center
+    }
+
+    .search-field-wrap {
+        position: relative
+    }
+
+    .search-field-input {
+        background: var(--card2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: .52rem .9rem;
+        font-size: .8rem;
+        font-family: var(--font-body);
+        color: var(--text);
+        width: 14rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .search-field-input::placeholder {
+        color: var(--muted2)
+    }
+
+    .search-field-input:focus {
+        border-color: rgba(20, 184, 166, .42);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, .1)
+    }
+
+    .search-btn {
+        background: linear-gradient(135deg, var(--teal), var(--teal-d));
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: .52rem 1rem;
+        font-size: .8rem;
+        font-weight: 700;
+        font-family: var(--font-body);
+        cursor: pointer;
+        transition: all .2s;
+        box-shadow: 0 0 14px rgba(13, 148, 136, .18);
+    }
+
+    .search-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 18px rgba(13, 148, 136, .32)
+    }
+
+    .clear-btn {
+        background: var(--card2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: .52rem .65rem;
+        font-size: .8rem;
+        color: var(--muted);
+        cursor: pointer;
+        font-family: var(--font-body);
+        transition: all .2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        line-height: 1;
+    }
+
+    .clear-btn:hover {
+        border-color: rgba(20, 184, 166, .32);
+        color: var(--teal-xl)
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem
+    }
+
+    .empty-title {
+        font-size: .86rem;
+        color: var(--muted);
+        margin-bottom: .65rem
+    }
+
+    .empty-link {
+        font-size: .76rem;
+        color: var(--teal-xl);
+        text-decoration: none
+    }
+
+    .empty-link:hover {
+        text-decoration: underline
+    }
+
+    .people-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+        gap: .9rem
+    }
+
+    .person-card {
+        padding: 1.4rem .9rem;
+        text-align: center;
+        border-radius: var(--radius);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .12rem
+    }
+
+    .avatar-wrap {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-bottom: .7rem;
+        flex-shrink: 0
+    }
+
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 1.5px solid var(--border)
+    }
+
+    .avatar-fallback {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.2rem;
+        font-family: var(--font-display);
+        border: 1.5px solid var(--border);
+        background: rgba(20, 184, 166, .08);
+        color: var(--teal-xl);
+    }
+
+    .person-name {
+        font-size: .85rem;
+        font-weight: 700;
+        line-height: 1.25;
+        font-family: var(--font-display)
+    }
+
+    .person-sub {
+        font-size: .71rem;
+        color: var(--muted);
+        margin-top: .12rem
+    }
+
+    .person-mono {
+        font-size: .67rem;
+        font-family: monospace;
+        color: var(--muted2);
+        margin-top: .08rem;
+        letter-spacing: .03em
+    }
+
+    .person-quote {
+        font-size: .7rem;
+        color: var(--muted);
+        font-style: italic;
+        margin-top: .45rem;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden
+    }
+
+    .person-link {
+        font-size: .7rem;
+        color: var(--teal-xl);
+        text-decoration: none;
+        margin-top: .35rem;
+        display: inline-block;
+        border-bottom: 1px solid rgba(94, 234, 212, .25);
+        padding-bottom: 1px;
+        transition: border-color .2s
+    }
+
+    .person-link:hover {
+        border-color: var(--teal-xl)
+    }
+
+    .pagination-wrap {
+        margin-top: 1.75rem
+    }
+</style>
+
+```
+
+---
+
+### 📄 File: `./resources/views/partials/_ttd.blade.php`
+
+```blade
+{{--
+    resources/views/partials/_ttd.blade.php
+    Digunakan oleh: landing/skl, landing/undangan
+--}}
+<div class="ttd-block">
+    <div class="ttd-inner">
+        <p>{{ $instansi?->nama }}, {{ now()->translatedFormat('d F Y') }}</p>
+        @if ($instansi?->tte_pimpinan)
+            <img src="{{ Storage::url($instansi->tte_pimpinan) }}" alt="Tanda Tangan">
+        @else
+            <div class="ttd-space"></div>
+        @endif
+        <p class="ttd-nama">{{ $instansi?->nama_pimpinan }}</p>
+        @if ($instansi?->nip_pimpinan)
+            <p class="ttd-nip">NIP. {{ $instansi->nip_pimpinan }}</p>
+        @endif
+    </div>
+</div>
+
+```
+
+---
+
 ### 📄 File: `./resources/views/pdf/skl.blade.php`
 
 ```blade
-{{-- ════════════════════════════════════════════════════
-     resources/views/pdf/skl.blade.php
-     Surat Keterangan Lulus (DomPDF)
-     Render via: Pdf::loadView('pdf.skl', compact('siswa','instansi','tahunPelajaran'))
-════════════════════════════════════════════════════ --}}
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <title>SKL - {{ $siswa->nama }}</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            color: #1a1a1a;
-            padding: 1.5cm 2cm 2cm;
-            line-height: 1.6;
-        }
-
-        /* KOP */
-        .kop {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 4px double #1a1a1a;
-            padding-bottom: 10px;
-            margin-bottom: 18px;
-        }
-
-        .kop img {
-            height: 80px;
-            width: 80px;
-            object-fit: contain;
-        }
-
-        .kop-text {
-            flex: 1;
-            text-align: center;
-        }
-
-        .kop-text h1 {
-            font-size: 15pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .kop-text p {
-            font-size: 10pt;
-            color: #444;
-            margin-top: 2px;
-        }
-
-        /* JUDUL */
-        h2.judul {
-            text-align: center;
-            font-size: 14pt;
-            font-weight: bold;
-            text-decoration: underline;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 18px 0 20px;
-        }
-
-        /* NOMOR */
-        table.nomor {
-            margin-bottom: 16px;
-            font-size: 11pt;
-        }
-
-        table.nomor td {
-            padding: 2px 6px 2px 0;
-            vertical-align: top;
-        }
-
-        table.nomor td.label {
-            width: 5cm;
-            color: #555;
-        }
-
-        table.nomor td.sep {
-            width: 0.3cm;
-        }
-
-        /* DATA SISWA */
-        table.data {
-            width: 100%;
-            margin-bottom: 16px;
-            font-size: 11pt;
-            border-collapse: collapse;
-        }
-
-        table.data td {
-            padding: 3px 6px 3px 0;
-            vertical-align: top;
-        }
-
-        table.data td.label {
-            width: 5.5cm;
-            color: #555;
-        }
-
-        table.data td.sep {
-            width: 0.3cm;
-        }
-
-        table.data td.val {
-            font-weight: bold;
-        }
-
-        /* PARAGRAF */
-        .isi p {
-            text-indent: 1.5cm;
-            margin-bottom: 10px;
-            text-align: justify;
-        }
-
-        /* TTD */
-        .ttd {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 32px;
-        }
-
-        .ttd-box {
-            text-align: center;
-            width: 7cm;
-            font-size: 11pt;
-        }
-
-        .ttd-box img {
-            height: 72px;
-            margin: 6px auto;
-            display: block;
-            object-fit: contain;
-        }
-
-        .ttd-box .nama {
-            font-weight: bold;
-            text-decoration: underline;
-        }
-
-        .ttd-box .nip {
-            font-size: 10pt;
-            color: #444;
-        }
-
-        /* QR */
-        .qr-box {
-            margin-top: 28px;
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 14px;
-        }
-
-        .qr-box img {
-            width: 90px;
-            height: 90px;
-        }
-
-        .qr-box p {
-            font-size: 9pt;
-            color: #666;
-            margin-top: 4px;
-        }
-    </style>
+    @include('pdf._base-styles')
 </head>
 
 <body>
+    @include('pdf._kop')
 
-    {{-- KOP --}}
-    <div class="kop">
-        @if ($instansi->logo_institusi)
-            <img src="{{ public_path('storage/' . $instansi->logo_institusi) }}" alt="">
-        @endif
-        <div class="kop-text">
-            <h1>{{ $instansi->nama }}</h1>
-            <p>NPSN: {{ $instansi->npsn }}
-                @if ($instansi->akreditasi)
-                    &nbsp;&bull;&nbsp; Akreditasi: {{ $instansi->akreditasi }}
-                @endif
-            </p>
-        </div>
-    </div>
-
-    {{-- NOMOR --}}
     <table class="nomor">
         <tr>
-            <td class="label">Nomor</td>
+            <td class="lbl">Nomor</td>
             <td class="sep">:</td>
             <td>{{ $instansi->nomor_surat ?? '-' }}</td>
         </tr>
@@ -6813,33 +8224,29 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     <h2 class="judul">Surat Keterangan Lulus</h2>
 
     <div class="isi">
-        <p>
-            Yang bertanda tangan di bawah ini, Kepala {{ $instansi->nama }},
-            menerangkan bahwa siswa berikut:
-        </p>
+        <p>Yang bertanda tangan di bawah ini, Kepala {{ $instansi->nama }}, menerangkan bahwa siswa berikut:</p>
     </div>
 
-    {{-- DATA SISWA --}}
     <table class="data">
         <tr>
-            <td class="label">Nama Lengkap</td>
+            <td class="lbl">Nama Lengkap</td>
             <td class="sep">:</td>
             <td class="val">{{ $siswa->nama }}</td>
         </tr>
         <tr>
-            <td class="label">NISN</td>
+            <td class="lbl">NISN</td>
             <td class="sep">:</td>
             <td class="val">{{ $siswa->nisn }}</td>
         </tr>
         @if ($siswa->nama_orangtua)
             <tr>
-                <td class="label">Nama Orang Tua / Wali</td>
+                <td class="lbl">Nama Orang Tua / Wali</td>
                 <td class="sep">:</td>
                 <td class="val">{{ $siswa->nama_orangtua }}</td>
             </tr>
         @endif
         <tr>
-            <td class="label">Tahun Pelajaran</td>
+            <td class="lbl">Tahun Pelajaran</td>
             <td class="sep">:</td>
             <td class="val">{{ $tahunPelajaran->name }}</td>
         </tr>
@@ -6855,40 +8262,19 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     @endphp
 
     <div class="isi">
-        <p>
-            Telah mengikuti dan menyelesaikan seluruh program pendidikan, dan
-            {!! $statusText !!} {{ $instansi->nama }} Tahun Pelajaran {{ $tahunPelajaran->name }}.
-        </p>
-        <p>
-            Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk
-            dapat digunakan sebagaimana mestinya.
-        </p>
+        <p>Telah mengikuti dan menyelesaikan seluruh program pendidikan, dan {!! $statusText !!}
+            {{ $instansi->nama }} Tahun Pelajaran {{ $tahunPelajaran->name }}.</p>
+        <p>Demikian surat keterangan ini dibuat dengan sebenar-benarnya untuk dapat digunakan sebagaimana mestinya.</p>
     </div>
 
-    {{-- TTD --}}
-    <div class="ttd">
-        <div class="ttd-box">
-            <p>{{ $instansi->nama }},<br>{{ now()->translatedFormat('d F Y') }}</p>
-            @if ($instansi->tte_pimpinan)
-                <img src="{{ public_path('storage/' . $instansi->tte_pimpinan) }}" alt="TTD">
-            @else
-                <div style="height:72px;"></div>
-            @endif
-            <p class="nama">{{ $instansi->nama_pimpinan }}</p>
-            @if ($instansi->nip_pimpinan)
-                <p class="nip">NIP. {{ $instansi->nip_pimpinan }}</p>
-            @endif
-        </div>
-    </div>
+    @include('pdf._ttd')
 
-    {{-- QR --}}
     @if ($siswa->barcode_url)
         <div class="qr-box">
             <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-            <p>Scan untuk verifikasi kehadiran</p>
+            <p>Scan untuk verifikasi</p>
         </div>
     @endif
-
 </body>
 
 </html>
@@ -6900,100 +8286,14 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/pdf/undangan.blade.php`
 
 ```blade
-{{-- ════════════════════════════════════════════════════
-     resources/views/pdf/undangan.blade.php
-     Surat Undangan Kelulusan (DomPDF)
-     Render via: Pdf::loadView('pdf.undangan', compact('siswa','instansi','tahunPelajaran'))
-════════════════════════════════════════════════════ --}}
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <title>Undangan - {{ $siswa->nama }}</title>
+    @include('pdf._base-styles')
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            color: #1a1a1a;
-            padding: 1.5cm 2cm 2cm;
-            line-height: 1.7;
-        }
-
-        /* KOP */
-        .kop {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border-bottom: 4px double #1a1a1a;
-            padding-bottom: 10px;
-            margin-bottom: 18px;
-        }
-
-        .kop img {
-            height: 80px;
-            width: 80px;
-            object-fit: contain;
-        }
-
-        .kop-text {
-            flex: 1;
-            text-align: center;
-        }
-
-        .kop-text h1 {
-            font-size: 15pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .kop-text p {
-            font-size: 10pt;
-            color: #444;
-            margin-top: 2px;
-        }
-
-        /* NOMOR */
-        table.nomor {
-            margin-bottom: 16px;
-            font-size: 11pt;
-        }
-
-        table.nomor td {
-            padding: 2px 6px 2px 0;
-            vertical-align: top;
-        }
-
-        table.nomor td.label {
-            width: 2cm;
-            color: #555;
-        }
-
-        /* JUDUL */
-        h2.judul {
-            text-align: center;
-            font-size: 14pt;
-            font-weight: bold;
-            text-decoration: underline;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 18px 0 20px;
-        }
-
-        /* ISI */
-        .isi p {
-            text-indent: 1.5cm;
-            margin-bottom: 10px;
-            text-align: justify;
-        }
-
-        /* JADWAL */
         table.jadwal {
             margin: 4px 0 16px 1.5cm;
             font-size: 11pt;
@@ -7004,89 +8304,25 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             vertical-align: top;
         }
 
-        table.jadwal td.label {
+        table.jadwal td.lbl {
             width: 4.5cm;
             color: #555;
-        }
-
-        /* TTD */
-        .ttd {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 32px;
-        }
-
-        .ttd-box {
-            text-align: center;
-            width: 7cm;
-            font-size: 11pt;
-        }
-
-        .ttd-box img {
-            height: 72px;
-            margin: 6px auto;
-            display: block;
-            object-fit: contain;
-        }
-
-        .ttd-box .nama {
-            font-weight: bold;
-            text-decoration: underline;
-        }
-
-        .ttd-box .nip {
-            font-size: 10pt;
-            color: #444;
-        }
-
-        /* QR */
-        .qr-box {
-            margin-top: 28px;
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 14px;
-        }
-
-        .qr-box img {
-            width: 90px;
-            height: 90px;
-        }
-
-        .qr-box p {
-            font-size: 9pt;
-            color: #666;
-            margin-top: 4px;
         }
     </style>
 </head>
 
 <body>
+    @include('pdf._kop')
 
-    {{-- KOP --}}
-    <div class="kop">
-        @if ($instansi->logo_institusi)
-            <img src="{{ public_path('storage/' . $instansi->logo_institusi) }}" alt="">
-        @endif
-        <div class="kop-text">
-            <h1>{{ $instansi->nama }}</h1>
-            <p>NPSN: {{ $instansi->npsn }}
-                @if ($instansi->akreditasi)
-                    &nbsp;&bull;&nbsp; Akreditasi: {{ $instansi->akreditasi }}
-                @endif
-            </p>
-        </div>
-    </div>
-
-    {{-- NOMOR --}}
     <table class="nomor">
         <tr>
-            <td class="label">Nomor</td>
-            <td>:</td>
+            <td class="lbl">Nomor</td>
+            <td class="sep">:</td>
             <td>{{ $instansi->nomor_surat ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="label">Hal</td>
-            <td>:</td>
+            <td class="lbl">Hal</td>
+            <td class="sep">:</td>
             <td>Undangan Wisuda &amp; Pengambilan Ijazah</td>
         </tr>
     </table>
@@ -7095,13 +8331,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
     <div class="isi">
         <p>Assalamu'alaikum Warahmatullahi Wabarakatuh.</p>
-        <p>
-            Dengan hormat, kami mengundang Bapak/Ibu
-            <b>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</b>
-            beserta putra/putri atas nama
-            <b>{{ $siswa->nama }}</b> (NISN: {{ $siswa->nisn }})
-            untuk menghadiri acara Wisuda &amp; Pengambilan Ijazah yang akan dilaksanakan pada:
-        </p>
+        <p>Dengan hormat, kami mengundang Bapak/Ibu <b>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</b> beserta
+            putra/putri atas nama <b>{{ $siswa->nama }}</b> (NISN: {{ $siswa->nisn }}) untuk menghadiri acara Wisuda
+            &amp; Pengambilan Ijazah yang akan dilaksanakan pada:</p>
     </div>
 
     @php
@@ -7112,18 +8344,18 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
     @if ($adaJadwal)
         <table class="jadwal">
             <tr>
-                <td class="label">Hari / Tanggal</td>
+                <td class="lbl">Hari / Tanggal</td>
                 <td>:</td>
                 <td>{{ $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y') }}</td>
             </tr>
             <tr>
-                <td class="label">Waktu</td>
+                <td class="lbl">Waktu</td>
                 <td>:</td>
-                <td>{{ $tp->jadwal_kelulusan_mulai->format('H:i') }} –
+                <td>{{ $tp->jadwal_kelulusan_mulai->format('H:i') }} &ndash;
                     {{ $tp->jadwal_kelulusan_selesai->format('H:i') }} WIB</td>
             </tr>
             <tr>
-                <td class="label">Tempat</td>
+                <td class="lbl">Tempat</td>
                 <td>:</td>
                 <td>{{ $tp->jadwal_kelulusan_tempat }}</td>
             </tr>
@@ -7135,33 +8367,232 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         <p>Wassalamu'alaikum Warahmatullahi Wabarakatuh.</p>
     </div>
 
-    {{-- TTD --}}
-    <div class="ttd">
-        <div class="ttd-box">
-            <p>{{ $instansi->nama }},<br>{{ now()->translatedFormat('d F Y') }}</p>
-            @if ($instansi->tte_pimpinan)
-                <img src="{{ public_path('storage/' . $instansi->tte_pimpinan) }}" alt="TTD">
-            @else
-                <div style="height:72px;"></div>
-            @endif
-            <p class="nama">{{ $instansi->nama_pimpinan }}</p>
-            @if ($instansi->nip_pimpinan)
-                <p class="nip">NIP. {{ $instansi->nip_pimpinan }}</p>
-            @endif
-        </div>
-    </div>
+    @include('pdf._ttd')
 
-    {{-- QR --}}
     @if ($siswa->barcode_url)
         <div class="qr-box">
             <img src="{{ $siswa->barcode_url }}" alt="QR Code">
             <p>Scan untuk verifikasi kehadiran di lokasi acara</p>
         </div>
     @endif
-
 </body>
 
 </html>
+
+```
+
+---
+
+### 📄 File: `./resources/views/pdf/_base-styles.blade.php`
+
+```blade
+<style>
+    *,
+    *::before,
+    *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt;
+        color: #1a1a1a;
+        padding: 1.5cm 2cm 2cm;
+        line-height: 1.65;
+    }
+
+    /* KOP */
+    .kop {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 4px double #1a1a1a;
+        padding-bottom: 10px;
+        margin-bottom: 18px;
+    }
+
+    .kop img {
+        height: 80px;
+        width: 80px;
+        object-fit: contain;
+    }
+
+    .kop-text {
+        flex: 1;
+        text-align: center;
+    }
+
+    .kop-text h1 {
+        font-size: 15pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .kop-text p {
+        font-size: 10pt;
+        color: #444;
+        margin-top: 2px;
+    }
+
+    /* JUDUL */
+    h2.judul {
+        text-align: center;
+        font-size: 14pt;
+        font-weight: bold;
+        text-decoration: underline;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 18px 0 20px;
+    }
+
+    /* NOMOR */
+    table.nomor {
+        margin-bottom: 16px;
+        font-size: 11pt;
+    }
+
+    table.nomor td {
+        padding: 2px 6px 2px 0;
+        vertical-align: top;
+    }
+
+    table.nomor td.lbl {
+        width: 5cm;
+        color: #555;
+    }
+
+    table.nomor td.sep {
+        width: .3cm;
+    }
+
+    /* DATA */
+    table.data {
+        width: 100%;
+        margin-bottom: 16px;
+        font-size: 11pt;
+        border-collapse: collapse;
+    }
+
+    table.data td {
+        padding: 3px 6px 3px 0;
+        vertical-align: top;
+    }
+
+    table.data td.lbl {
+        width: 5.5cm;
+        color: #555;
+    }
+
+    table.data td.sep {
+        width: .3cm;
+    }
+
+    table.data td.val {
+        font-weight: bold;
+    }
+
+    /* ISI */
+    .isi p {
+        text-indent: 1.5cm;
+        margin-bottom: 10px;
+        text-align: justify;
+    }
+
+    /* TTD */
+    .ttd {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 32px;
+    }
+
+    .ttd-box {
+        text-align: center;
+        width: 7cm;
+        font-size: 11pt;
+    }
+
+    .ttd-box img {
+        height: 72px;
+        margin: 6px auto;
+        display: block;
+        object-fit: contain;
+    }
+
+    .ttd-box .nama {
+        font-weight: bold;
+        text-decoration: underline;
+    }
+
+    .ttd-box .nip {
+        font-size: 10pt;
+        color: #444;
+    }
+
+    /* QR */
+    .qr-box {
+        margin-top: 28px;
+        text-align: center;
+        border-top: 1px dashed #ccc;
+        padding-top: 14px;
+    }
+
+    .qr-box img {
+        width: 90px;
+        height: 90px;
+    }
+
+    .qr-box p {
+        font-size: 9pt;
+        color: #666;
+        margin-top: 4px;
+    }
+</style>
+
+```
+
+---
+
+### 📄 File: `./resources/views/pdf/_kop.blade.php`
+
+```blade
+{{-- resources/views/pdf/_kop.blade.php --}}
+<div class="kop">
+    @if ($instansi->logo_institusi)
+        <img src="{{ public_path('storage/' . $instansi->logo_institusi) }}" alt="">
+    @endif
+    <div class="kop-text">
+        <h1>{{ $instansi->nama }}</h1>
+        <p>NPSN: {{ $instansi->npsn }}
+            @if ($instansi->akreditasi) &bull; Akreditasi: {{ $instansi->akreditasi }} @endif
+        </p>
+    </div>
+</div>
+
+```
+
+---
+
+### 📄 File: `./resources/views/pdf/_ttd.blade.php`
+
+```blade
+{{-- resources/views/pdf/_ttd.blade.php --}}
+<div class="ttd">
+    <div class="ttd-box">
+        <p>{{ $instansi->nama }},<br>{{ now()->translatedFormat('d F Y') }}</p>
+        @if ($instansi->tte_pimpinan)
+            <img src="{{ public_path('storage/' . $instansi->tte_pimpinan) }}" alt="TTD">
+        @else
+            <div style="height:72px;"></div>
+        @endif
+        <p class="nama">{{ $instansi->nama_pimpinan }}</p>
+        @if ($instansi->nip_pimpinan)
+            <p class="nip">NIP. {{ $instansi->nip_pimpinan }}</p>
+        @endif
+    </div>
+</div>
 
 ```
 
@@ -7173,101 +8604,29 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Personil')
 
+@push('styles')
+    @include('partials._people-styles')
+@endpush
+
 @section('content')
+    @include('partials._page-header', [
+        'title' => 'Personil',
+        'searchRoute' => 'personil.cari',
+        'clearRoute' => 'personil.index',
+        'placeholder' => 'Cari nama&hellip;',
+        'keyword' => $keyword ?? null,
+        'totalFound' => $personils->count() ?? null,
+    ])
 
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-            <h1 class="text-xl font-bold text-green-700">Personil</h1>
-            @if (isset($keyword))
-                <p class="text-sm text-gray-400 mt-0.5">
-                    Hasil pencarian untuk <span class="font-semibold text-gray-600">"{{ $keyword }}"</span>
-                    &mdash; {{ $personils->count() }} data
-                </p>
-            @endif
-        </div>
-
-        <form action="{{ route('personil.cari') }}" method="GET" class="flex gap-2">
-            <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm pointer-events-none">🔎</span>
-                <input type="text" name="nama" value="{{ request('nama', $keyword ?? '') }}" placeholder="Cari nama…"
-                    class="border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-sm w-52
-                          focus:outline-none focus:ring-2 focus:ring-green-500 transition">
-            </div>
-            <button
-                class="bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                       text-white px-4 py-2 rounded-xl text-sm transition">
-                Cari
-            </button>
-            @if (isset($keyword))
-                <a href="{{ route('personil.index') }}"
-                    class="px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-gray-600
-                      border border-gray-200 hover:border-gray-300 transition">
-                    ✕
-                </a>
-            @endif
-        </form>
-    </div>
-
-    @if ($personils->isEmpty())
-        <div class="text-center py-16 text-gray-400">
-            <p class="text-4xl mb-3">🔍</p>
-            <p class="text-sm">
-                Tidak ada data personil{{ isset($keyword) ? ' untuk "' . $keyword . '"' : '' }}.
-            </p>
-            @if (isset($keyword))
-                <a href="{{ route('personil.index') }}" class="inline-block mt-3 text-xs text-green-600 hover:underline">
-                    Lihat semua personil
-                </a>
-            @endif
-        </div>
-    @else
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            @foreach ($personils as $p)
-                <div
-                    class="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100
-                transition-all duration-200 hover:-translate-y-0.5 p-5 text-center group">
-                    @if ($p->foto)
-                        <img src="{{ Storage::url($p->foto) }}" alt="{{ $p->nama }}"
-                            class="w-16 h-16 rounded-full object-cover mx-auto mb-3
-                        ring-2 ring-green-100 group-hover:ring-green-300 transition">
-                    @else
-                        <div
-                            class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center
-                        mx-auto mb-3 ring-2 ring-green-100 group-hover:ring-green-300 transition">
-                            <span class="text-green-700 font-bold text-xl">
-                                {{ strtoupper(substr($p->nama, 0, 1)) }}
-                            </span>
-                        </div>
-                    @endif
-
-                    <p class="font-semibold text-sm leading-tight">{{ $p->nama }}</p>
-                    <p class="text-xs text-green-600 font-medium mt-0.5">{{ $p->jabatan }}</p>
-
-                    @if ($p->nip)
-                        <p class="text-xs text-gray-300 font-mono mt-0.5">{{ $p->nip }}</p>
-                    @endif
-
-                    @if ($p->quote)
-                        <p class="text-xs text-gray-400 italic mt-2 line-clamp-2 leading-relaxed">
-                            "{{ $p->quote }}"
-                        </p>
-                    @endif
-
-                    @if ($p->sosial_media)
-                        <a href="{{ $p->sosial_media }}" target="_blank" rel="noopener"
-                            class="inline-block mt-2 text-xs text-blue-400 hover:text-blue-600 transition">
-                            🔗 Sosial Media
-                        </a>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-
-        @if ($personils instanceof \Illuminate\Pagination\LengthAwarePaginator)
-            <div class="mt-6">{{ $personils->links() }}</div>
-        @endif
-    @endif
-
+    @include('partials._people-grid', [
+        'items' => $personils,
+        'photoKey' => 'foto',
+        'subKey' => 'jabatan',
+        'subPrefix' => '',
+        'subColor' => 'var(--teal-xl)',
+        'monoKey' => 'nip',
+        'keyword' => $keyword ?? null,
+    ])
 @endsection
 
 ```
@@ -7280,79 +8639,197 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Tamu Undangan')
 
-@section('content')
+@push('styles')
+    <style>
+        .tamu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.6rem
+        }
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <h1 class="text-xl font-bold text-green-700">Tamu Undangan</h1>
-        <div class="flex gap-2">
-            <a href="{{ route('tamu.scan') }}"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                  text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-sm shadow-green-200">
-                📷 Scan QR
-            </a>
-            <a href="{{ route('tamu.cetak-hadir') }}" target="_blank"
-                class="flex items-center gap-2 bg-white border border-green-300 text-green-700
-                  hover:bg-green-50 active:scale-[0.98]
-                  text-sm font-semibold px-4 py-2 rounded-xl transition">
-                🖨️ Cetak Hadir
-            </a>
+        .tamu-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
+            font-family: var(--font-display)
+        }
+
+        .tamu-actions {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .9rem;
+            margin-bottom: 1.6rem
+        }
+
+        .stat-tile {
+            padding: 1.4rem 1.1rem;
+            text-align: center;
+            border-radius: var(--radius)
+        }
+
+        .stat-val {
+            font-size: 1.9rem;
+            font-weight: 900;
+            font-family: var(--font-display);
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1
+        }
+
+        .stat-lbl {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-top: .4rem;
+            font-weight: 500
+        }
+
+        .tamu-table-wrap {
+            border-radius: var(--radius);
+            overflow: hidden
+        }
+
+        .tamu-tbl {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .tamu-tbl thead th {
+            padding: .8rem 1.05rem;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .tamu-tbl tbody tr {
+            border-bottom: 1px solid var(--border2);
+            transition: background .15s
+        }
+
+        .tamu-tbl tbody tr:hover {
+            background: rgba(13, 148, 136, .035)
+        }
+
+        .tamu-tbl tbody td {
+            padding: .8rem 1.05rem;
+            font-size: .82rem
+        }
+
+        .tamu-tbl tbody tr:last-child {
+            border-bottom: none
+        }
+
+        .pax-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .2);
+            color: var(--teal-xl);
+            border-radius: 999px;
+            min-width: 28px;
+            height: 22px;
+            padding: 0 .45rem;
+            font-size: .7rem;
+            font-weight: 700
+        }
+
+        .time-cell {
+            font-size: .7rem;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums
+        }
+
+        .empty-tbl {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            color: var(--muted)
+        }
+
+        .empty-tbl-sub {
+            font-size: .82rem;
+            margin-top: .4rem
+        }
+
+        @media(max-width:640px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .tamu-hide {
+                display: none
+            }
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="tamu-header">
+        <h1 class="tamu-title">Tamu Undangan</h1>
+        <div class="tamu-actions">
+            <a href="{{ route('tamu.scan') }}" class="btn btn-primary" style="font-size:.8rem;padding:.52rem 1rem;">Scan QR</a>
+            <a href="{{ route('tamu.cetak-hadir') }}" class="btn btn-ghost" style="font-size:.8rem;padding:.52rem 1rem;"
+                target="_blank">Cetak Hadir</a>
         </div>
     </div>
 
-    {{-- Statistik --}}
-    <div class="grid grid-cols-2 {{ isset($totalSiswa) ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }} gap-4 mb-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-            <p class="text-3xl font-bold text-green-700">{{ $tamuUndangans->total() }}</p>
-            <p class="text-xs text-gray-400 mt-1">Siswa Hadir</p>
+    <div class="stats-grid">
+        <div class="card stat-tile reveal">
+            <div class="stat-val">{{ $tamuUndangans->total() }}</div>
+            <div class="stat-lbl">Siswa Hadir</div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-            <p class="text-3xl font-bold text-green-700">{{ $tamuUndangans->sum('jumlah_tamu') }}</p>
-            <p class="text-xs text-gray-400 mt-1">Total PAX</p>
+        <div class="card stat-tile reveal reveal-delay-1">
+            <div class="stat-val">{{ $tamuUndangans->sum('jumlah_tamu') }}</div>
+            <div class="stat-lbl">Total PAX</div>
         </div>
         @isset($totalSiswa)
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-                @php $pct = $totalSiswa > 0 ? round($tamuUndangans->total() / $totalSiswa * 100) : 0; @endphp
-                <p class="text-3xl font-bold text-green-700">{{ $pct }}%</p>
-                <p class="text-xs text-gray-400 mt-1">Kehadiran</p>
+            @php $pct = $totalSiswa > 0 ? round($tamuUndangans->total() / $totalSiswa * 100) : 0; @endphp
+            <div class="card stat-tile reveal reveal-delay-2">
+                <div class="stat-val">{{ $pct }}%</div>
+                <div class="stat-lbl">Kehadiran</div>
             </div>
         @endisset
     </div>
 
-    {{-- Tabel --}}
-    <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-                <tr class="text-xs text-gray-400 uppercase tracking-wider">
-                    <th class="px-4 py-3 text-left w-10">#</th>
-                    <th class="px-4 py-3 text-left">Nama Siswa</th>
-                    <th class="px-4 py-3 text-left hidden sm:table-cell">Nama Orang Tua</th>
-                    <th class="px-4 py-3 text-center">PAX</th>
-                    <th class="px-4 py-3 text-right">Waktu</th>
+    <div class="card tamu-table-wrap reveal">
+        <table class="tamu-tbl">
+            <thead>
+                <tr>
+                    <th style="width:2.25rem">#</th>
+                    <th>Nama Siswa</th>
+                    <th class="tamu-hide">Nama Orang Tua</th>
+                    <th style="text-align:center">PAX</th>
+                    <th style="text-align:right">Waktu</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody>
                 @forelse($tamuUndangans as $i => $t)
-                    <tr class="hover:bg-gray-50/70 transition">
-                        <td class="px-4 py-3 text-gray-300 text-xs">{{ $tamuUndangans->firstItem() + $i }}</td>
-                        <td class="px-4 py-3 font-medium">{{ $t->siswa?->nama ?? '-' }}</td>
-                        <td class="px-4 py-3 text-gray-400 hidden sm:table-cell">{{ $t->siswa?->nama_orangtua ?? '-' }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <span
-                                class="inline-flex items-center justify-center bg-green-100 text-green-700
-                                 font-semibold text-xs px-2.5 py-1 rounded-full min-w-[28px]">
-                                {{ $t->jumlah_tamu }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-gray-400 text-xs text-right tabular-nums">
-                            {{ $t->created_at->format('H:i') }}
-                        </td>
+                    <tr>
+                        <td style="color:var(--muted2);font-size:.7rem;">{{ $tamuUndangans->firstItem() + $i }}</td>
+                        <td style="font-weight:600">{{ $t->siswa?->nama ?? '&mdash;' }}</td>
+                        <td class="tamu-hide" style="color:var(--muted)">{{ $t->siswa?->nama_orangtua ?? '&mdash;' }}</td>
+                        <td style="text-align:center"><span class="pax-badge">{{ $t->jumlah_tamu }}</span></td>
+                        <td style="text-align:right" class="time-cell">{{ $t->created_at->format('H:i') }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center py-14 text-gray-400">
-                            <p class="text-3xl mb-2">👥</p>
-                            <p class="text-sm">Belum ada tamu yang hadir.</p>
+                        <td colspan="5" class="empty-tbl">
+                            <div style="font-size:1.5rem;margin-bottom:.5rem;opacity:.3">—</div>
+                            <div class="empty-tbl-sub">Belum ada tamu yang hadir.</div>
                         </td>
                     </tr>
                 @endforelse
@@ -7360,8 +8837,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         </table>
     </div>
 
-    <div class="mt-4">{{ $tamuUndangans->links() }}</div>
-
+    <div style="margin-top:1.1rem">{{ $tamuUndangans->links() }}</div>
 @endsection
 
 ```
@@ -7374,88 +8850,135 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 @extends('layouts.app')
 @section('title', 'Konfirmasi Tamu')
 
-@section('content')
-    <div class="max-w-md mx-auto">
+@push('styles')
+    <style>
+        .konfirmasi-wrap {
+            max-width: 420px;
+            margin: 0 auto
+        }
 
+        .pax-control {
+            display: flex;
+            align-items: center;
+            gap: .8rem
+        }
+
+        .pax-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all .2s;
+            font-family: var(--font-body);
+        }
+
+        .pax-btn:hover {
+            border-color: rgba(20, 184, 166, .42);
+            color: var(--teal-xl);
+            background: rgba(20, 184, 166, .07)
+        }
+
+        .pax-input {
+            flex: 1;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: .6rem;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: var(--font-display);
+            color: var(--text);
+            text-align: center;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .pax-input:focus {
+            border-color: rgba(20, 184, 166, .42);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1)
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            padding: .48rem 0;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .info-row:last-child {
+            border-bottom: none
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="konfirmasi-wrap">
         <a href="{{ route('tamu.scan') }}"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-700 mb-5 transition group">
-            <span class="group-hover:-translate-x-0.5 transition-transform">←</span> Kembali ke Scanner
+            style="margin-bottom:1.4rem;display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--muted);text-decoration:none;">
+            &larr; Kembali ke Scanner
         </a>
 
-        <h1 class="text-xl font-bold text-green-700 mb-4">Konfirmasi Kehadiran</h1>
+        <h1
+            style="font-size:1.3rem;font-weight:800;letter-spacing:-.03em;margin-bottom:1.35rem;font-family:var(--font-display)">
+            Konfirmasi Kehadiran</h1>
 
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div class="card" style="overflow:hidden;">
+            <div style="padding:1.4rem 1.6rem;border-bottom:1px solid var(--border2);">
+                @if (isset($sudahHadir) && $sudahHadir)
+                    <div
+                        style="display:flex;align-items:center;gap:.55rem;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);color:#fbbf24;border-radius:9px;padding:.7rem .9rem;font-size:.76rem;font-weight:600;margin-bottom:.9rem;">
+                        Siswa ini sudah tercatat hadir. Data akan diperbarui.
+                    </div>
+                @endif
 
-            {{-- Info siswa --}}
-            <div class="px-6 py-5 space-y-3 text-sm border-b border-gray-100">
                 @foreach ([
-            'Nama Siswa' => $siswa->nama,
-            'NISN' => $siswa->nisn,
-            'Nama Orang Tua' => $siswa->nama_orangtua ?? '-',
-            'Status' => $siswa->status->label(),
-        ] as $label => $val)
-                    <div class="flex justify-between items-baseline gap-4">
-                        <span class="text-gray-400 flex-shrink-0">{{ $label }}</span>
+            'Nama Siswa' => [$siswa->nama, false, false],
+            'NISN' => [$siswa->nisn, true, false],
+            'Nama Ortu' => [$siswa->nama_orangtua ?? '—', false, false],
+            'Status' => [$siswa->status->label(), false, true],
+        ] as $lbl => [$val, $mono, $accent])
+                    <div class="info-row">
+                        <span style="font-size:.73rem;color:var(--muted)">{{ $lbl }}</span>
                         <span
-                            class="font-medium text-right {{ $label === 'NISN' ? 'font-mono' : '' }}
-                             {{ $label === 'Status' ? 'text-green-700' : '' }}">
-                            {{ $val }}
-                        </span>
+                            style="font-size:.82rem;font-weight:600;{{ $mono ? 'font-family:monospace;' : '' }}{{ $accent ? 'color:var(--teal-xl);' : '' }}">{{ $val }}</span>
                     </div>
                 @endforeach
             </div>
 
-            {{-- Form --}}
-            <div class="px-6 py-5">
-                @if (isset($sudahHadir) && $sudahHadir)
-                    <div
-                        class="mb-4 flex items-center gap-2 bg-yellow-50 border border-yellow-200
-                            text-yellow-700 text-xs px-4 py-3 rounded-xl">
-                        <span>⚠️</span>
-                        <span>Siswa ini sudah tercatat hadir. Data akan diperbarui.</span>
-                    </div>
-                @endif
-
-                <form action="{{ route('tamu.store') }}" method="POST" class="flex flex-col gap-4">
+            <div style="padding:1.4rem 1.6rem;">
+                <form action="{{ route('tamu.store') }}" method="POST"
+                    style="display:flex;flex-direction:column;gap:1rem;">
                     @csrf
                     <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                            Jumlah Tamu <span class="text-gray-400 font-normal">(termasuk orang tua/wali)</span>
+                        <label
+                            style="font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:.7rem;">
+                            Jumlah Tamu <span style="font-weight:400;color:var(--muted2)">(termasuk orang tua/wali)</span>
                         </label>
-                        <div class="flex items-center gap-3">
-                            <button type="button" onclick="adj(-1)"
-                                class="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
-                                       hover:bg-gray-100 text-lg font-bold text-gray-600 transition
-                                       flex items-center justify-center flex-shrink-0">
-                                −
-                            </button>
+                        <div class="pax-control">
+                            <button type="button" onclick="adj(-1)" class="pax-btn">&minus;</button>
                             <input id="pax" type="number" name="jumlah_tamu" value="{{ old('jumlah_tamu', 1) }}"
-                                min="1" max="10" readonly
-                                class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm
-                                      text-center font-bold text-lg focus:outline-none focus:ring-2
-                                      focus:ring-green-500 @error('jumlah_tamu') border-red-300 @enderror">
-                            <button type="button" onclick="adj(1)"
-                                class="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50
-                                       hover:bg-gray-100 text-lg font-bold text-gray-600 transition
-                                       flex items-center justify-center flex-shrink-0">
-                                +
-                            </button>
+                                min="1" max="10" readonly class="pax-input">
+                            <button type="button" onclick="adj(1)" class="pax-btn">+</button>
                         </div>
                         @error('jumlah_tamu')
-                            <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                                <span>⚠</span> {{ $message }}
-                            </p>
+                            <p style="font-size:.72rem;color:#f87171;margin-top:.45rem;">&times; {{ $message }}</p>
                         @enderror
                     </div>
 
-                    <button type="submit"
-                        class="bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                               text-white font-semibold py-3 rounded-xl text-sm transition
-                               shadow-sm shadow-green-200 mt-1">
-                        ✅ Simpan Kehadiran
-                    </button>
+                    <button type="submit" class="btn btn-primary" style="justify-content:center;">Simpan Kehadiran</button>
                 </form>
             </div>
         </div>
@@ -7464,10 +8987,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 @push('scripts')
     <script>
-        function adj(delta) {
+        function adj(d) {
             const el = document.getElementById('pax');
-            const val = parseInt(el.value) + delta;
-            el.value = Math.min(10, Math.max(1, val));
+            el.value = Math.min(10, Math.max(1, parseInt(el.value) + d));
         }
     </script>
 @endpush
@@ -7484,52 +9006,133 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 @push('styles')
     <style>
-        #qr-region video {
-            border-radius: 12px;
-            width: 100% !important;
+        .scan-wrap {
+            max-width: 440px;
+            margin: 0 auto
+        }
+
+        .scan-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -.03em;
+            margin-bottom: .35rem;
+            font-family: var(--font-display)
+        }
+
+        .scan-sub {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: 1.4rem
+        }
+
+        .scanner-card {
+            padding: 1.1rem;
+            border-radius: var(--radius);
+            margin-bottom: .9rem
         }
 
         #qr-region {
-            border-radius: 12px;
+            border-radius: 11px;
             overflow: hidden;
+            background: rgba(13, 148, 136, .04);
+            aspect-ratio: 1
+        }
+
+        #qr-region video {
+            border-radius: 11px;
+            width: 100% !important
+        }
+
+        .qr-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            margin-top: .8rem
+        }
+
+        .qr-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--muted2);
+            transition: background .3s
+        }
+
+        .qr-text {
+            font-size: .73rem;
+            color: var(--muted)
+        }
+
+        .manual-card {
+            padding: 1.4rem;
+            border-radius: var(--radius)
+        }
+
+        .manual-label {
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: .8rem
+        }
+
+        .manual-form {
+            display: flex;
+            gap: .55rem
+        }
+
+        .manual-input {
+            flex: 1;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: .58rem .88rem;
+            font-size: .83rem;
+            font-family: var(--font-body);
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .manual-input::placeholder {
+            color: var(--muted2)
+        }
+
+        .manual-input:focus {
+            border-color: rgba(20, 184, 166, .42);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1)
+        }
+
+        .manual-input.is-error {
+            border-color: rgba(220, 38, 38, .4)
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="max-w-md mx-auto">
+    <div class="scan-wrap">
+        <h1 class="scan-title">Scan QR Undangan</h1>
+        <p class="scan-sub">Arahkan kamera ke QR Code pada surat undangan siswa.</p>
 
-        <div class="mb-6">
-            <h1 class="text-xl font-bold text-green-700 mb-1">Scan QR Undangan</h1>
-            <p class="text-sm text-gray-400">Arahkan kamera ke QR Code pada surat undangan siswa.</p>
-        </div>
-
-        {{-- Scanner --}}
-        <div class="bg-white rounded-2xl shadow-md p-4 border border-gray-100 mb-4">
-            <div id="qr-region" class="w-full aspect-square bg-gray-100 rounded-xl overflow-hidden"></div>
-            <div id="qr-status-wrap" class="flex items-center justify-center gap-2 mt-3">
-                <span id="qr-dot" class="inline-block w-2 h-2 rounded-full bg-gray-300"></span>
-                <p id="qr-status" class="text-xs text-gray-400">Menginisialisasi kamera…</p>
+        <div class="card scanner-card">
+            <div id="qr-region"></div>
+            <div class="qr-status-row">
+                <span id="qr-dot" class="qr-dot"></span>
+                <span id="qr-status" class="qr-text">Menginisialisasi kamera&hellip;</span>
             </div>
         </div>
 
-        {{-- Manual --}}
-        <div class="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
-            <p class="text-sm font-medium text-gray-600 mb-3">Atau masukkan kode secara manual:</p>
-            <form action="{{ route('tamu.scan.post') }}" method="POST" class="flex gap-2">
+        <div class="card manual-card">
+            <div class="manual-label">Atau masukkan kode secara manual:</div>
+            <form action="{{ route('tamu.scan.post') }}" method="POST" class="manual-form">
                 @csrf
                 <input type="text" name="kode" placeholder="ID Siswa / NISN"
-                    class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-green-500 transition
-                          @error('kode') border-red-300 @enderror">
-                <button type="submit"
-                    class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2.5
-                           rounded-xl text-sm transition active:scale-[0.98]">
-                    Cari
-                </button>
+                    class="manual-input {{ $errors->has('kode') ? 'is-error' : '' }}">
+                <button type="submit" class="btn btn-primary"
+                    style="font-size:.8rem;padding:.58rem 1rem;flex-shrink:0">Cari</button>
             </form>
             @error('kode')
-                <p class="text-red-500 text-xs mt-2 flex items-center gap-1"><span>⚠</span> {{ $message }}</p>
+                <p style="font-size:.72rem;color:#f87171;margin-top:.55rem;">&times; {{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -7544,47 +9147,36 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         const dotEl = document.getElementById('qr-dot');
         let scanned = false;
 
-        function setStatus(msg, color = 'gray') {
+        function setStatus(msg, color = 'var(--muted2)') {
             statusEl.textContent = msg;
-            dotEl.className = `inline-block w-2 h-2 rounded-full bg-${color}-400`;
+            dotEl.style.background = color;
         }
 
         const html5Qr = new Html5Qrcode('qr-region');
-
         Html5Qrcode.getCameras()
             .then(cameras => {
                 if (!cameras.length) {
-                    setStatus('Tidak ada kamera ditemukan.', 'red');
+                    setStatus('Tidak ada kamera ditemukan.', '#f87171');
                     return;
                 }
-
-                // Prefer kamera belakang
                 const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) ?? cameras[cameras.length - 1];
-                setStatus('Kamera aktif — arahkan ke QR Code…', 'green');
-
-                html5Qr.start(
-                    cam.id, {
-                        fps: 10,
-                        qrbox: {
-                            width: 240,
-                            height: 240
-                        }
-                    },
-                    decodedText => {
-                        if (scanned) return;
-                        scanned = true;
-                        setStatus('✅ QR terdeteksi, mengalihkan…', 'green');
-                        html5Qr.stop().catch(() => {});
-                        window.location.href = '{{ route('tamu.konfirmasi', ['siswa' => ':id']) }}'
-                            .replace(':id', encodeURIComponent(decodedText));
+                setStatus('Kamera aktif — arahkan ke QR Code', 'var(--teal-xl)');
+                html5Qr.start(cam.id, {
+                    fps: 10,
+                    qrbox: {
+                        width: 230,
+                        height: 230
                     }
-                ).catch(() => {
-                    setStatus('Gagal memulai kamera.', 'red');
-                });
+                }, text => {
+                    if (scanned) return;
+                    scanned = true;
+                    setStatus('QR terdeteksi, mengalihkan\u2026', 'var(--teal-xl)');
+                    html5Qr.stop().catch(() => {});
+                    window.location.href = '{{ route('tamu.konfirmasi', ['siswa' => ':id']) }}'.replace(':id',
+                        encodeURIComponent(text));
+                }).catch(() => setStatus('Gagal memulai kamera.', '#f87171'));
             })
-            .catch(() => {
-                setStatus('Akses kamera ditolak. Gunakan input manual.', 'red');
-            });
+            .catch(() => setStatus('Akses kamera ditolak. Gunakan input manual.', '#fbbf24'));
     </script>
 @endpush
 
@@ -7769,4 +9361,3 @@ services.json
 ```
 
 ---
-

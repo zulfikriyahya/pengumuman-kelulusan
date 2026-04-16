@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Instansi;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,10 +13,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        view()->composer('*', function ($view) {
-            // fix: cache query agar tidak hit DB di setiap request
-            $instansi = Cache::remember('instansi.aktif', now()->addHour(), fn() => Instansi::first());
-            $view->with('instansi', $instansi);
+        $instansiArray = Cache::remember('instansi.aktif', now()->addHour(), function () {
+            $data = Instansi::first();
+            return $data ? $data->toArray() : null;
         });
+        $instansi = $instansiArray ? (object) $instansiArray : null;
+        View::share('instansi', $instansi);
     }
 }

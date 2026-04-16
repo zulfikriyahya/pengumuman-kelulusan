@@ -1,126 +1,301 @@
 @extends('layouts.app')
 @section('title', $siswa ? 'Hasil — ' . $siswa->nama : 'Siswa Tidak Ditemukan')
 
+@push('styles')
+    <style>
+        .hasil-wrap {
+            max-width: 500px;
+            margin: 0 auto
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: .8rem;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color .2s
+        }
+
+        .back-link:hover {
+            color: var(--teal-xl)
+        }
+
+        .back-link span {
+            transition: transform .2s
+        }
+
+        .back-link:hover span {
+            transform: translateX(-2px)
+        }
+
+        /* Not found */
+        .notfound-card {
+            padding: 3rem 2rem;
+            text-align: center
+        }
+
+        .notfound-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: .45rem;
+            font-family: var(--font-display)
+        }
+
+        .notfound-sub {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.75;
+            margin-bottom: 1.4rem
+        }
+
+        /* Result */
+        .result-header {
+            padding: 1.5rem 1.6rem;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: .9rem
+        }
+
+        .status-icon-wrap {
+            width: 50px;
+            height: 50px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            font-family: var(--font-display)
+        }
+
+        .status-label-sm {
+            font-size: .62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            opacity: .7;
+            margin-bottom: .18rem
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            line-height: 1.1;
+            font-family: var(--font-display)
+        }
+
+        .result-info {
+            padding: 1.1rem 1.6rem;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            padding: .5rem 0;
+            border-bottom: 1px solid var(--border2)
+        }
+
+        .info-row:last-child {
+            border-bottom: none
+        }
+
+        .info-label {
+            font-size: .73rem;
+            color: var(--muted);
+            flex-shrink: 0;
+            font-weight: 500
+        }
+
+        .info-val {
+            font-size: .83rem;
+            font-weight: 600;
+            text-align: right
+        }
+
+        .result-actions {
+            padding: 1.1rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem
+        }
+
+        .doc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .8rem 1.1rem;
+            border-radius: 11px;
+            font-size: .82rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .22s;
+            border: none
+        }
+
+        .doc-btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-d));
+            color: #fff;
+            box-shadow: 0 0 24px rgba(13, 148, 136, .22)
+        }
+
+        .doc-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(13, 148, 136, .38)
+        }
+
+        .doc-btn-outline {
+            background: transparent;
+            border: 1px solid rgba(20, 184, 166, .28);
+            color: var(--teal-xl)
+        }
+
+        .doc-btn-outline:hover {
+            background: rgba(20, 184, 166, .07);
+            border-color: rgba(20, 184, 166, .5)
+        }
+
+        .doc-btn-disabled {
+            background: rgba(255, 255, 255, .02);
+            border: 1px dashed var(--border);
+            color: var(--muted2);
+            cursor: default;
+            pointer-events: none
+        }
+
+        .result-footer-note {
+            text-align: center;
+            font-size: .72rem;
+            color: var(--muted2);
+            margin-top: .85rem;
+            letter-spacing: .01em
+        }
+
+        /* Themes */
+        .theme-lulus .status-icon-wrap {
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .2);
+            color: var(--teal-xl)
+        }
+
+        .theme-lulus .status-text {
+            color: var(--teal-xl)
+        }
+
+        .theme-tidak .status-icon-wrap {
+            background: rgba(220, 38, 38, .08);
+            border: 1px solid rgba(220, 38, 38, .18);
+            color: #f87171
+        }
+
+        .theme-tidak .status-text {
+            color: #f87171
+        }
+
+        .theme-syarat .status-icon-wrap {
+            background: rgba(245, 158, 11, .09);
+            border: 1px solid rgba(245, 158, 11, .2);
+            color: #fbbf24
+        }
+
+        .theme-syarat .status-text {
+            color: #fbbf24
+        }
+    </style>
+@endpush
+
 @section('content')
-    <div class="max-w-lg mx-auto">
+    <div class="hasil-wrap reveal visible">
+        <a href="{{ route('landing') }}" class="back-link"><span>&larr;</span> Kembali ke Pencarian</a>
 
-        {{-- Kembali --}}
-        <a href="{{ route('landing') }}"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-700 mb-5 transition group">
-            <span class="group-hover:-translate-x-0.5 transition-transform">←</span>
-            Kembali ke Pencarian
-        </a>
-
-        {{-- ══ Tidak ditemukan ══ --}}
         @if (!$siswa)
-            <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-10 text-center">
-                <p class="text-5xl mb-4">🔍</p>
-                <h2 class="font-bold text-gray-700 text-lg mb-1">Data Tidak Ditemukan</h2>
-                <p class="text-sm text-gray-400 mb-6">
+            <div class="card notfound-card">
+                <div class="notfound-title">Data Tidak Ditemukan</div>
+                <div class="notfound-sub">
                     Tidak ada siswa dengan NISN atau nomor telepon
-                    <span class="font-mono font-semibold text-gray-600">"{{ $keyword }}"</span>.
-                </p>
-                <a href="{{ route('landing') }}"
-                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700
-                      text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition active:scale-[0.98]">
-                    ← Coba Lagi
+                    <strong style="color:var(--text)">&ldquo;{{ $keyword }}&rdquo;</strong>.
+                    Pastikan data yang dimasukkan sudah benar.
+                </div>
+                <a href="{{ route('landing') }}" class="btn btn-primary" style="margin:0 auto;">
+                    &larr; Coba Lagi
                 </a>
             </div>
-
-            {{-- ══ Ditemukan ══ --}}
         @else
             @php
-                [$bgCard, $bgBadge, $textColor, $icon] = match ($siswa->status) {
-                    \App\Enums\StatusSiswa::Lulus => ['from-green-50 to-white', 'bg-green-600', 'text-green-700', '🎓'],
-                    \App\Enums\StatusSiswa::TidakLulus => ['from-red-50 to-white', 'bg-red-500', 'text-red-700', '📋'],
-                    \App\Enums\StatusSiswa::LulusBersyarat => [
-                        'from-yellow-50 to-white',
-                        'bg-yellow-500',
-                        'text-yellow-700',
-                        '⚠️',
-                    ],
+                [$themeClass, $iconLabel, $statusLabel] = match ($siswa->status) {
+                    App\Enums\StatusSiswa::Lulus => ['theme-lulus', 'LULUS', $siswa->status->label()],
+                    App\Enums\StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK', $siswa->status->label()],
+                    App\Enums\StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT', $siswa->status->label()],
                 };
             @endphp
 
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-
-                {{-- Header --}}
-                <div class="bg-gradient-to-br {{ $bgCard }} px-6 py-6 border-b border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="{{ $bgBadge }} text-white rounded-2xl h-14 w-14 flex items-center justify-center text-2xl shadow-md flex-shrink-0">
-                            {{ $icon }}
-                        </div>
+            <div class="card {{ $themeClass }}" style="overflow:hidden;">
+                <div class="result-header">
+                    <div class="eyebrow" style="margin-bottom:.9rem;">Hasil Seleksi Kelulusan</div>
+                    <div class="status-row">
+                        <div class="status-icon-wrap">{{ $iconLabel }}</div>
                         <div>
-                            <p class="text-xs text-gray-400 uppercase tracking-widest mb-0.5">Status Kelulusan</p>
-                            <p class="text-xl font-bold {{ $textColor }}">{{ $siswa->status->label() }}</p>
+                            <div class="status-label-sm">Status</div>
+                            <div class="status-text">{{ $statusLabel }}</div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Info Siswa --}}
-                <div class="px-6 py-5 space-y-3 text-sm">
+                <div class="result-info">
                     @foreach ([
-            'Nama Siswa' => $siswa->nama,
-            'NISN' => $siswa->nisn,
-            'Nama Orang Tua' => $siswa->nama_orangtua,
-        ] as $label => $val)
+            'Nama Siswa' => [$siswa->nama, false],
+            'NISN' => [$siswa->nisn, true],
+            'Nama Orang Tua' => [$siswa->nama_orangtua, false],
+        ] as $label => [$val, $mono])
                         @if ($val)
-                            <div class="flex justify-between items-baseline gap-4">
-                                <span class="text-gray-400 flex-shrink-0">{{ $label }}</span>
-                                <span
-                                    class="font-medium text-right {{ $label === 'NISN' ? 'font-mono' : '' }}">{{ $val }}</span>
+                            <div class="info-row">
+                                <span class="info-label">{{ $label }}</span>
+                                <span class="info-val"
+                                    @if ($mono) style="font-family:monospace;" @endif>{{ $val }}</span>
                             </div>
                         @endif
                     @endforeach
                 </div>
 
-                <div class="mx-6 border-t border-dashed border-gray-100"></div>
-
-                {{-- Aksi --}}
-                <div class="px-6 py-5 flex flex-col gap-2.5">
-
-                    {{-- SKL --}}
+                <div class="result-actions">
                     @if ($siswa->berkas_skl)
-                        <a href="{{ route('landing.skl', $siswa) }}" target="_blank"
-                            class="flex items-center justify-center gap-2
-                          bg-green-600 hover:bg-green-700 active:scale-[0.98]
-                          text-white font-semibold py-3 rounded-xl text-sm transition-all
-                          shadow-sm shadow-green-200">
-                            <span>📄</span> Unduh Surat Keterangan Lulus
+                        <a href="{{ route('landing.skl', $siswa) }}" target="_blank" class="doc-btn doc-btn-primary">
+                            Unduh Surat Keterangan Lulus
                         </a>
                     @else
-                        <div
-                            class="flex items-center gap-2 justify-center bg-gray-50 border border-dashed
-                            border-gray-200 rounded-xl py-3 text-xs text-gray-400">
-                            <span>🕐</span> Dokumen SKL belum tersedia — hubungi sekolah
-                        </div>
+                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi sekolah</div>
                     @endif
 
-                    {{-- Surat Undangan (Lulus & Lulus Bersyarat) --}}
                     @if ($siswa->isLulus())
-                        <a href="{{ route('landing.undangan', $siswa) }}" target="_blank"
-                            class="flex items-center justify-center gap-2
-                          bg-white border border-green-300 text-green-700
-                          hover:bg-green-50 active:scale-[0.98]
-                          font-semibold py-3 rounded-xl text-sm transition-all">
-                            <span>🎟️</span> Cetak Surat Undangan Kelulusan
+                        <a href="{{ route('landing.undangan', $siswa) }}" target="_blank" class="doc-btn doc-btn-outline">
+                            Cetak Surat Undangan Kelulusan
                         </a>
                     @endif
-
                 </div>
             </div>
 
-            @if ($siswa->status === \App\Enums\StatusSiswa::Lulus)
-                <p class="text-center text-xs text-gray-400 mt-4">
-                    🎉 Selamat! Semoga sukses di jenjang berikutnya.
-                </p>
-            @elseif($siswa->status === \App\Enums\StatusSiswa::LulusBersyarat)
-                <p class="text-center text-xs text-yellow-500 mt-4">
-                    ⚠️ Segera hubungi sekolah untuk informasi lebih lanjut.
+            @if ($siswa->status === App\Enums\StatusSiswa::Lulus)
+                <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
+            @elseif ($siswa->status === App\Enums\StatusSiswa::LulusBersyarat)
+                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi sekolah untuk informasi lebih lanjut.
                 </p>
             @endif
         @endif
-
     </div>
 @endsection

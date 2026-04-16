@@ -1,6 +1,309 @@
 @extends('layouts.app')
 @section('title', 'Pengumuman Kelulusan')
 
+@push('styles')
+    <style>
+        .hero-section {
+            min-height: calc(100svh - var(--nav-h));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-inner {
+            max-width: 620px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-logo {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            margin: 0 auto 1.4rem;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(13, 148, 136, .07);
+            padding: 6px;
+            box-shadow: 0 0 36px rgba(13, 148, 136, .16);
+            animation: fade-up .6s ease both .1s;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 2.9rem);
+            font-weight: 900;
+            letter-spacing: -.03em;
+            line-height: 1.08;
+            font-family: var(--font-display);
+            animation: fade-up .7s ease both .2s;
+        }
+
+        .grad {
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: .86rem;
+            color: var(--muted);
+            margin-top: .8rem;
+            line-height: 1.7;
+            animation: fade-up .7s ease both .3s;
+        }
+
+        /* Countdown */
+        .cd-card {
+            max-width: 400px;
+            margin: 2.25rem auto 0;
+            padding: 1.6rem;
+            border-radius: 20px;
+            background: rgba(13, 148, 136, .07);
+            border: 1px solid rgba(20, 184, 166, .16);
+            backdrop-filter: blur(16px);
+            animation: fade-up .8s ease both .4s;
+        }
+
+        .cd-label {
+            font-size: .67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--gold-l);
+            text-align: center;
+            margin-bottom: .8rem;
+        }
+
+        .cd-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .55rem;
+        }
+
+        .cd-box {
+            background: rgba(13, 148, 136, .09);
+            border: 1px solid rgba(20, 184, 166, .13);
+            border-radius: 11px;
+            padding: .85rem .35rem;
+            text-align: center;
+        }
+
+        .cd-n {
+            font-size: 1.9rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, var(--teal-xl), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .cd-l {
+            font-size: .56rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            margin-top: .25rem;
+            font-weight: 600;
+        }
+
+        .cd-footer-note {
+            margin-top: .9rem;
+            font-size: .71rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* State cards */
+        .state-card {
+            max-width: 400px;
+            margin: 2rem auto 0;
+            padding: 2.25rem;
+            border-radius: 20px;
+            text-align: center;
+            animation: fade-up .7s ease both .3s;
+        }
+
+        .state-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+            font-family: var(--font-display);
+        }
+
+        .state-sub {
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* Envelope */
+        .amplop-section {
+            display: flex;
+            justify-content: center;
+            padding: 1.25rem 2rem 0;
+            animation: fade-up .8s ease both .35s;
+        }
+
+        .amplop-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .7rem;
+        }
+
+        .amplop-hint {
+            font-size: .7rem;
+            color: var(--muted);
+            letter-spacing: .04em;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Search card */
+        .search-card {
+            max-width: 460px;
+            margin: 1.4rem auto 0;
+            padding: 1.75rem;
+            border-radius: 20px;
+            background: rgba(13, 148, 136, .06);
+            border: 1px solid rgba(20, 184, 166, .16);
+            backdrop-filter: blur(16px);
+        }
+
+        .search-card-head {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            margin-bottom: 1.35rem;
+        }
+
+        .search-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 11px;
+            background: rgba(20, 184, 166, .1);
+            border: 1px solid rgba(20, 184, 166, .18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .72rem;
+            font-weight: 800;
+            color: var(--teal-xl);
+            font-family: var(--font-display);
+            letter-spacing: .03em;
+        }
+
+        .search-card-title {
+            font-size: .94rem;
+            font-weight: 700;
+            line-height: 1.2;
+            font-family: var(--font-display);
+        }
+
+        .search-card-sub {
+            font-size: .73rem;
+            color: var(--muted);
+            margin-top: .18rem;
+        }
+
+        .search-field {
+            position: relative;
+            margin-bottom: .9rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: .72rem .9rem;
+            font-size: .86rem;
+            font-family: var(--font-body);
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--muted2);
+        }
+
+        .search-input:focus {
+            border-color: rgba(20, 184, 166, .45);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1);
+        }
+
+        .search-input.is-error {
+            border-color: rgba(220, 38, 38, .42);
+        }
+
+        .search-error {
+            font-size: .73rem;
+            color: #f87171;
+            margin-bottom: .7rem;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .42rem 1rem;
+            border-radius: 999px;
+            font-size: .7rem;
+            font-weight: 700;
+            margin-top: 1.4rem;
+            animation: fade-up .7s ease both .35s;
+        }
+
+        .status-badge-warn {
+            background: rgba(245, 158, 11, .08);
+            border: 1px solid rgba(245, 158, 11, .22);
+            color: #fbbf24;
+        }
+
+        .animate-fade-slide-up {
+            animation: fade-up .4s ease both;
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         $tp = $tahunPelajaran ?? null;
@@ -10,166 +313,116 @@
         $sudahTutup = $tp && $now->gt($tp->jadwal_pengumuman_selesai);
     @endphp
 
-    {{-- ── Hero ──────────────────────────────────────────────── --}}
-    <section class="text-center py-10 px-4">
-        @if ($instansi?->logo_institusi)
-            <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo"
-                class="h-24 w-24 object-contain mx-auto mb-5 drop-shadow">
-        @endif
-        <h1 class="text-2xl md:text-3xl font-bold text-green-700 tracking-tight">
-            Pengumuman Kelulusan
-        </h1>
-        <p class="text-gray-400 mt-2 text-sm">
-            {{ $instansi?->nama }} &bull; Tahun Pelajaran {{ $tp?->name ?? '-' }}
-        </p>
-    </section>
+    <div style="margin-top:-2.5rem">
+        <section class="hero-section">
+            <div class="hero-inner">
+                @if ($instansi?->logo_institusi)
+                    <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo" class="hero-logo">
+                @endif
 
-    {{-- ══ STATE: Belum ada konfigurasi ══ --}}
-    @if (!$tp)
-        <section class="flex justify-center py-12 px-4">
-            <div class="bg-gray-50 border border-gray-200 rounded-2xl px-8 py-8 max-w-sm text-center shadow-sm">
-                <p class="text-4xl mb-3">🏫</p>
-                <p class="text-gray-600 font-semibold">Informasi belum tersedia.</p>
-                <p class="text-sm text-gray-400 mt-1">Hubungi sekolah untuk informasi lebih lanjut.</p>
-            </div>
-        </section>
-
-        {{-- ══ STATE 1: Belum buka → Countdown ══ --}}
-    @elseif($belumBuka)
-        <section class="text-center py-8 px-4">
-            <div class="inline-block bg-white rounded-2xl shadow-md px-8 py-6 mb-8 border border-gray-100">
-                <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Pengumuman dibuka pada</p>
-                <p class="font-semibold text-green-700 text-sm">
-                    {{ $tp->jadwal_pengumuman_mulai->translatedFormat('l, d F Y · H:i') }} WIB
+                <h1 class="hero-title">Pengumuman<br><span class="grad">Kelulusan</span></h1>
+                <p class="hero-sub">
+                    {{ $instansi?->nama }}
+                    @if ($tp)
+                        Tahun Pelajaran {{ $tp->name }}
+                    @endif
                 </p>
-            </div>
 
-            <div class="flex justify-center gap-3">
-                @foreach (['days' => 'Hari', 'hours' => 'Jam', 'minutes' => 'Menit', 'seconds' => 'Detik'] as $key => $label)
-                    <div class="bg-white shadow-md rounded-2xl px-5 py-4 min-w-[72px] border border-gray-100">
-                        <span id="cd-{{ $key }}" class="text-3xl font-bold text-green-700 tabular-nums">00</span>
-                        <p class="text-xs text-gray-400 mt-1">{{ $label }}</p>
+                @if (!$tp)
+                    <div class="card state-card" style="margin-top:2.25rem;">
+                        <div class="state-title">Informasi Belum Tersedia</div>
+                        <div class="state-sub">Hubungi pihak sekolah untuk informasi lebih lanjut mengenai pengumuman
+                            kelulusan.</div>
                     </div>
-                @endforeach
-            </div>
-
-            <p class="text-xs text-gray-400 mt-6">
-                Pastikan kamu kembali tepat waktu ya 😊
-            </p>
-        </section>
-
-        {{-- ══ STATE 2: Sudah tutup ══ --}}
-    @elseif($sudahTutup)
-        <section class="flex justify-center py-12 px-4">
-            <div class="bg-yellow-50 border border-yellow-200 rounded-2xl px-8 py-8 max-w-sm text-center shadow-sm">
-                <p class="text-4xl mb-3">📋</p>
-                <p class="text-yellow-700 font-semibold">Periode pengumuman telah berakhir.</p>
-                <p class="text-sm text-gray-500 mt-1">Hubungi sekolah untuk informasi lebih lanjut.</p>
-            </div>
-        </section>
-
-        {{-- ══ STATE 3: Sedang buka → Amplop + Pencarian ══ --}}
-    @elseif($sudahBuka)
-        {{-- Amplop --}}
-        <section class="flex justify-center my-4 px-4" id="amplop-section">
-            <div class="flex flex-col items-center">
-                <button onclick="bukaAmplop()" id="amplop-btn" class="group focus:outline-none"
-                    aria-label="Klik untuk membuka amplop">
-                    <div id="amplop"
-                        class="relative w-72 h-48 transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1 drop-shadow-xl">
-                        <svg viewBox="0 0 288 192" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                            <rect width="288" height="192" rx="14" fill="#16a34a" />
-                            <path d="M0 192 L144 112 L288 192Z" fill="#15803d" />
-                            <path d="M288 20 L288 192 L144 112Z" fill="#14532d" fill-opacity="0.3" />
-                            <path d="M0 20 L0 192 L144 112Z" fill="#14532d" fill-opacity="0.2" />
-                            <path id="amplop-lid" d="M0 20 L144 108 L288 20 L288 0 L0 0 Z" fill="#166534"
-                                style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
-                            <path d="M0 20 L144 108 L288 20" stroke="#bbf7d0" stroke-width="1.5" fill="none"
-                                opacity="0.5" />
-                            <text x="144" y="158" text-anchor="middle" fill="white" font-size="12"
-                                font-family="Inter,sans-serif" font-weight="600" opacity="0.9">
-                                ✉ Klik untuk membuka
-                            </text>
-                        </svg>
+                @elseif ($belumBuka)
+                    <div class="status-badge status-badge-warn">
+                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y H:i') }}
+                        WIB
                     </div>
-                </button>
-                <p class="text-xs text-gray-400 mt-3 animate-bounce">↑ ketuk amplop</p>
-            </div>
-        </section>
-
-        {{-- Form Pencarian --}}
-        <section id="cari-section" class="hidden px-4">
-            <div class="bg-white rounded-2xl shadow-md p-6 max-w-lg mx-auto border border-gray-100">
-                <div class="flex items-center gap-3 mb-5">
-                    <div
-                        class="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 text-lg flex-shrink-0">
-                        🎓
+                    <div class="cd-card">
+                        <div class="cd-label">Hitung Mundur Pembukaan</div>
+                        <div class="cd-grid">
+                            @foreach (['days' => 'Hari', 'hours' => 'Jam', 'minutes' => 'Menit', 'seconds' => 'Detik'] as $k => $l)
+                                <div class="cd-box">
+                                    <div class="cd-n" id="cd-{{ $k }}">00</div>
+                                    <div class="cd-l">{{ $l }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="cd-footer-note">Pastikan kamu kembali tepat waktu.</div>
                     </div>
-                    <div>
-                        <h2 class="font-semibold text-green-700 text-base leading-tight">Cek Status Kelulusan</h2>
-                        <p class="text-xs text-gray-400">Masukkan NISN atau nomor telepon terdaftar</p>
+                @elseif ($sudahTutup)
+                    <div class="card state-card"
+                        style="margin-top:2.25rem;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.18);">
+                        <div class="state-title" style="color:#fbbf24;">Periode Pengumuman Telah Berakhir</div>
+                        <div class="state-sub">Hubungi sekolah untuk informasi lebih lanjut.</div>
                     </div>
-                </div>
-
-                <form action="{{ route('landing.cari') }}" method="POST" class="flex flex-col gap-3">
-                    @csrf
-                    <div class="relative">
-                        <span
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">🔎</span>
-                        <input type="text" name="nisn" placeholder="NISN (10 digit) atau Nomor Telepon"
-                            value="{{ old('nisn') }}"
-                            class="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                                  transition placeholder:text-gray-300 @error('nisn') border-red-300 @enderror"
-                            maxlength="15" autofocus>
+                @elseif ($sudahBuka)
+                    <div class="amplop-section" id="amplop-section">
+                        <button onclick="bukaAmplop()" id="amplop-btn" class="amplop-btn" aria-label="Buka amplop">
+                            <div id="amplop"
+                                style="position:relative;width:270px;height:180px;transition:all .5s ease;filter:drop-shadow(0 14px 36px rgba(13,148,136,.28))">
+                                <svg viewBox="0 0 270 180" fill="none" xmlns="http://www.w3.org/2000/svg"
+                                    style="width:100%;height:100%">
+                                    <rect width="270" height="180" rx="15" fill="#0d9488" />
+                                    <rect width="270" height="180" rx="15" fill="url(#eg)" />
+                                    <path d="M0 180 L135 104 L270 180Z" fill="#0f766e" />
+                                    <path id="amplop-lid" d="M0 20 L135 102 L270 20 L270 0 L0 0Z" fill="#14b8a6"
+                                        style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
+                                    <path d="M0 20 L135 102 L270 20" stroke="rgba(94,234,212,.35)" stroke-width="1.5"
+                                        fill="none" />
+                                    <text x="135" y="150" text-anchor="middle" fill="rgba(255,255,255,.75)" font-size="10"
+                                        font-family="var(--font-body),sans-serif" font-weight="600"
+                                        letter-spacing="0.5">Ketuk untuk membuka</text>
+                                    <defs>
+                                        <linearGradient id="eg" x1="0" y1="0" x2="270"
+                                            y2="180" gradientUnits="userSpaceOnUse">
+                                            <stop offset="0%" stop-color="rgba(20,184,166,.28)" />
+                                            <stop offset="100%" stop-color="rgba(13,148,136,0)" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <span class="amplop-hint">Ketuk amplop &uarr;</span>
+                        </button>
                     </div>
 
-                    @error('nisn')
-                        <p class="text-red-500 text-xs flex items-center gap-1">
-                            <span>⚠</span> {{ $message }}
-                        </p>
-                    @enderror
-                    @error('telepon')
-                        <p class="text-red-500 text-xs flex items-center gap-1">
-                            <span>⚠</span> {{ $message }}
-                        </p>
-                    @enderror
-
-                    <button type="submit"
-                        class="bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-semibold
-                               py-2.5 rounded-xl text-sm transition-all shadow-sm shadow-green-200">
-                        Cari Kelulusan
-                    </button>
-                </form>
+                    <div id="cari-section" class="hidden" style="padding:0 1rem">
+                        <div class="search-card">
+                            <div class="search-card-head">
+                                <div class="search-icon-wrap">SKL</div>
+                                <div>
+                                    <div class="search-card-title">Cek Status Kelulusan</div>
+                                    <div class="search-card-sub">Masukkan NISN atau nomor telepon terdaftar</div>
+                                </div>
+                            </div>
+                            <form action="{{ route('landing.cari') }}" method="POST">
+                                @csrf
+                                <div class="search-field">
+                                    <input type="text" name="nisn" placeholder="NISN (10 digit) atau Nomor Telepon"
+                                        value="{{ old('nisn') }}"
+                                        class="search-input {{ $errors->hasAny(['nisn', 'telepon']) ? 'is-error' : '' }}"
+                                        maxlength="15" autofocus>
+                                </div>
+                                @error('nisn')
+                                    <div class="search-error"><span>&times;</span> {{ $message }}</div>
+                                @enderror
+                                @error('telepon')
+                                    <div class="search-error"><span>&times;</span> {{ $message }}</div>
+                                @enderror
+                                <button type="submit" class="btn btn-primary"
+                                    style="width:100%;justify-content:center;">Cari Kelulusan</button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             </div>
         </section>
-
-    @endif
+    </div>
 @endsection
-
-@push('styles')
-    <style>
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-slide-up {
-            animation: fadeSlideUp .4s ease forwards;
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>
-        // ── Countdown ────────────────────────────────────────
         const cdTarget = new Date("{{ $tp?->jadwal_pengumuman_mulai?->toIso8601String() }}");
         const pad = n => String(n).padStart(2, '0');
 
@@ -179,27 +432,21 @@
                 location.reload();
                 return;
             }
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
             [
-                ['days', d],
-                ['hours', h],
-                ['minutes', m],
-                ['seconds', s]
+                ['days', Math.floor(diff / 86400000)],
+                ['hours', Math.floor((diff % 86400000) / 3600000)],
+                ['minutes', Math.floor((diff % 3600000) / 60000)],
+                ['seconds', Math.floor((diff % 60000) / 1000)]
             ].forEach(([k, v]) => {
                 const el = document.getElementById('cd-' + k);
                 if (el) el.textContent = pad(v);
             });
         }
-
         if (document.getElementById('cd-seconds')) {
             tickCountdown();
             setInterval(tickCountdown, 1000);
         }
 
-        // ── Buka Amplop ──────────────────────────────────────
         function tampilkanForm() {
             document.getElementById('amplop-section')?.classList.add('hidden');
             const cari = document.getElementById('cari-section');
@@ -214,31 +461,24 @@
             const btn = document.getElementById('amplop-btn');
             if (!lid || btn.disabled) return;
             btn.disabled = true;
-
             lid.style.transform = 'rotateX(-180deg)';
             lid.style.opacity = '0';
-
             setTimeout(() => {
-                const amplop = document.getElementById('amplop');
-                if (amplop) {
-                    amplop.style.transform = 'scale(0.8)';
-                    amplop.style.opacity = '0';
-                    amplop.style.transition = 'all .4s ease';
+                const a = document.getElementById('amplop');
+                if (a) {
+                    a.style.transform = 'scale(.8)';
+                    a.style.opacity = '0';
                 }
             }, 400);
-
             setTimeout(tampilkanForm, 750);
             try {
                 localStorage.setItem('amplop_dibuka', '1');
             } catch (e) {}
         }
 
-        // Auto-buka jika sudah pernah
         try {
             if (localStorage.getItem('amplop_dibuka') === '1') tampilkanForm();
         } catch (e) {}
-
-        // Auto-buka jika ada error validasi (form sudah disubmit)
         @if ($errors->any())
             tampilkanForm();
         @endif
