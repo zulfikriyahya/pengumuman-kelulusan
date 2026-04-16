@@ -2827,7 +2827,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                             Unduh Surat Keterangan Lulus
                         </a>
                     @else
-                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi sekolah</div>
+                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi madrasah</div>
                     @endif
 
                     @if ($siswa->isLulus())
@@ -2841,7 +2841,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             @if ($siswa->status === App\Enums\StatusSiswa::Lulus)
                 <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
             @elseif ($siswa->status === App\Enums\StatusSiswa::LulusBersyarat)
-                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi sekolah untuk informasi lebih lanjut.
+                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi madrasah untuk informasi lebih lanjut.
                 </p>
             @endif
         @endif
@@ -3188,7 +3188,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 @if (!$tp)
                     <div class="card state-card" style="margin-top:2.25rem;">
                         <div class="state-title">Informasi Belum Tersedia</div>
-                        <div class="state-sub">Hubungi pihak sekolah untuk informasi lebih lanjut mengenai pengumuman
+                        <div class="state-sub">Hubungi pihak madrasah untuk informasi lebih lanjut mengenai pengumuman
                             kelulusan.</div>
                     </div>
                 @elseif ($belumBuka)
@@ -3212,7 +3212,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                     <div class="card state-card"
                         style="margin-top:2.25rem;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.18);">
                         <div class="state-title" style="color:#fbbf24;">Periode Pengumuman Telah Berakhir</div>
-                        <div class="state-sub">Hubungi sekolah untuk informasi lebih lanjut.</div>
+                        <div class="state-sub">Hubungi madrasah untuk informasi lebih lanjut.</div>
                     </div>
                 @elseif ($sudahBuka)
                     <div class="amplop-section" id="amplop-section">
@@ -3528,7 +3528,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                         </tr>
                     </table>
                 @else
-                    <div class="doc-alert">Jadwal acara belum ditentukan. Pantau informasi dari sekolah.</div>
+                    <div class="doc-alert">Jadwal acara belum ditentukan. Pantau informasi dari madrasah.</div>
                 @endif
 
                 <p class="doc-para">Atas kehadiran Bapak/Ibu, kami ucapkan terima kasih.</p>

@@ -279,7 +279,7 @@
                             Unduh Surat Keterangan Lulus
                         </a>
                     @else
-                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi sekolah</div>
+                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi madrasah</div>
                     @endif
 
                     @if ($siswa->isLulus())
@@ -293,7 +293,7 @@
             @if ($siswa->status === App\Enums\StatusSiswa::Lulus)
                 <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
             @elseif ($siswa->status === App\Enums\StatusSiswa::LulusBersyarat)
-                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi sekolah untuk informasi lebih lanjut.
+                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi madrasah untuk informasi lebih lanjut.
                 </p>
             @endif
         @endif

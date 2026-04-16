@@ -73,7 +73,7 @@
                         </tr>
                     </table>
                 @else
-                    <div class="doc-alert">Jadwal acara belum ditentukan. Pantau informasi dari sekolah.</div>
+                    <div class="doc-alert">Jadwal acara belum ditentukan. Pantau informasi dari madrasah.</div>
                 @endif
 
                 <p class="doc-para">Atas kehadiran Bapak/Ibu, kami ucapkan terima kasih.</p>

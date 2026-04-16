@@ -331,7 +331,7 @@
                 @if (!$tp)
                     <div class="card state-card" style="margin-top:2.25rem;">
                         <div class="state-title">Informasi Belum Tersedia</div>
-                        <div class="state-sub">Hubungi pihak sekolah untuk informasi lebih lanjut mengenai pengumuman
+                        <div class="state-sub">Hubungi pihak madrasah untuk informasi lebih lanjut mengenai pengumuman
                             kelulusan.</div>
                     </div>
                 @elseif ($belumBuka)
@@ -355,38 +355,9 @@
                     <div class="card state-card"
                         style="margin-top:2.25rem;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.18);">
                         <div class="state-title" style="color:#fbbf24;">Periode Pengumuman Telah Berakhir</div>
-                        <div class="state-sub">Hubungi sekolah untuk informasi lebih lanjut.</div>
+                        <div class="state-sub">Hubungi madrasah untuk informasi lebih lanjut.</div>
                     </div>
                 @elseif ($sudahBuka)
-                    <div class="amplop-section" id="amplop-section">
-                        <button onclick="bukaAmplop()" id="amplop-btn" class="amplop-btn" aria-label="Buka amplop">
-                            <div id="amplop"
-                                style="position:relative;width:270px;height:180px;transition:all .5s ease;filter:drop-shadow(0 14px 36px rgba(13,148,136,.28))">
-                                <svg viewBox="0 0 270 180" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                    style="width:100%;height:100%">
-                                    <rect width="270" height="180" rx="15" fill="#0d9488" />
-                                    <rect width="270" height="180" rx="15" fill="url(#eg)" />
-                                    <path d="M0 180 L135 104 L270 180Z" fill="#0f766e" />
-                                    <path id="amplop-lid" d="M0 20 L135 102 L270 20 L270 0 L0 0Z" fill="#14b8a6"
-                                        style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
-                                    <path d="M0 20 L135 102 L270 20" stroke="rgba(94,234,212,.35)" stroke-width="1.5"
-                                        fill="none" />
-                                    <text x="135" y="150" text-anchor="middle" fill="rgba(255,255,255,.75)" font-size="10"
-                                        font-family="var(--font-body),sans-serif" font-weight="600"
-                                        letter-spacing="0.5">Ketuk untuk membuka</text>
-                                    <defs>
-                                        <linearGradient id="eg" x1="0" y1="0" x2="270"
-                                            y2="180" gradientUnits="userSpaceOnUse">
-                                            <stop offset="0%" stop-color="rgba(20,184,166,.28)" />
-                                            <stop offset="100%" stop-color="rgba(13,148,136,0)" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                            </div>
-                            <span class="amplop-hint">Ketuk amplop &uarr;</span>
-                        </button>
-                    </div>
-
                     <div id="cari-section" class="hidden" style="padding:0 1rem">
                         <div class="search-card">
                             <div class="search-card-head">
