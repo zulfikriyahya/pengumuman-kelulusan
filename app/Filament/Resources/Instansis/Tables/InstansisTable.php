@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -16,46 +17,29 @@ class InstansisTable
     {
         return $table
             ->columns([
+                ImageColumn::make('logo')
+                    ->disk('public')
+                    ->height(40)
+                    ->defaultImageUrl(asset('images/default.png')),
                 TextColumn::make('nama')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('npsn')
-                    ->searchable(),
-                TextColumn::make('logo')
-                    ->searchable(),
-                TextColumn::make('logo_institusi')
-                    ->searchable(),
-                TextColumn::make('nomor_surat')
-                    ->searchable(),
-                TextColumn::make('nama_pimpinan')
-                    ->searchable(),
-                TextColumn::make('nip_pimpinan')
-                    ->searchable(),
-                TextColumn::make('tte_pimpinan')
-                    ->searchable(),
-                TextColumn::make('nama_ketua')
-                    ->searchable(),
-                TextColumn::make('nip_ketua')
-                    ->searchable(),
-                TextColumn::make('tte_ketua')
+                    ->label('NPSN')
                     ->searchable(),
                 TextColumn::make('jenjang')
                     ->searchable(),
                 TextColumn::make('akreditasi')
                     ->searchable(),
                 IconColumn::make('status')
-                    ->boolean(),
+                    ->boolean()
+                    ->label('Aktif'),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->dateTime('d F Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

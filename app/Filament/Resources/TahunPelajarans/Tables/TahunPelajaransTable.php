@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class TahunPelajaransTable
@@ -17,34 +18,31 @@ class TahunPelajaransTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Tahun Pelajaran')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('jadwal_pengumuman_mulai')
-                    ->dateTime()
+                    ->label('Pengumuman Mulai')
+                    ->dateTime('d F Y H:i')
                     ->sortable(),
                 TextColumn::make('jadwal_pengumuman_selesai')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('jadwal_kelulusan_mulai')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('jadwal_kelulusan_selesai')
-                    ->dateTime()
+                    ->label('Pengumuman Selesai')
+                    ->dateTime('d F Y H:i')
                     ->sortable(),
                 TextColumn::make('jadwal_kelulusan_tempat')
-                    ->searchable(),
+                    ->label('Tempat Kelulusan')
+                    ->searchable()
+                    ->toggleable(),
                 IconColumn::make('status')
-                    ->boolean(),
+                    ->boolean()
+                    ->label('Aktif'),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->dateTime('d F Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('status')->label('Aktif'),
             ])
             ->recordActions([
                 ViewAction::make(),

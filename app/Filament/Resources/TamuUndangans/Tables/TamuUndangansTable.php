@@ -18,8 +18,8 @@ class TamuUndangansTable
                 TextColumn::make('siswa.nama')->label('Nama Siswa')->searchable()->sortable(),
                 TextColumn::make('siswa.nisn')->label('NISN')->searchable(),
                 TextColumn::make('jumlah_tamu')->numeric()->sortable(),
-                TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([])
             ->recordActions([ViewAction::make(), EditAction::make()])

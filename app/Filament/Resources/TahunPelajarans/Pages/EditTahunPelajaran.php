@@ -6,6 +6,8 @@ use App\Filament\Resources\TahunPelajarans\TahunPelajaranResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 
 class EditTahunPelajaran extends EditRecord
 {
@@ -14,8 +16,18 @@ class EditTahunPelajaran extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
-            DeleteAction::make(),
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
         ];
     }
 }

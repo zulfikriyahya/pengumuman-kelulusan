@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -15,26 +16,26 @@ class AlumnisTable
     {
         return $table
             ->columns([
+                ImageColumn::make('avatar')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(asset('images/default.png')),
                 TextColumn::make('nama')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('nisn')
+                    ->label('NISN')
                     ->searchable(),
                 TextColumn::make('tahun_lulus')
-                    ->searchable(),
-                TextColumn::make('avatar')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->dateTime('d F Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->defaultSort('tahun_lulus', 'desc')
+            ->filters([])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

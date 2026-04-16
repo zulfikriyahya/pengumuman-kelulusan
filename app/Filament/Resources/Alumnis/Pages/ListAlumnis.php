@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Alumnis\Pages;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 
 class ListAlumnis extends ListRecords
 {
@@ -13,7 +15,12 @@ class ListAlumnis extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
         ];
     }
 }

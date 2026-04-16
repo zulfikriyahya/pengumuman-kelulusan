@@ -20,7 +20,7 @@ class PersonilResource extends Resource
 {
     protected static ?string $model = Personil::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
 
     protected static ?string $recordTitleAttribute = 'nama';
 
