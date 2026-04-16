@@ -1,0 +1,108 @@
+models:
+  Instansi:
+    id: uuid
+    nama: string
+    npsn: string:8 unique
+    logo: string nullable
+    logo_institusi: string nullable
+    nomor_surat: string nullable
+    nama_pimpinan: string nullable
+    nip_pimpinan: string nullable
+    tte_pimpinan: string nullable
+    nama_ketua: string nullable
+    nip_ketua: string nullable
+    tte_ketua: string nullable
+    jenjang: enum:SD,MI,SMP,MTS,SMA,SMK,MA
+    akreditasi: enum:A,B,C,D,TT
+    status: boolean default:true
+    timestamps: true
+
+  TahunPelajaran:
+    id: uuid
+    name: string
+    jadwal_pengumuman_mulai: datetime
+    jadwal_pengumuman_selesai: datetime
+    jadwal_kelulusan_mulai: datetime nullable
+    jadwal_kelulusan_selesai: datetime nullable
+    jadwal_kelulusan_tempat: string nullable
+    status: boolean default:false
+    timestamps: true
+
+  Siswa:
+    id: uuid
+    nama: string
+    nama_orangtua: string nullable
+    nisn: string:10 unique
+    berkas_skl: string nullable
+    telepon: string:15 unique nullable
+    status: enum:Lulus,Tidak Lulus,Lulus Bersyarat
+    barcode_url: string nullable
+    timestamps: true
+    relationships:
+      hasMany: TamuUndangan
+
+  TamuUndangan:
+    id: uuid
+    siswa_id: foreignUuid:siswas
+    jumlah_tamu: integer default:1 nullable
+    timestamps: true
+    relationships:
+      belongsTo: Siswa
+
+  Alumni:
+    id: uuid
+    nama: string
+    nisn: string:10 unique
+    tahun_lulus: string:4
+    avatar: string nullable
+    quote: text nullable
+    timestamps: true
+
+  Personil:
+    id: uuid
+    nama: string
+    nip: string nullable
+    foto: string nullable
+    telepon: string:15 nullable
+    sosial_media: string nullable
+    jabatan: string
+    quote: text nullable
+    timestamps: true
+
+controllers:
+  LandingPage:
+    index:
+      render: landing.index
+    cari:
+      validate: nisn
+      render: landing.hasil
+    cetakSkl:
+      find: Siswa
+      render: landing.skl with:siswa
+    cetakUndangan:
+      find: Siswa
+      render: landing.undangan with:siswa
+
+  Personil:
+    index:
+      render: personil.index
+    cari:
+      validate: nama
+      render: personil.index
+
+  Alumni:
+    index:
+      render: alumni.index
+    cari:
+      validate: nama
+      render: alumni.index
+
+  TamuUndangan:
+    index:
+      render: tamu.index
+    scanQr:
+      render: tamu.scan
+    store:
+      validate: siswa_id,jumlah_tamu
+      save: tamuUndangan
+      redirect: tamu.index
