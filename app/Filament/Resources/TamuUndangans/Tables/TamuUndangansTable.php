@@ -15,8 +15,6 @@ class TamuUndangansTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')->label('ID')->searchable()->toggleable(isToggledHiddenByDefault: true),
-                // fix: relasi dot-notation
                 TextColumn::make('siswa.nama')->label('Nama Siswa')->searchable()->sortable(),
                 TextColumn::make('siswa.nisn')->label('NISN')->searchable(),
                 TextColumn::make('jumlah_tamu')->numeric()->sortable(),

@@ -16,8 +16,6 @@ class TamuUndanganController extends Controller
         $tamus = TamuUndangan::with('siswa')
             ->orderByDesc('created_at')
             ->paginate(20);
-
-        // fix: hitung total PAX dari DB, bukan dari paginator (yang hanya halaman aktif)
         $totalPax = TamuUndangan::sum('jumlah_tamu');
         $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
@@ -33,7 +31,6 @@ class TamuUndanganController extends Controller
         return view('tamu.scan');
     }
 
-    // fix: method baru — proses scan QR manual (POST dari form)
     public function processScan(Request $request): RedirectResponse
     {
         $request->validate([
@@ -52,7 +49,6 @@ class TamuUndanganController extends Controller
         return redirect()->route('tamu.konfirmasi', $siswa);
     }
 
-    // fix: method baru — halaman konfirmasi kehadiran
     public function konfirmasi(Siswa $siswa): View
     {
         $sudahHadir = TamuUndangan::where('siswa_id', $siswa->id)->exists();
@@ -76,7 +72,6 @@ class TamuUndanganController extends Controller
             ->with('success', 'Tamu berhasil dicatat.');
     }
 
-    // fix: method baru — cetak daftar hadir (view/PDF sederhana)
     public function cetakHadir(): View
     {
         $tamus = TamuUndangan::with('siswa')

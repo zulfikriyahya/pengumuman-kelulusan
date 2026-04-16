@@ -16,9 +16,6 @@ class TahunPelajaransTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('jadwal_pengumuman_mulai')

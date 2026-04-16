@@ -11,8 +11,6 @@ class PersonilInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('nip')
                     ->placeholder('-'),

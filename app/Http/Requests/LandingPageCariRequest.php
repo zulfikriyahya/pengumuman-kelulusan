@@ -14,7 +14,6 @@ class LandingPageCariRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // User cukup isi salah satu: nisn atau telepon
             'nisn' => ['required_without:telepon', 'nullable', 'string', 'max:10'],
             'telepon' => ['required_without:nisn', 'nullable', 'string', 'max:15'],
         ];
@@ -28,7 +27,6 @@ class LandingPageCariRequest extends FormRequest
         ];
     }
 
-    // Kembalikan keyword tunggal yang diisi user
     public function keyword(): string
     {
         return $this->filled('nisn') ? $this->nisn : $this->telepon;

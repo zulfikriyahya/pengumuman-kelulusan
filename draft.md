@@ -82,6 +82,7 @@ _PHP dependencies and project metadata._
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "laravel/boost": "^2.4",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
@@ -274,11 +275,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-/**
- * Import satu atau banyak file PDF SKL.
- * Naming convention: <nisn>.pdf
- * Jika berkas sudah ada → replace (hapus lama, simpan baru).
- */
 class ImportDokumenSkl
 {
     /**
@@ -294,16 +290,18 @@ class ImportDokumenSkl
             $nisn = Str::beforeLast($file->getClientOriginalName(), '.pdf');
 
             if (! preg_match('/^\d{10}$/', $nisn)) {
-                $log[] = "❌ Dilewati — nama file tidak valid: {$file->getClientOriginalName()}";
+                $log[] = "Dilewati — nama file tidak valid: {$file->getClientOriginalName()}";
                 $gagal++;
+
                 continue;
             }
 
             $siswa = Siswa::where('nisn', $nisn)->first();
 
             if (! $siswa) {
-                $log[] = "⚠️  Siswa dengan NISN {$nisn} tidak ditemukan.";
+                $log[] = "Siswa dengan NISN {$nisn} tidak ditemukan.";
                 $dilewati++;
+
                 continue;
             }
 
@@ -315,13 +313,14 @@ class ImportDokumenSkl
             $path = $file->storeAs('skl', "{$nisn}.pdf", 'public');
 
             $siswa->update(['berkas_skl' => $path]);
-            $log[] = "✅ SKL {$nisn} berhasil diimpor.";
+            $log[] = "SKL {$nisn} berhasil diimpor.";
             $berhasil++;
         }
 
         return compact('berhasil', 'dilewati', 'gagal', 'log');
     }
 }
+
 ```
 
 ---
@@ -340,7 +339,8 @@ use Illuminate\Console\Command;
 
 class BroadcastKelulusan extends Command
 {
-    protected $signature   = 'skl:broadcast {--force : Kirim tanpa cek jadwal}';
+    protected $signature = 'skl:broadcast {--force : Kirim tanpa cek jadwal}';
+
     protected $description = 'Broadcast pesan kelulusan via WhatsApp ke seluruh siswa yang memiliki nomor.';
 
     public function handle(): int
@@ -349,6 +349,7 @@ class BroadcastKelulusan extends Command
 
         if (! $tp) {
             $this->error('Tidak ada Tahun Pelajaran aktif.');
+
             return self::FAILURE;
         }
 
@@ -359,19 +360,21 @@ class BroadcastKelulusan extends Command
 
         if (! $this->option('force') && ! $dalamJadwal) {
             $this->warn('Belum dalam rentang jadwal pengumuman. Gunakan --force untuk memaksa.');
+
             return self::FAILURE;
         }
 
         $siswas = Siswa::whereNotNull('telepon')->get();
-        $total  = $siswas->count();
+        $total = $siswas->count();
 
         if ($total === 0) {
             $this->warn('Tidak ada siswa dengan nomor telepon terdaftar.');
+
             return self::SUCCESS;
         }
 
         $this->info("Mengirim ke {$total} siswa...");
-        $bar    = $this->output->createProgressBar($total);
+        $bar = $this->output->createProgressBar($total);
         $bar->start();
 
         // Delay akumulatif agar job tidak membanjiri API sekaligus
@@ -407,15 +410,15 @@ namespace App\Enums;
 
 enum StatusSiswa: string
 {
-    case Lulus           = 'Lulus';
-    case TidakLulus      = 'Tidak Lulus';
-    case LulusBersyarat  = 'Lulus Bersyarat';
+    case Lulus = 'Lulus';
+    case TidakLulus = 'Tidak Lulus';
+    case LulusBersyarat = 'Lulus Bersyarat';
 
     public function label(): string
     {
         return match ($this) {
-            self::Lulus          => 'Lulus',
-            self::TidakLulus     => 'Tidak Lulus',
+            self::Lulus => 'Lulus',
+            self::TidakLulus => 'Tidak Lulus',
             self::LulusBersyarat => 'Lulus Bersyarat',
         };
     }
@@ -423,8 +426,8 @@ enum StatusSiswa: string
     public function color(): string
     {
         return match ($this) {
-            self::Lulus          => 'success',
-            self::TidakLulus     => 'danger',
+            self::Lulus => 'success',
+            self::TidakLulus => 'danger',
             self::LulusBersyarat => 'warning',
         };
     }
@@ -609,8 +612,8 @@ class ViewAlumni extends ViewRecord
 
 namespace App\Filament\Resources\Alumnis\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class AlumniForm
@@ -652,8 +655,6 @@ class AlumniInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('nisn'),
                 TextEntry::make('tahun_lulus'),
@@ -696,9 +697,6 @@ class AlumnisTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('nisn')
@@ -964,8 +962,6 @@ class InstansiInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('npsn'),
                 TextEntry::make('logo')
@@ -1025,9 +1021,6 @@ class InstansisTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('npsn')
@@ -1259,8 +1252,8 @@ class PersonilResource extends Resource
 
 namespace App\Filament\Resources\Personils\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class PersonilForm
@@ -1304,8 +1297,6 @@ class PersonilInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('nip')
                     ->placeholder('-'),
@@ -1353,9 +1344,6 @@ class PersonilsTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('nip')
@@ -1502,6 +1490,7 @@ class ViewSiswa extends ViewRecord
 
 ```php
 <?php
+
 // ──────────────────────────────────────────────────────────────
 // app/Filament/Resources/Siswas/Schemas/SiswaForm.php
 // fix: status pakai Select enum, bukan TextInput
@@ -1563,16 +1552,14 @@ class SiswaInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextEntry::make('id')->label('ID'),
             TextEntry::make('nama'),
             TextEntry::make('nama_orangtua')->placeholder('-'),
             TextEntry::make('nisn'),
             TextEntry::make('berkas_skl')->placeholder('-'),
             TextEntry::make('telepon')->placeholder('-'),
-            // fix: badge berwarna sesuai status
             TextEntry::make('status')
                 ->badge()
-                ->color(fn($state) => $state?->color()),
+                ->color(fn ($state) => $state?->color()),
             TextEntry::make('barcode_url')->placeholder('-'),
             TextEntry::make('created_at')->dateTime()->placeholder('-'),
             TextEntry::make('updated_at')->dateTime()->placeholder('-'),
@@ -1670,9 +1657,6 @@ class SiswasTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('nama_orangtua')
@@ -1871,8 +1855,6 @@ class TahunPelajaranInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('name'),
                 TextEntry::make('jadwal_pengumuman_mulai')
                     ->dateTime(),
@@ -1923,9 +1905,6 @@ class TahunPelajaransTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('jadwal_pengumuman_mulai')
@@ -2190,8 +2169,6 @@ class TamuUndanganInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextEntry::make('id')->label('ID'),
-            // fix: pakai dot-notation relasi
             TextEntry::make('siswa.nama')->label('Siswa'),
             TextEntry::make('siswa.nisn')->label('NISN')->placeholder('-'),
             TextEntry::make('jumlah_tamu')->numeric()->placeholder('-'),
@@ -2225,8 +2202,6 @@ class TamuUndangansTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')->label('ID')->searchable()->toggleable(isToggledHiddenByDefault: true),
-                // fix: relasi dot-notation
                 TextColumn::make('siswa.nama')->label('Nama Siswa')->searchable()->sortable(),
                 TextColumn::make('siswa.nisn')->label('NISN')->searchable(),
                 TextColumn::make('jumlah_tamu')->numeric()->sortable(),
@@ -2332,7 +2307,6 @@ class AlumniController extends Controller
 
     public function cari(AlumnusCariRequest $request): View
     {
-        // fix: ambil keyword dari field yang terisi
         $keyword = $request->filled('nisn')
             ? $request->validated('nisn')
             : $request->validated('nama');
@@ -2406,16 +2380,15 @@ class LandingPageController extends Controller
             ->first();
 
         return view('landing.hasil', [
-            'siswa'   => $siswa,
+            'siswa' => $siswa,
             'keyword' => $keyword,
         ]);
     }
 
-    // fix: method baru — halaman hasil langsung via URL siswa
     public function hasil(Siswa $siswa): View
     {
         return view('landing.hasil', [
-            'siswa'   => $siswa,
+            'siswa' => $siswa,
             'keyword' => $siswa->nisn,
         ]);
     }
@@ -2425,15 +2398,14 @@ class LandingPageController extends Controller
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         return view('landing.skl', [
-            'siswa'          => $siswa,
+            'siswa' => $siswa,
             'tahunPelajaran' => $tahunPelajaran,
         ]);
     }
 
-    // fix: method baru — render PDF SKL via DomPDF
     public function cetakSklPdf(Siswa $siswa): Response
     {
-        $instansi       = Instansi::first();
+        $instansi = Instansi::first();
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         $pdf = Pdf::loadView('pdf.skl', compact('siswa', 'instansi', 'tahunPelajaran'))
@@ -2449,17 +2421,16 @@ class LandingPageController extends Controller
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         return view('landing.undangan', [
-            'siswa'          => $siswa,
+            'siswa' => $siswa,
             'tahunPelajaran' => $tahunPelajaran,
         ]);
     }
 
-    // fix: method baru — render PDF Undangan via DomPDF
     public function cetakUndanganPdf(Siswa $siswa): Response
     {
         abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak mendapatkan surat undangan.');
 
-        $instansi       = Instansi::first();
+        $instansi = Instansi::first();
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         $pdf = Pdf::loadView('pdf.undangan', compact('siswa', 'instansi', 'tahunPelajaran'))
@@ -2506,7 +2477,7 @@ class PersonilController extends Controller
 
         return view('personil.index', [
             'personils' => $personils,
-            'keyword'   => $keyword,
+            'keyword' => $keyword,
         ]);
     }
 }
@@ -2536,15 +2507,13 @@ class TamuUndanganController extends Controller
         $tamus = TamuUndangan::with('siswa')
             ->orderByDesc('created_at')
             ->paginate(20);
-
-        // fix: hitung total PAX dari DB, bukan dari paginator (yang hanya halaman aktif)
-        $totalPax    = TamuUndangan::sum('jumlah_tamu');
-        $totalSiswa  = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
+        $totalPax = TamuUndangan::sum('jumlah_tamu');
+        $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
         return view('tamu.index', [
             'tamuUndangans' => $tamus,
-            'totalPax'      => $totalPax,
-            'totalSiswa'    => $totalSiswa,
+            'totalPax' => $totalPax,
+            'totalSiswa' => $totalSiswa,
         ]);
     }
 
@@ -2553,14 +2522,13 @@ class TamuUndanganController extends Controller
         return view('tamu.scan');
     }
 
-    // fix: method baru — proses scan QR manual (POST dari form)
     public function processScan(Request $request): RedirectResponse
     {
         $request->validate([
             'kode' => ['required', 'string'],
         ]);
 
-        $kode  = $request->input('kode');
+        $kode = $request->input('kode');
         $siswa = Siswa::where('id', $kode)
             ->orWhere('nisn', $kode)
             ->first();
@@ -2572,14 +2540,13 @@ class TamuUndanganController extends Controller
         return redirect()->route('tamu.konfirmasi', $siswa);
     }
 
-    // fix: method baru — halaman konfirmasi kehadiran
     public function konfirmasi(Siswa $siswa): View
     {
         $sudahHadir = TamuUndangan::where('siswa_id', $siswa->id)->exists();
 
         return view('tamu.konfirmasi', [
-            'siswa'       => $siswa,
-            'sudahHadir'  => $sudahHadir,
+            'siswa' => $siswa,
+            'sudahHadir' => $sudahHadir,
         ]);
     }
 
@@ -2588,7 +2555,7 @@ class TamuUndanganController extends Controller
         $data = $request->validated();
 
         TamuUndangan::updateOrCreate(
-            ['siswa_id'    => $data['siswa_id']],
+            ['siswa_id' => $data['siswa_id']],
             ['jumlah_tamu' => $data['jumlah_tamu'] ?? 1],
         );
 
@@ -2596,7 +2563,6 @@ class TamuUndanganController extends Controller
             ->with('success', 'Tamu berhasil dicatat.');
     }
 
-    // fix: method baru — cetak daftar hadir (view/PDF sederhana)
     public function cetakHadir(): View
     {
         $tamus = TamuUndangan::with('siswa')
@@ -2604,7 +2570,7 @@ class TamuUndanganController extends Controller
             ->get();
 
         return view('tamu.cetak-hadir', [
-            'tamus'    => $tamus,
+            'tamus' => $tamus,
             'totalPax' => $tamus->sum('jumlah_tamu'),
         ]);
     }
@@ -2645,6 +2611,7 @@ class JadwalKelulusanAktif
         return $next($request);
     }
 }
+
 ```
 
 ---
@@ -2668,7 +2635,6 @@ class AlumnusCariRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Pencarian by nama (like) atau nisn (exact) — salah satu wajib diisi
             'nama' => ['required_without:nisn', 'nullable', 'string', 'max:255'],
             'nisn' => ['required_without:nama', 'nullable', 'string', 'max:10'],
         ];
@@ -2706,7 +2672,6 @@ class LandingPageCariRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // User cukup isi salah satu: nisn atau telepon
             'nisn' => ['required_without:telepon', 'nullable', 'string', 'max:10'],
             'telepon' => ['required_without:nisn', 'nullable', 'string', 'max:15'],
         ];
@@ -2715,12 +2680,11 @@ class LandingPageCariRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nisn.required_without'     => 'Masukkan NISN atau nomor telepon.',
-            'telepon.required_without'  => 'Masukkan NISN atau nomor telepon.',
+            'nisn.required_without' => 'Masukkan NISN atau nomor telepon.',
+            'telepon.required_without' => 'Masukkan NISN atau nomor telepon.',
         ];
     }
 
-    // Kembalikan keyword tunggal yang diisi user
     public function keyword(): string
     {
         return $this->filled('nisn') ? $this->nisn : $this->telepon;
@@ -2785,7 +2749,6 @@ class TamuUndanganScanQrRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Hanya validasi siswa_id hasil scan QR
             'siswa_id' => ['required', 'uuid', 'exists:siswas,id'],
         ];
     }
@@ -2794,8 +2757,8 @@ class TamuUndanganScanQrRequest extends FormRequest
     {
         return [
             'siswa_id.required' => 'QR Code tidak terbaca.',
-            'siswa_id.uuid'     => 'QR Code tidak valid.',
-            'siswa_id.exists'   => 'Data siswa tidak ditemukan.',
+            'siswa_id.uuid' => 'QR Code tidak valid.',
+            'siswa_id.exists' => 'Data siswa tidak ditemukan.',
         ];
     }
 }
@@ -2824,12 +2787,11 @@ class TamuUndanganStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // fix: tambah where status lulus agar siswa tidak lulus tidak bisa check-in
             'siswa_id' => [
                 'required',
                 'uuid',
                 Rule::exists('siswas', 'id')->where(
-                    fn($q) => $q->whereIn('status', ['Lulus', 'Lulus Bersyarat'])
+                    fn ($q) => $q->whereIn('status', ['Lulus', 'Lulus Bersyarat'])
                 ),
             ],
             'jumlah_tamu' => ['nullable', 'integer', 'min:1', 'max:10'],
@@ -2840,10 +2802,10 @@ class TamuUndanganStoreRequest extends FormRequest
     {
         return [
             'siswa_id.required' => 'QR Code tidak valid.',
-            'siswa_id.uuid'     => 'QR Code tidak valid.',
-            'siswa_id.exists'   => 'Siswa tidak ditemukan atau tidak berhak hadir.',
-            'jumlah_tamu.min'   => 'Jumlah tamu minimal 1 orang.',
-            'jumlah_tamu.max'   => 'Jumlah tamu maksimal 10 orang.',
+            'siswa_id.uuid' => 'QR Code tidak valid.',
+            'siswa_id.exists' => 'Siswa tidak ditemukan atau tidak berhak hadir.',
+            'jumlah_tamu.min' => 'Jumlah tamu minimal 1 orang.',
+            'jumlah_tamu.max' => 'Jumlah tamu maksimal 10 orang.',
         ];
     }
 }
@@ -2868,17 +2830,16 @@ class AlumniImport implements ToModel, WithHeadingRow, WithUpserts
 {
     public function model(array $row): ?Alumni
     {
-        // Skip baris tanpa nama atau nisn
         if (blank($row['nama'] ?? null) || blank($row['nisn'] ?? null)) {
             return null;
         }
 
         return new Alumni([
-            'nama'        => $row['nama'],
-            'nisn'        => $row['nisn'],
+            'nama' => $row['nama'],
+            'nisn' => $row['nisn'],
             'tahun_lulus' => $row['tahun_lulus'],
-            'avatar'      => $row['avatar'] ?? null, // fix: field ada di model tapi tidak di-map
-            'quote'       => $row['quote'] ?? null,
+            'avatar' => $row['avatar'] ?? null,
+            'quote' => $row['quote'] ?? null,
         ]);
     }
 
@@ -2908,24 +2869,20 @@ class PersonilImport implements ToModel, WithHeadingRow, WithUpserts
 {
     public function model(array $row): ?Personil
     {
-        // Skip baris tanpa nama atau jabatan
         if (blank($row['nama'] ?? null) || blank($row['jabatan'] ?? null)) {
             return null;
         }
 
         return new Personil([
-            'nama'         => $row['nama'],
-            'nip'          => filled($row['nip'] ?? null) ? $row['nip'] : null,
-            'jabatan'      => $row['jabatan'],
-            'telepon'      => $row['telepon'] ?? null,
+            'nama' => $row['nama'],
+            'nip' => filled($row['nip'] ?? null) ? $row['nip'] : null,
+            'jabatan' => $row['jabatan'],
+            'telepon' => $row['telepon'] ?? null,
             'sosial_media' => $row['sosial_media'] ?? null,
-            'quote'        => $row['quote'] ?? null,
+            'quote' => $row['quote'] ?? null,
         ]);
     }
 
-    // nip nullable — upsert by nip hanya jika ada nilainya
-    // Jika nip kosong, Laravel akan insert baru (bukan upsert)
-    // Ini perilaku yang aman: personil tanpa NIP tidak saling tumpuk
     public function uniqueBy(): string
     {
         return 'nip';
@@ -2940,6 +2897,7 @@ class PersonilImport implements ToModel, WithHeadingRow, WithUpserts
 
 ```php
 <?php
+
 namespace App\Imports;
 
 use App\Models\Siswa;
@@ -2952,16 +2910,18 @@ class SiswaImport implements ToModel, WithHeadingRow, WithUpserts
     public function model(array $row): Siswa
     {
         return new Siswa([
-            'nama'         => $row['nama'],
-            'nama_orangtua'=> $row['nama_orangtua'] ?? null,
-            'nisn'         => $row['nisn'],
-            'telepon'      => $row['telepon'] ?? null,
-            'status'       => $row['status'] ?? 'Lulus',
+            'nama' => $row['nama'],
+            'nama_orangtua' => $row['nama_orangtua'] ?? null,
+            'nisn' => $row['nisn'],
+            'telepon' => $row['telepon'] ?? null,
+            'status' => $row['status'] ?? 'Lulus',
         ]);
     }
 
-    /** Upsert key: nisn */
-    public function uniqueBy(): string { return 'nisn'; }
+    public function uniqueBy(): string
+    {
+        return 'nisn';
+    }
 }
 
 ```
@@ -2989,8 +2949,9 @@ class BroadcastPesanKelulusan implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
-    public int $backoff = 60; // detik antar retry otomatis Laravel
+    public int $tries = 3;
+
+    public int $backoff = 60;
 
     public function __construct(
         private readonly Siswa $siswa,
@@ -3003,18 +2964,15 @@ class BroadcastPesanKelulusan implements ShouldQueue
             return;
         }
 
-        $pesan    = $this->buildPesan();
+        $pesan = $this->buildPesan();
         $response = Http::withToken(config('services.wapi.token'))
             ->timeout(15)
             ->post(config('services.wapi.url'), [
-                'phone'   => $this->siswa->telepon,
+                'phone' => $this->siswa->telepon,
                 'message' => $pesan,
             ]);
-
-        // Lempar exception agar Laravel retry otomatis via $tries & $backoff
-        // Jangan pakai $this->release() sekaligus $tries — akan double-count attempt
         if ($response->failed()) {
-            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): " . $response->body());
+            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): ".$response->body());
 
             throw new \RuntimeException("Gagal kirim WA ke {$this->siswa->nisn}: HTTP {$response->status()}");
         }
@@ -3024,10 +2982,10 @@ class BroadcastPesanKelulusan implements ShouldQueue
 
     private function buildPesan(): string
     {
-        $tp  = $this->tahunPelajaran;
+        $tp = $this->tahunPelajaran;
         $url = config('app.url');
 
-        $pesan  = "Assalamu'alaikum, {$this->siswa->nama}.\n\n";
+        $pesan = "Assalamu'alaikum, {$this->siswa->nama}.\n\n";
         $pesan .= "Pengumuman Kelulusan sudah dapat diakses pada:\n";
         $pesan .= "🔗 {$url}\n\n";
 
@@ -3036,7 +2994,7 @@ class BroadcastPesanKelulusan implements ShouldQueue
             && $tp->jadwal_kelulusan_tempat;
 
         if ($adaJadwal) {
-            $mulai   = $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y H:i');
+            $mulai = $tp->jadwal_kelulusan_mulai->translatedFormat('l, d F Y H:i');
             $selesai = $tp->jadwal_kelulusan_selesai->translatedFormat('H:i');
 
             $pesan .= "📅 Acara Kelulusan:\n";
@@ -3044,14 +3002,14 @@ class BroadcastPesanKelulusan implements ShouldQueue
             $pesan .= "Tempat  : {$tp->jadwal_kelulusan_tempat}\n\n";
         }
 
-        $pesan .= "Selamat & semoga sukses! 🎓";
+        $pesan .= 'Selamat & semoga sukses! 🎓';
 
         return $pesan;
     }
 
     public function failed(\Throwable $e): void
     {
-        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: " . $e->getMessage());
+        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: ".$e->getMessage());
     }
 }
 
@@ -3188,6 +3146,7 @@ class Personil extends Model
 
 namespace App\Models;
 
+use App\Enums\StatusSiswa;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -3210,7 +3169,7 @@ class Siswa extends Model
     protected function casts(): array
     {
         return [
-            'status' => \App\Enums\StatusSiswa::class,
+            'status' => StatusSiswa::class,
         ];
     }
 
@@ -3222,8 +3181,8 @@ class Siswa extends Model
     public function isLulus(): bool
     {
         return in_array($this->status, [
-            \App\Enums\StatusSiswa::Lulus,
-            \App\Enums\StatusSiswa::LulusBersyarat,
+            StatusSiswa::Lulus,
+            StatusSiswa::LulusBersyarat,
         ]);
     }
 }
@@ -3260,11 +3219,11 @@ class TahunPelajaran extends Model
     protected function casts(): array
     {
         return [
-            'jadwal_pengumuman_mulai'  => 'datetime',
+            'jadwal_pengumuman_mulai' => 'datetime',
             'jadwal_pengumuman_selesai' => 'datetime',
-            'jadwal_kelulusan_mulai'   => 'datetime',
+            'jadwal_kelulusan_mulai' => 'datetime',
             'jadwal_kelulusan_selesai' => 'datetime',
-            'status'                   => 'boolean',
+            'status' => 'boolean',
         ];
     }
 
@@ -3272,6 +3231,7 @@ class TahunPelajaran extends Model
     public function isPengumumanAktif(): bool
     {
         $now = now();
+
         return $this->status
             && $now->gte($this->jadwal_pengumuman_mulai)
             && $now->lte($this->jadwal_pengumuman_selesai);
@@ -3280,10 +3240,11 @@ class TahunPelajaran extends Model
     // Apakah rentang acara kelulusan sedang aktif
     public function isKelulusanAktif(): bool
     {
-        if (!$this->jadwal_kelulusan_mulai || !$this->jadwal_kelulusan_selesai) {
+        if (! $this->jadwal_kelulusan_mulai || ! $this->jadwal_kelulusan_selesai) {
             return false;
         }
         $now = now();
+
         return $now->gte($this->jadwal_kelulusan_mulai)
             && $now->lte($this->jadwal_kelulusan_selesai);
     }
@@ -3386,6 +3347,7 @@ namespace App\Providers;
 
 use App\Models\Instansi;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -3394,11 +3356,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        view()->composer('*', function ($view) {
-            // fix: cache query agar tidak hit DB di setiap request
-            $instansi = Cache::remember('instansi.aktif', now()->addHour(), fn() => Instansi::first());
-            $view->with('instansi', $instansi);
+        $instansiArray = Cache::remember('instansi.aktif', now()->addHour(), function () {
+            $data = Instansi::first();
+
+            return $data ? $data->toArray() : null;
         });
+        $instansi = $instansiArray ? (object) $instansiArray : null;
+        View::share('instansi', $instansi);
     }
 }
 
@@ -3425,7 +3389,7 @@ use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken; // ← ganti ini
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -3458,7 +3422,7 @@ class AdminPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                VerifyCsrfToken::class, // ← bukan PreventRequestForgery
+                VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
@@ -3480,6 +3444,7 @@ class AdminPanelProvider extends PanelProvider
 ```php
 <?php
 
+use App\Http\Middleware\JadwalKelulusanAktif;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -3487,13 +3452,13 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'jadwal.kelulusan' => \App\Http\Middleware\JadwalKelulusanAktif::class,
+            'jadwal.kelulusan' => JadwalKelulusanAktif::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -3503,11 +3468,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->to('/admin')
                     ->with('error', "Terjadi kesalahan ({$e->getStatusCode()}).");
             }
+
             return redirect()
                 ->route('landing')
                 ->with('error', "Terjadi kesalahan ({$e->getStatusCode()}). Silakan coba lagi.");
         });
-    })->create(); // ← add ->create() here
+    })->create();
 
 ```
 
@@ -3518,9 +3484,12 @@ return Application::configure(basePath: dirname(__DIR__))
 ```php
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
 ];
 
 ```
@@ -3537,128 +3506,25 @@ Application configuration files.
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    |
-    | This value is the name of your application, which will be used when the
-    | framework needs to place the application's name in a notification or
-    | other UI elements where an application name needs to be displayed.
-    |
-    */
-
     'name' => env('APP_NAME', 'Laravel'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Environment
-    |--------------------------------------------------------------------------
-    |
-    | This value determines the "environment" your application is currently
-    | running in. This may determine how you prefer to configure various
-    | services the application utilizes. Set this in your ".env" file.
-    |
-    */
-
     'env' => env('APP_ENV', 'production'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Debug Mode
-    |--------------------------------------------------------------------------
-    |
-    | When your application is in debug mode, detailed error messages with
-    | stack traces will be shown on every error that occurs within your
-    | application. If disabled, a simple generic error page is shown.
-    |
-    */
-
     'debug' => (bool) env('APP_DEBUG', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application URL
-    |--------------------------------------------------------------------------
-    |
-    | This URL is used by the console to properly generate URLs when using
-    | the Artisan command line tool. You should set this to the root of
-    | the application so that it's available within Artisan commands.
-    |
-    */
-
     'url' => env('APP_URL', 'http://localhost'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Timezone
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
-    |
-    */
-
     'timezone' => 'UTC',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Locale Configuration
-    |--------------------------------------------------------------------------
-    |
-    | The application locale determines the default locale that will be used
-    | by Laravel's translation / localization methods. This option can be
-    | set to any locale for which you plan to have translation strings.
-    |
-    */
-
     'locale' => env('APP_LOCALE', 'en'),
-
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
-
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Encryption Key
-    |--------------------------------------------------------------------------
-    |
-    | This key is utilized by Laravel's encryption services and should be set
-    | to a random, 32 character string to ensure that all encrypted values
-    | are secure. You should do this prior to deploying the application.
-    |
-    */
-
     'cipher' => 'AES-256-CBC',
-
     'key' => env('APP_KEY'),
-
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Maintenance Mode Driver
-    |--------------------------------------------------------------------------
-    |
-    | These configuration options determine the driver used to determine and
-    | manage Laravel's "maintenance mode" status. The "cache" driver will
-    | allow maintenance mode to be controlled across multiple machines.
-    |
-    | Supported drivers: "file", "cache"
-    |
-    */
-
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-
 ];
 
 ```
@@ -3673,95 +3539,26 @@ return [
 use App\Models\User;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Defaults
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default authentication "guard" and password
-    | reset "broker" for your application. You may change these values
-    | as required, but they're a perfect start for most applications.
-    |
-    */
-
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Guards
-    |--------------------------------------------------------------------------
-    |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | Supported: "session"
-    |
-    */
-
     'guards' => [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | User Providers
-    |--------------------------------------------------------------------------
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | If you have multiple user tables or models you may configure multiple
-    | providers to represent the model / table. These providers may then
-    | be assigned to any extra authentication guards you have defined.
-    |
-    | Supported: "database", "eloquent"
-    |
-    */
-
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
-
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resetting Passwords
-    |--------------------------------------------------------------------------
-    |
-    | These configuration options specify the behavior of Laravel's password
-    | reset functionality, including the table utilized for token storage
-    | and the user provider that is invoked to actually retrieve users.
-    |
-    | The expiry time is the number of minutes that each reset token will be
-    | considered valid. This security feature keeps tokens short-lived so
-    | they have less time to be guessed. You may change this as needed.
-    |
-    | The throttle setting is the number of seconds a user must wait before
-    | generating more password reset tokens. This prevents the user from
-    | quickly generating a very large amount of password reset tokens.
-    |
-    */
-
     'passwords' => [
         'users' => [
             'provider' => 'users',
@@ -3770,20 +3567,7 @@ return [
             'throttle' => 60,
         ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Password Confirmation Timeout
-    |--------------------------------------------------------------------------
-    |
-    | Here you may define the number of seconds before a password confirmation
-    | window expires and users are asked to re-enter their password via the
-    | confirmation screen. By default, the timeout lasts for three hours.
-    |
-    */
-
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
 ];
 
 ```
@@ -3798,42 +3582,12 @@ return [
 use Illuminate\Support\Str;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Cache Store
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default cache store that will be used by the
-    | framework. This connection is utilized if another isn't explicitly
-    | specified when running a cache operation inside the application.
-    |
-    */
-
     'default' => env('CACHE_STORE', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Stores
-    |--------------------------------------------------------------------------
-    |
-    | Here you may define all of the cache "stores" for your application as
-    | well as their drivers. You may even define multiple stores for the
-    | same cache driver to group types of items stored in your caches.
-    |
-    | Supported drivers: "array", "database", "file", "memcached",
-    |                    "redis", "dynamodb", "octane",
-    |                    "failover", "null"
-    |
-    */
-
     'stores' => [
-
         'array' => [
             'driver' => 'array',
             'serialize' => false,
         ],
-
         'database' => [
             'driver' => 'database',
             'connection' => env('DB_CACHE_CONNECTION'),
@@ -3841,13 +3595,11 @@ return [
             'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
-
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
             'lock_path' => storage_path('framework/cache/data'),
         ],
-
         'memcached' => [
             'driver' => 'memcached',
             'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),
@@ -3866,13 +3618,11 @@ return [
                 ],
             ],
         ],
-
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
         ],
-
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -3881,11 +3631,9 @@ return [
             'table' => env('DYNAMODB_CACHE_TABLE', 'cache'),
             'endpoint' => env('DYNAMODB_ENDPOINT'),
         ],
-
         'octane' => [
             'driver' => 'octane',
         ],
-
         'failover' => [
             'driver' => 'failover',
             'stores' => [
@@ -3893,35 +3641,9 @@ return [
                 'array',
             ],
         ],
-
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Key Prefix
-    |--------------------------------------------------------------------------
-    |
-    | When utilizing the APC, database, memcached, Redis, and DynamoDB cache
-    | stores, there might be other applications using the same cache. For
-    | that reason, you may prefix every cache key to avoid collisions.
-    |
-    */
-
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Serializable Classes
-    |--------------------------------------------------------------------------
-    |
-    | This value determines the classes that can be unserialized from cache
-    | storage. By default, no PHP classes will be unserialized from your
-    | cache to prevent gadget chain attacks if your APP_KEY is leaked.
-    |
-    */
-
     'serializable_classes' => false,
-
 ];
 
 ```
@@ -3937,34 +3659,8 @@ use Illuminate\Support\Str;
 use Pdo\Mysql;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Database Connection Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify which of the database connections below you wish
-    | to use as your default connection for database operations. This is
-    | the connection which will be utilized unless another connection
-    | is explicitly specified when you execute a query / statement.
-    |
-    */
-
     'default' => env('DB_CONNECTION', 'sqlite'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Database Connections
-    |--------------------------------------------------------------------------
-    |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
-    |
-    */
-
     'connections' => [
-
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
@@ -3976,7 +3672,6 @@ return [
             'synchronous' => null,
             'transaction_mode' => 'DEFERRED',
         ],
-
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -3996,7 +3691,6 @@ return [
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
@@ -4016,7 +3710,6 @@ return [
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
@@ -4031,7 +3724,6 @@ return [
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
-
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
@@ -4048,44 +3740,17 @@ return [
         ],
 
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Migration Repository Table
-    |--------------------------------------------------------------------------
-    |
-    | This table keeps track of all the migrations that have already run for
-    | your application. Using this information, we can determine which of
-    | the migrations on disk haven't actually been run on the database.
-    |
-    */
-
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redis Databases
-    |--------------------------------------------------------------------------
-    |
-    | Redis is an open source, fast, and advanced key-value store that also
-    | provides a richer body of commands than a typical key-value system
-    | such as Memcached. You may define your connection settings here.
-    |
-    */
-
     'redis' => [
-
         'client' => env('REDIS_CLIENT', 'phpredis'),
-
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
-
         'default' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -4098,7 +3763,6 @@ return [
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
-
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -4111,9 +3775,7 @@ return [
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
-
     ],
-
 ];
 
 ```
@@ -4126,35 +3788,8 @@ return [
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Filesystem Disk
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default filesystem disk that should be used
-    | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application for file storage.
-    |
-    */
-
     'default' => env('FILESYSTEM_DISK', 'local'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Filesystem Disks
-    |--------------------------------------------------------------------------
-    |
-    | Below you may configure as many filesystem disks as necessary, and you
-    | may even configure multiple disks for the same driver. Examples for
-    | most supported storage drivers are configured here for reference.
-    |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
-    |
-    */
-
     'disks' => [
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
@@ -4162,7 +3797,6 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -4171,7 +3805,6 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -4184,24 +3817,10 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Symbolic Links
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
-    */
-
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-
 ];
 
 ```
@@ -4219,65 +3838,23 @@ use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default log channel that is utilized to write
-    | messages to your logs. The value provided here should match one of
-    | the channels present in the list of "channels" configured below.
-    |
-    */
-
     'default' => env('LOG_CHANNEL', 'stack'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Deprecations Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the log channel that should be used to log warnings
-    | regarding deprecated PHP and library features. This allows you to get
-    | your application ready for upcoming major versions of dependencies.
-    |
-    */
-
     'deprecations' => [
         'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
         'trace' => env('LOG_DEPRECATIONS_TRACE', false),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Log Channels
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the log channels for your application. Laravel
-    | utilizes the Monolog PHP logging library, which includes a variety
-    | of powerful log handlers and formatters that you're free to use.
-    |
-    | Available drivers: "single", "daily", "slack", "syslog",
-    |                    "errorlog", "monolog", "custom", "stack"
-    |
-    */
-
     'channels' => [
-
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
             'ignore_exceptions' => false,
         ],
-
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
-
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
@@ -4285,7 +3862,6 @@ return [
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
-
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
@@ -4294,7 +3870,6 @@ return [
             'level' => env('LOG_LEVEL', 'critical'),
             'replace_placeholders' => true,
         ],
-
         'papertrail' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
@@ -4306,7 +3881,6 @@ return [
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],
-
         'stderr' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
@@ -4317,31 +3891,25 @@ return [
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'processors' => [PsrLogMessageProcessor::class],
         ],
-
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
             'replace_placeholders' => true,
         ],
-
         'errorlog' => [
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
-
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
         ],
-
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
-
     ],
-
 ];
 
 ```
@@ -4354,42 +3922,8 @@ return [
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Mailer
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default mailer that is used to send all email
-    | messages unless another mailer is explicitly specified when sending
-    | the message. All additional mailers can be configured within the
-    | "mailers" array. Examples of each type of mailer are provided.
-    |
-    */
-
     'default' => env('MAIL_MAILER', 'log'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mailer Configurations
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure all of the mailers used by your application plus
-    | their respective settings. Several examples have been configured for
-    | you and you are free to add your own as your application requires.
-    |
-    | Laravel supports a variety of mail "transport" drivers that can be used
-    | when delivering an email. You may specify which one you're using for
-    | your mailers below. You may also add additional mailers if needed.
-    |
-    | Supported: "smtp", "sendmail", "mailgun", "ses", "ses-v2",
-    |            "postmark", "resend", "log", "array",
-    |            "failover", "roundrobin"
-    |
-    */
-
     'mailers' => [
-
         'smtp' => [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
@@ -4401,11 +3935,9 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
-
         'ses' => [
             'transport' => 'ses',
         ],
-
         'postmark' => [
             'transport' => 'postmark',
             // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
@@ -4413,25 +3945,20 @@ return [
             //     'timeout' => 5,
             // ],
         ],
-
         'resend' => [
             'transport' => 'resend',
         ],
-
         'sendmail' => [
             'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
         ],
-
         'log' => [
             'transport' => 'log',
             'channel' => env('MAIL_LOG_CHANNEL'),
         ],
-
         'array' => [
             'transport' => 'array',
         ],
-
         'failover' => [
             'transport' => 'failover',
             'mailers' => [
@@ -4440,7 +3967,6 @@ return [
             ],
             'retry_after' => 60,
         ],
-
         'roundrobin' => [
             'transport' => 'roundrobin',
             'mailers' => [
@@ -4449,25 +3975,11 @@ return [
             ],
             'retry_after' => 60,
         ],
-
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Global "From" Address
-    |--------------------------------------------------------------------------
-    |
-    | You may wish for all emails sent by your application to be sent from
-    | the same address. Here you may specify a name and address that is
-    | used globally for all emails that are sent by your application.
-    |
-    */
-
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
-
 ];
 
 ```
@@ -4480,40 +3992,11 @@ return [
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Queue Connection Name
-    |--------------------------------------------------------------------------
-    |
-    | Laravel's queue supports a variety of backends via a single, unified
-    | API, giving you convenient access to each backend using identical
-    | syntax for each. The default queue connection is defined below.
-    |
-    */
-
     'default' => env('QUEUE_CONNECTION', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Queue Connections
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the connection options for every queue backend
-    | used by your application. An example configuration is provided for
-    | each backend supported by Laravel. You're also free to add more.
-    |
-    | Drivers: "sync", "database", "beanstalkd", "sqs", "redis",
-    |          "deferred", "background", "failover", "null"
-    |
-    */
-
     'connections' => [
-
         'sync' => [
             'driver' => 'sync',
         ],
-
         'database' => [
             'driver' => 'database',
             'connection' => env('DB_QUEUE_CONNECTION'),
@@ -4522,7 +4005,6 @@ return [
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
             'after_commit' => false,
         ],
-
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
@@ -4531,7 +4013,6 @@ return [
             'block_for' => 0,
             'after_commit' => false,
         ],
-
         'sqs' => [
             'driver' => 'sqs',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -4542,7 +4023,6 @@ return [
             'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
             'after_commit' => false,
         ],
-
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
@@ -4551,15 +4031,12 @@ return [
             'block_for' => null,
             'after_commit' => false,
         ],
-
         'deferred' => [
             'driver' => 'deferred',
         ],
-
         'background' => [
             'driver' => 'background',
         ],
-
         'failover' => [
             'driver' => 'failover',
             'connections' => [
@@ -4567,44 +4044,16 @@ return [
                 'deferred',
             ],
         ],
-
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Job Batching
-    |--------------------------------------------------------------------------
-    |
-    | The following options configure the database and table that store job
-    | batching information. These options can be updated to any database
-    | connection and table which has been defined by your application.
-    |
-    */
-
     'batching' => [
         'database' => env('DB_CONNECTION', 'sqlite'),
         'table' => 'job_batches',
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Failed Queue Jobs
-    |--------------------------------------------------------------------------
-    |
-    | These options configure the behavior of failed queue job logging so you
-    | can control how and where failed jobs are stored. Laravel ships with
-    | support for storing failed jobs in a simple file or in a database.
-    |
-    | Supported drivers: "database-uuids", "dynamodb", "file", "null"
-    |
-    */
-
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'sqlite'),
         'table' => 'failed_jobs',
     ],
-
 ];
 
 ```
@@ -4617,45 +4066,27 @@ return [
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
-
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
-
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
     'wapi' => [
-      'url'   => env('WAPI_URL', 'https://wapi.zedlabs.id/send/messages'),
-      'token' => env('WAPI_TOKEN'),
+        'url' => env('WAPI_URL', 'https://wapi.zedlabs.id/send/messages'),
+        'token' => env('WAPI_TOKEN'),
     ],
-
 ];
 
 ```
@@ -4670,233 +4101,26 @@ return [
 use Illuminate\Support\Str;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Session Driver
-    |--------------------------------------------------------------------------
-    |
-    | This option determines the default session driver that is utilized for
-    | incoming requests. Laravel supports a variety of storage options to
-    | persist session data. Database storage is a great default choice.
-    |
-    | Supported: "file", "cookie", "database", "memcached",
-    |            "redis", "dynamodb", "array"
-    |
-    */
-
     'driver' => env('SESSION_DRIVER', 'database'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Lifetime
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the number of minutes that you wish the session
-    | to be allowed to remain idle before it expires. If you want them
-    | to expire immediately when the browser is closed then you may
-    | indicate that via the expire_on_close configuration option.
-    |
-    */
-
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
-
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Encryption
-    |--------------------------------------------------------------------------
-    |
-    | This option allows you to easily specify that all of your session data
-    | should be encrypted before it's stored. All encryption is performed
-    | automatically by Laravel and you may use the session like normal.
-    |
-    */
-
     'encrypt' => env('SESSION_ENCRYPT', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session File Location
-    |--------------------------------------------------------------------------
-    |
-    | When utilizing the "file" session driver, the session files are placed
-    | on disk. The default storage location is defined here; however, you
-    | are free to provide another location where they should be stored.
-    |
-    */
-
     'files' => storage_path('framework/sessions'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Database Connection
-    |--------------------------------------------------------------------------
-    |
-    | When using the "database" or "redis" session drivers, you may specify a
-    | connection that should be used to manage these sessions. This should
-    | correspond to a connection in your database configuration options.
-    |
-    */
-
     'connection' => env('SESSION_CONNECTION'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Database Table
-    |--------------------------------------------------------------------------
-    |
-    | When using the "database" session driver, you may specify the table to
-    | be used to store sessions. Of course, a sensible default is defined
-    | for you; however, you're welcome to change this to another table.
-    |
-    */
-
     'table' => env('SESSION_TABLE', 'sessions'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cache Store
-    |--------------------------------------------------------------------------
-    |
-    | When using one of the framework's cache driven session backends, you may
-    | define the cache store which should be used to store the session data
-    | between requests. This must match one of your defined cache stores.
-    |
-    | Affects: "dynamodb", "memcached", "redis"
-    |
-    */
-
     'store' => env('SESSION_STORE'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Sweeping Lottery
-    |--------------------------------------------------------------------------
-    |
-    | Some session drivers must manually sweep their storage location to get
-    | rid of old sessions from storage. Here are the chances that it will
-    | happen on a given request. By default, the odds are 2 out of 100.
-    |
-    */
-
     'lottery' => [2, 100],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Name
-    |--------------------------------------------------------------------------
-    |
-    | Here you may change the name of the session cookie that is created by
-    | the framework. Typically, you should not need to change this value
-    | since doing so does not grant a meaningful security improvement.
-    |
-    */
-
     'cookie' => env(
         'SESSION_COOKIE',
         Str::slug((string) env('APP_NAME', 'laravel')).'-session'
     ),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Path
-    |--------------------------------------------------------------------------
-    |
-    | The session cookie path determines the path for which the cookie will
-    | be regarded as available. Typically, this will be the root path of
-    | your application, but you're free to change this when necessary.
-    |
-    */
-
     'path' => env('SESSION_PATH', '/'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Cookie Domain
-    |--------------------------------------------------------------------------
-    |
-    | This value determines the domain and subdomains the session cookie is
-    | available to. By default, the cookie will be available to the root
-    | domain without subdomains. Typically, this shouldn't be changed.
-    |
-    */
-
     'domain' => env('SESSION_DOMAIN'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | HTTPS Only Cookies
-    |--------------------------------------------------------------------------
-    |
-    | By setting this option to true, session cookies will only be sent back
-    | to the server if the browser has a HTTPS connection. This will keep
-    | the cookie from being sent to you when it can't be done securely.
-    |
-    */
-
     'secure' => env('SESSION_SECURE_COOKIE'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | HTTP Access Only
-    |--------------------------------------------------------------------------
-    |
-    | Setting this value to true will prevent JavaScript from accessing the
-    | value of the cookie and the cookie will only be accessible through
-    | the HTTP protocol. It's unlikely you should disable this option.
-    |
-    */
-
     'http_only' => env('SESSION_HTTP_ONLY', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Same-Site Cookies
-    |--------------------------------------------------------------------------
-    |
-    | This option determines how your cookies behave when cross-site requests
-    | take place, and can be used to mitigate CSRF attacks. By default, we
-    | will set this value to "lax" to permit secure cross-site requests.
-    |
-    | See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value
-    |
-    | Supported: "lax", "strict", "none", null
-    |
-    */
-
     'same_site' => env('SESSION_SAME_SITE', 'lax'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Partitioned Cookies
-    |--------------------------------------------------------------------------
-    |
-    | Setting this value to true will tie the cookie to the top-level site for
-    | a cross-site context. Partitioned cookies are accepted by the browser
-    | when flagged "secure" and the Same-Site attribute is set to "none".
-    |
-    */
-
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Session Serialization
-    |--------------------------------------------------------------------------
-    |
-    | This value controls the serialization strategy for session data, which
-    | is JSON by default. Setting this to "php" allows the storage of PHP
-    | objects in the session but can make an application vulnerable to
-    | "gadget chain" serialization attacks if the APP_KEY is leaked.
-    |
-    | Supported: "json", "php"
-    |
-    */
-
     'serialization' => 'json',
-
 ];
 
 ```
@@ -4911,197 +4135,6 @@ Migrations, seeders, and factories.
 
 ```
 *.sqlite*
-
-```
-
----
-
-### 📄 File: `./database/factories/AlumniFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class AlumniFactory extends Factory
-{
-    /**
-     * Define the model's default state.
-     */
-    public function definition(): array
-    {
-        return [
-            'nama' => fake()->word(),
-            'nisn' => fake()->regexify('[A-Za-z0-9]{10}'),
-            'tahun_lulus' => fake()->regexify('[A-Za-z0-9]{4}'),
-            'avatar' => fake()->word(),
-            'quote' => fake()->text(),
-        ];
-    }
-}
-
-```
-
----
-
-### 📄 File: `./database/factories/InstansiFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class InstansiFactory extends Factory
-{
-    /**
-     * Define the model's default state.
-     */
-    public function definition(): array
-    {
-        return [
-            'nama' => fake()->word(),
-            'npsn' => fake()->regexify('[A-Za-z0-9]{8}'),
-            'logo' => fake()->word(),
-            'logo_institusi' => fake()->word(),
-            'nomor_surat' => fake()->word(),
-            'nama_pimpinan' => fake()->word(),
-            'nip_pimpinan' => fake()->word(),
-            'tte_pimpinan' => fake()->word(),
-            'nama_ketua' => fake()->word(),
-            'nip_ketua' => fake()->word(),
-            'tte_ketua' => fake()->word(),
-            'jenjang' => fake()->randomElement(["SD","MI","SMP","MTS","SMA","SMK","MA"]),
-            'akreditasi' => fake()->randomElement(["A","B","C","D","TT"]),
-            'status' => fake()->boolean(),
-        ];
-    }
-}
-
-```
-
----
-
-### 📄 File: `./database/factories/PersonilFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class PersonilFactory extends Factory
-{
-    /**
-     * Define the model's default state.
-     */
-    public function definition(): array
-    {
-        return [
-            'nama' => fake()->word(),
-            'nip' => fake()->word(),
-            'foto' => fake()->word(),
-            'telepon' => fake()->regexify('[A-Za-z0-9]{15}'),
-            'sosial_media' => fake()->word(),
-            'jabatan' => fake()->word(),
-            'quote' => fake()->text(),
-        ];
-    }
-}
-
-```
-
----
-
-### 📄 File: `./database/factories/SiswaFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class SiswaFactory extends Factory
-{
-    public function definition(): array
-    {
-        return [
-            'nama'          => fake()->name(),
-            'nama_orangtua' => fake()->name(),
-            'nisn'          => fake()->numerify('##########'), // fix: 10 digit numerik
-            'berkas_skl'    => null,
-            'telepon'       => fake()->numerify('08##########'),
-            // fix: nilai sesuai enum PHP
-            'status'        => fake()->randomElement(['Lulus', 'Tidak Lulus', 'Lulus Bersyarat']),
-            'barcode_url'   => null,
-        ];
-    }
-}
-
-```
-
----
-
-### 📄 File: `./database/factories/TahunPelajaranFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class TahunPelajaranFactory extends Factory
-{
-    /**
-     * Define the model's default state.
-     */
-    public function definition(): array
-    {
-        return [
-            'name' => fake()->name(),
-            'jadwal_pengumuman_mulai' => fake()->dateTime(),
-            'jadwal_pengumuman_selesai' => fake()->dateTime(),
-            'jadwal_kelulusan_mulai' => fake()->dateTime(),
-            'jadwal_kelulusan_selesai' => fake()->dateTime(),
-            'jadwal_kelulusan_tempat' => fake()->word(),
-            'status' => fake()->boolean(),
-        ];
-    }
-}
-
-```
-
----
-
-### 📄 File: `./database/factories/TamuUndanganFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use App\Models\Siswa;
-use Illuminate\Database\Eloquent\Factories\Factory;
-
-class TamuUndanganFactory extends Factory
-{
-    /**
-     * Define the model's default state.
-     */
-    public function definition(): array
-    {
-        return [
-            'siswa_id' => Siswa::factory(),
-            'jumlah_tamu' => fake()->numberBetween(-10000, 10000),
-        ];
-    }
-}
 
 ```
 
@@ -5124,9 +4157,6 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     /**
@@ -5145,9 +4175,6 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -5354,8 +4381,8 @@ return new class extends Migration
             $table->string('nama_ketua')->nullable();
             $table->string('nip_ketua')->nullable();
             $table->string('tte_ketua')->nullable();
-            $table->enum('jenjang', ["SD","MI","SMP","MTS","SMA","SMK","MA"]);
-            $table->enum('akreditasi', ["A","B","C","D","TT"]);
+            $table->enum('jenjang', ['SD', 'MI', 'SMP', 'MTS', 'SMA', 'SMK', 'MA']);
+            $table->enum('akreditasi', ['A', 'B', 'C', 'D', 'TT']);
             $table->boolean('status')->default(true);
             $table->timestamps();
         });
@@ -5587,14 +4614,8 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -5653,14 +4674,14 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-if (file_exists($maintenance = __DIR__ . '/../storage/framework/maintenance.php')) {
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
 }
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 /** @var Application $app */
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 
 $app->handleRequest(Request::capture());
 
@@ -5737,7 +4758,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         'title' => 'Alumni',
         'searchRoute' => 'alumni.cari',
         'clearRoute' => 'alumni.index',
-        'placeholder' => 'Nama atau NISN&hellip;',
+        'placeholder' => 'Nama atau NISN',
         'keyword' => $keyword ?? null,
         'totalFound' => $alumnis->total() ?? null,
     ])
@@ -6000,11 +5021,10 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             </div>
         @else
             @php
-                use App\Enums\StatusSiswa;
                 [$themeClass, $iconLabel, $statusLabel] = match ($siswa->status) {
-                    StatusSiswa::Lulus => ['theme-lulus', 'LULUS', $siswa->status->label()],
-                    StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK', $siswa->status->label()],
-                    StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT', $siswa->status->label()],
+                    App\Enums\StatusSiswa::Lulus => ['theme-lulus', 'LULUS', $siswa->status->label()],
+                    App\Enums\StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK', $siswa->status->label()],
+                    App\Enums\StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT', $siswa->status->label()],
                 };
             @endphp
 
@@ -6053,9 +5073,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 </div>
             </div>
 
-            @if ($siswa->status === StatusSiswa::Lulus)
+            @if ($siswa->status === App\Enums\StatusSiswa::Lulus)
                 <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
-            @elseif ($siswa->status === StatusSiswa::LulusBersyarat)
+            @elseif ($siswa->status === App\Enums\StatusSiswa::LulusBersyarat)
                 <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi sekolah untuk informasi lebih lanjut.
                 </p>
             @endif
@@ -6396,7 +5416,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 <p class="hero-sub">
                     {{ $instansi?->nama }}
                     @if ($tp)
-                        &nbsp;&middot;&nbsp; Tahun Pelajaran {{ $tp->name }}
+                        Tahun Pelajaran {{ $tp->name }}
                     @endif
                 </p>
 
@@ -6408,7 +5428,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                     </div>
                 @elseif ($belumBuka)
                     <div class="status-badge status-badge-warn">
-                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y &middot; H:i') }}
+                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y H:i') }}
                         WIB
                     </div>
                     <div class="cd-card">
@@ -7563,7 +6583,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_doc-styles.blade.php`
 
 ```blade
-{{-- resources/views/partials/_doc-styles.blade.php --}}
 <style>
     .doc-wrap {
         max-width: 680px;
@@ -7810,10 +6829,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_kop-surat.blade.php`
 
 ```blade
-{{--
-    resources/views/partials/_kop-surat.blade.php
-    Digunakan oleh: landing/skl, landing/undangan
---}}
 <div class="kop-surat">
     @if ($instansi?->logo_institusi)
         <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="">
@@ -7836,18 +6851,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_page-header.blade.php`
 
 ```blade
-{{--
-    resources/views/partials/_page-header.blade.php
-
-    Props:
-      $title        — judul halaman
-      $searchRoute  — route name untuk form action
-      $clearRoute   — route name untuk tombol clear
-      $placeholder  — placeholder input
-      $keyword      — keyword aktif (optional)
-      $totalFound   — jumlah data ditemukan (optional)
---}}
-
 <div class="page-header">
     <div>
         <h1 class="page-title">{{ $title }}</h1>
@@ -7878,21 +6881,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_people-grid.blade.php`
 
 ```blade
-{{--
-    resources/views/partials/_people-grid.blade.php
-    Digunakan oleh: alumni/index & personil/index
-
-    Props (via @include):
-      $items       — collection (alumni / personil)
-      $photoKey    — field name untuk foto ('avatar' | 'foto')
-      $subKey      — field name untuk sub-title ('tahun_lulus' | 'jabatan')
-      $subPrefix   — string prefix ('Lulus ' | '')
-      $subColor    — CSS color string ('' | 'var(--teal-xl)')
-      $monoKey     — field untuk monospace ('nisn' | 'nip')
-      $routePrefix — untuk pagination links, jika perlu
-      $keyword     — search keyword (optional)
---}}
-
 @if ($items->isEmpty())
     <div class="empty-state">
         <p class="empty-title">Tidak ada data{{ isset($keyword) ? ' untuk &ldquo;' . e($keyword) . '&rdquo;' : '' }}.</p>
@@ -7947,7 +6935,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_people-styles.blade.php`
 
 ```blade
-{{-- resources/views/partials/_people-styles.blade.php --}}
 <style>
     .page-header {
         display: flex;
@@ -8175,10 +7162,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/partials/_ttd.blade.php`
 
 ```blade
-{{--
-    resources/views/partials/_ttd.blade.php
-    Digunakan oleh: landing/skl, landing/undangan
---}}
 <div class="ttd-block">
     <div class="ttd-inner">
         <p>{{ $instansi?->nama }}, {{ now()->translatedFormat('d F Y') }}</p>
@@ -8531,7 +7514,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         color: #444;
     }
 
-    /* QR */
     .qr-box {
         margin-top: 28px;
         text-align: center;
@@ -8558,7 +7540,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/pdf/_kop.blade.php`
 
 ```blade
-{{-- resources/views/pdf/_kop.blade.php --}}
 <div class="kop">
     @if ($instansi->logo_institusi)
         <img src="{{ public_path('storage/' . $instansi->logo_institusi) }}" alt="">
@@ -8578,7 +7559,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ### 📄 File: `./resources/views/pdf/_ttd.blade.php`
 
 ```blade
-{{-- resources/views/pdf/_ttd.blade.php --}}
 <div class="ttd">
     <div class="ttd-box">
         <p>{{ $instansi->nama }},<br>{{ now()->translatedFormat('d F Y') }}</p>
@@ -8613,7 +7593,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         'title' => 'Personil',
         'searchRoute' => 'personil.cari',
         'clearRoute' => 'personil.index',
-        'placeholder' => 'Cari nama&hellip;',
+        'placeholder' => 'Cari nama',
         'keyword' => $keyword ?? null,
         'totalFound' => $personils->count() ?? null,
     ])
@@ -8820,8 +7800,8 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                 @forelse($tamuUndangans as $i => $t)
                     <tr>
                         <td style="color:var(--muted2);font-size:.7rem;">{{ $tamuUndangans->firstItem() + $i }}</td>
-                        <td style="font-weight:600">{{ $t->siswa?->nama ?? '&mdash;' }}</td>
-                        <td class="tamu-hide" style="color:var(--muted)">{{ $t->siswa?->nama_orangtua ?? '&mdash;' }}</td>
+                        <td style="font-weight:600">{{ $t->siswa?->nama ?? '-' }}</td>
+                        <td class="tamu-hide" style="color:var(--muted)">{{ $t->siswa?->nama_orangtua ?? '-' }}</td>
                         <td style="text-align:center"><span class="pax-badge">{{ $t->jumlah_tamu }}</span></td>
                         <td style="text-align:right" class="time-cell">{{ $t->created_at->format('H:i') }}</td>
                     </tr>
@@ -9118,7 +8098,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             <div id="qr-region"></div>
             <div class="qr-status-row">
                 <span id="qr-dot" class="qr-dot"></span>
-                <span id="qr-status" class="qr-text">Menginisialisasi kamera&hellip;</span>
+                <span id="qr-status" class="qr-text">Menginisialisasi kamera</span>
             </div>
         </div>
 
@@ -9188,43 +8168,27 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 Application routing definitions.
 
-### 📄 File: `./routes/api.php`
-
-```php
-<?php
-
-use Illuminate\Support\Facades\Route;
-
-```
-
----
-
 ### 📄 File: `./routes/console.php`
 
 ```php
 <?php
 
 use App\Console\Commands\BroadcastKelulusan;
+use App\Models\TahunPelajaran;
+use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-
-/*
-|--------------------------------------------------------------------------
-| Broadcast otomatis setiap hari pukul 07:00
-| Hanya berjalan jika hari ini adalah hari jadwal_pengumuman_mulai
-|--------------------------------------------------------------------------
-*/
 
 Schedule::command(BroadcastKelulusan::class)
     ->dailyAt('07:00')
     ->when(
-        fn() => \App\Models\TahunPelajaran::where('status', true)
+        fn () => TahunPelajaran::where('status', true)
             ->whereDate('jadwal_pengumuman_mulai', today())
             ->exists()
     );
 
 Artisan::command('inspire', function () {
-    $this->comment(\Illuminate\Foundation\Inspiring::quote());
+    $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
 ```
@@ -9240,61 +8204,41 @@ use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\PersonilController;
 use App\Http\Controllers\TamuUndanganController;
+use App\Http\Middleware\JadwalKelulusanAktif;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Landing Page & Kelulusan
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
-Route::post('/cari', [LandingPageController::class, 'cari'])->name('landing.cari');       // fix: GET → POST
-Route::get('/siswa/{siswa}', [LandingPageController::class, 'hasil'])->name('landing.hasil'); // fix: route baru
+Route::post('/cari', [LandingPageController::class, 'cari'])->name('landing.cari');
+Route::get('/siswa/{siswa}', [LandingPageController::class, 'hasil'])->name('landing.hasil');
 Route::get('/siswa/{siswa}/skl', [LandingPageController::class, 'cetakSkl'])
     ->name('landing.skl')
     ->middleware('throttle:30,1');
-Route::get('/siswa/{siswa}/skl/pdf', [LandingPageController::class, 'cetakSklPdf'])      // fix: route baru
+Route::get('/siswa/{siswa}/skl/pdf', [LandingPageController::class, 'cetakSklPdf'])
     ->name('landing.skl.pdf')
     ->middleware('throttle:10,1');
 Route::get('/siswa/{siswa}/undangan', [LandingPageController::class, 'cetakUndangan'])
     ->name('landing.undangan')
     ->middleware('throttle:30,1');
-Route::get('/siswa/{siswa}/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf']) // fix: route baru
+Route::get('/siswa/{siswa}/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf'])
     ->name('landing.undangan.pdf')
     ->middleware('throttle:10,1');
 
-/*
-|--------------------------------------------------------------------------
-| Personil
-|--------------------------------------------------------------------------
-*/
 Route::get('/personil', [PersonilController::class, 'index'])->name('personil.index');
 Route::get('/personil/cari', [PersonilController::class, 'cari'])->name('personil.cari');
 
-/*
-|--------------------------------------------------------------------------
-| Alumni
-|--------------------------------------------------------------------------
-*/
 Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
 Route::get('/alumni/cari', [AlumniController::class, 'cari'])->name('alumni.cari');
 
-/*
-|--------------------------------------------------------------------------
-| Tamu Undangan (hanya aktif dalam rentang jadwal kelulusan)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(\App\Http\Middleware\JadwalKelulusanAktif::class)
+Route::middleware(JadwalKelulusanAktif::class)
     ->prefix('tamu')
     ->name('tamu.')
     ->group(function () {
         Route::get('/', [TamuUndanganController::class, 'index'])->name('index');
         Route::get('/scan', [TamuUndanganController::class, 'scanQr'])->name('scan');
-        Route::post('/scan', [TamuUndanganController::class, 'processScan'])->name('scan.post'); // fix: baru
-        Route::get('/konfirmasi/{siswa}', [TamuUndanganController::class, 'konfirmasi'])->name('konfirmasi'); // fix: baru
+        Route::post('/scan', [TamuUndanganController::class, 'processScan'])->name('scan.post');
+        Route::get('/konfirmasi/{siswa}', [TamuUndanganController::class, 'konfirmasi'])->name('konfirmasi');
         Route::post('/', [TamuUndanganController::class, 'store'])->name('store');
-        Route::get('/cetak-hadir', [TamuUndanganController::class, 'cetakHadir'])->name('cetak-hadir'); // fix: baru
+        Route::get('/cetak-hadir', [TamuUndanganController::class, 'cetakHadir'])->name('cetak-hadir');
     });
 
 ```
@@ -9361,3 +8305,4 @@ services.json
 ```
 
 ---
+

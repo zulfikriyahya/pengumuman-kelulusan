@@ -15,9 +15,6 @@ class SiswasTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('nama_orangtua')

@@ -10,13 +10,11 @@ class SiswaInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextEntry::make('id')->label('ID'),
             TextEntry::make('nama'),
             TextEntry::make('nama_orangtua')->placeholder('-'),
             TextEntry::make('nisn'),
             TextEntry::make('berkas_skl')->placeholder('-'),
             TextEntry::make('telepon')->placeholder('-'),
-            // fix: badge berwarna sesuai status
             TextEntry::make('status')
                 ->badge()
                 ->color(fn ($state) => $state?->color()),

@@ -14,7 +14,6 @@ class AlumnusCariRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Pencarian by nama (like) atau nisn (exact) — salah satu wajib diisi
             'nama' => ['required_without:nisn', 'nullable', 'string', 'max:255'],
             'nisn' => ['required_without:nama', 'nullable', 'string', 'max:10'],
         ];

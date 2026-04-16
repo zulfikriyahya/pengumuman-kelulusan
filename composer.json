@@ -9,21 +9,13 @@
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "*",
         "filament/filament": "*",
-        "laravel-shift/blueprint": "*",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "*",
         "simplesoftwareio/simple-qrcode": "*"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/boost": "^2.4",
-        "laravel/pail": "^1.2.5",
-        "laravel/pint": "^1.27",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.5",
-        "pestphp/pest-plugin-laravel": "^4.1"
+        "laravel/pint": "^1.27"
     },
     "autoload": {
         "psr-4": {

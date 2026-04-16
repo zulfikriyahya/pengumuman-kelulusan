@@ -16,9 +16,6 @@ class InstansisTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 TextColumn::make('nama')
                     ->searchable(),
                 TextColumn::make('npsn')

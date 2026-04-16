@@ -15,7 +15,6 @@ class TamuUndanganStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // fix: tambah where status lulus agar siswa tidak lulus tidak bisa check-in
             'siswa_id' => [
                 'required',
                 'uuid',

@@ -18,7 +18,7 @@ class BroadcastPesanKelulusan implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $backoff = 60; // detik antar retry otomatis Laravel
+    public int $backoff = 60;
 
     public function __construct(
         private readonly Siswa $siswa,
@@ -38,9 +38,6 @@ class BroadcastPesanKelulusan implements ShouldQueue
                 'phone' => $this->siswa->telepon,
                 'message' => $pesan,
             ]);
-
-        // Lempar exception agar Laravel retry otomatis via $tries & $backoff
-        // Jangan pakai $this->release() sekaligus $tries — akan double-count attempt
         if ($response->failed()) {
             Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): ".$response->body());
 

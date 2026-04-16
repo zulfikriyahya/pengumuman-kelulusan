@@ -14,7 +14,6 @@ class TamuUndanganScanQrRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Hanya validasi siswa_id hasil scan QR
             'siswa_id' => ['required', 'uuid', 'exists:siswas,id'],
         ];
     }

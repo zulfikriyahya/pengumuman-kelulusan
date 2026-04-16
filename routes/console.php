@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command(BroadcastKelulusan::class)
     ->dailyAt('07:00')
     ->when(
-        fn() => TahunPelajaran::where('status', true)
+        fn () => TahunPelajaran::where('status', true)
             ->whereDate('jadwal_pengumuman_mulai', today())
             ->exists()
     );

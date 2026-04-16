@@ -7,11 +7,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-/**
- * Import satu atau banyak file PDF SKL.
- * Naming convention: <nisn>.pdf
- * Jika berkas sudah ada → replace (hapus lama, simpan baru).
- */
 class ImportDokumenSkl
 {
     /**
@@ -27,7 +22,7 @@ class ImportDokumenSkl
             $nisn = Str::beforeLast($file->getClientOriginalName(), '.pdf');
 
             if (! preg_match('/^\d{10}$/', $nisn)) {
-                $log[] = "❌ Dilewati — nama file tidak valid: {$file->getClientOriginalName()}";
+                $log[] = "Dilewati — nama file tidak valid: {$file->getClientOriginalName()}";
                 $gagal++;
 
                 continue;
@@ -36,7 +31,7 @@ class ImportDokumenSkl
             $siswa = Siswa::where('nisn', $nisn)->first();
 
             if (! $siswa) {
-                $log[] = "⚠️  Siswa dengan NISN {$nisn} tidak ditemukan.";
+                $log[] = "Siswa dengan NISN {$nisn} tidak ditemukan.";
                 $dilewati++;
 
                 continue;
@@ -50,7 +45,7 @@ class ImportDokumenSkl
             $path = $file->storeAs('skl', "{$nisn}.pdf", 'public');
 
             $siswa->update(['berkas_skl' => $path]);
-            $log[] = "✅ SKL {$nisn} berhasil diimpor.";
+            $log[] = "SKL {$nisn} berhasil diimpor.";
             $berhasil++;
         }
 

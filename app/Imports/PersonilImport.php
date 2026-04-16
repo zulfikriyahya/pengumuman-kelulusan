@@ -11,7 +11,6 @@ class PersonilImport implements ToModel, WithHeadingRow, WithUpserts
 {
     public function model(array $row): ?Personil
     {
-        // Skip baris tanpa nama atau jabatan
         if (blank($row['nama'] ?? null) || blank($row['jabatan'] ?? null)) {
             return null;
         }
@@ -26,9 +25,6 @@ class PersonilImport implements ToModel, WithHeadingRow, WithUpserts
         ]);
     }
 
-    // nip nullable — upsert by nip hanya jika ada nilainya
-    // Jika nip kosong, Laravel akan insert baru (bukan upsert)
-    // Ini perilaku yang aman: personil tanpa NIP tidak saling tumpuk
     public function uniqueBy(): string
     {
         return 'nip';

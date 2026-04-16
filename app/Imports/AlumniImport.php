@@ -11,7 +11,6 @@ class AlumniImport implements ToModel, WithHeadingRow, WithUpserts
 {
     public function model(array $row): ?Alumni
     {
-        // Skip baris tanpa nama atau nisn
         if (blank($row['nama'] ?? null) || blank($row['nisn'] ?? null)) {
             return null;
         }
@@ -20,7 +19,7 @@ class AlumniImport implements ToModel, WithHeadingRow, WithUpserts
             'nama' => $row['nama'],
             'nisn' => $row['nisn'],
             'tahun_lulus' => $row['tahun_lulus'],
-            'avatar' => $row['avatar'] ?? null, // fix: field ada di model tapi tidak di-map
+            'avatar' => $row['avatar'] ?? null,
             'quote' => $row['quote'] ?? null,
         ]);
     }

@@ -11,8 +11,6 @@ class AlumniInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('nisn'),
                 TextEntry::make('tahun_lulus'),

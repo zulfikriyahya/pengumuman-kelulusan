@@ -29,4 +29,4 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->route('landing')
                 ->with('error', "Terjadi kesalahan ({$e->getStatusCode()}). Silakan coba lagi.");
         });
-    })->create(); // ← add ->create() here
+    })->create();

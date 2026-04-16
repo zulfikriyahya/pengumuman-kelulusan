@@ -12,8 +12,6 @@ class InstansiInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('nama'),
                 TextEntry::make('npsn'),
                 TextEntry::make('logo')

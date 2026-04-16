@@ -36,7 +36,6 @@ class LandingPageController extends Controller
         ]);
     }
 
-    // fix: method baru — halaman hasil langsung via URL siswa
     public function hasil(Siswa $siswa): View
     {
         return view('landing.hasil', [
@@ -55,7 +54,6 @@ class LandingPageController extends Controller
         ]);
     }
 
-    // fix: method baru — render PDF SKL via DomPDF
     public function cetakSklPdf(Siswa $siswa): Response
     {
         $instansi = Instansi::first();
@@ -79,7 +77,6 @@ class LandingPageController extends Controller
         ]);
     }
 
-    // fix: method baru — render PDF Undangan via DomPDF
     public function cetakUndanganPdf(Siswa $siswa): Response
     {
         abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak mendapatkan surat undangan.');

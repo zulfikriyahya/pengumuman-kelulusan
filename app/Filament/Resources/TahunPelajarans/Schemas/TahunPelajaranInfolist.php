@@ -12,8 +12,6 @@ class TahunPelajaranInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
                 TextEntry::make('name'),
                 TextEntry::make('jadwal_pengumuman_mulai')
                     ->dateTime(),

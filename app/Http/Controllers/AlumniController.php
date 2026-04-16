@@ -18,7 +18,6 @@ class AlumniController extends Controller
 
     public function cari(AlumnusCariRequest $request): View
     {
-        // fix: ambil keyword dari field yang terisi
         $keyword = $request->filled('nisn')
             ? $request->validated('nisn')
             : $request->validated('nama');

@@ -20,7 +20,6 @@ class SiswaImport implements ToModel, WithHeadingRow, WithUpserts
         ]);
     }
 
-    /** Upsert key: nisn */
     public function uniqueBy(): string
     {
         return 'nisn';
