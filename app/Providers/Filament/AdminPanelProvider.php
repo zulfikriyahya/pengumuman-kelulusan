@@ -32,8 +32,10 @@ class AdminPanelProvider extends PanelProvider
             ->breadcrumbs()
             ->topNavigation()
             ->maxContentWidth('full')
+            ->globalSearch(false)
+            ->databaseNotifications()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Emerald,
             ])
             ->font('Lexend')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

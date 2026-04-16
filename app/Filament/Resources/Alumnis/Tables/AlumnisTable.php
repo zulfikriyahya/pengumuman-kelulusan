@@ -3,12 +3,16 @@
 namespace App\Filament\Resources\Alumnis\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\ActionGroup;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
 
 class AlumnisTable
 {
@@ -37,8 +41,26 @@ class AlumnisTable
             ->defaultSort('tahun_lulus', 'desc')
             ->filters([])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
