@@ -20,17 +20,14 @@ class SiswaInfolist
                     TextEntry::make('nisn')->label('NISN'),
                     TextEntry::make('telepon')->placeholder('-'),
                     TextEntry::make('status')
-                        ->badge()
-                        ->color(fn ($state) => $state?->color()),
+                        ->badge(),
                 ]),
 
             Section::make('Data Sistem')
                 ->icon('heroicon-o-circle-stack')
-                ->columns(2)
-                ->collapsed()
+                ->columns(3)
                 ->schema([
                     TextEntry::make('berkas_skl')->placeholder('-'),
-                    TextEntry::make('barcode_url')->placeholder('-'),
                     TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
                     TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
                 ]),

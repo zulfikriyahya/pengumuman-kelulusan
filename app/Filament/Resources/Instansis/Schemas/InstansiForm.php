@@ -16,18 +16,18 @@ class InstansiForm
         return $schema->components([
             Section::make('Identitas Instansi')
                 ->icon('heroicon-o-building-office-2')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextInput::make('nama')
                         ->required()
-                        ->maxLength(255)
-                        ->columnSpanFull(),
+                        ->maxLength(255),
                     TextInput::make('npsn')
                         ->required()
                         ->label('NPSN')
                         ->maxLength(20),
                     Select::make('jenjang')
                         ->required()
+                        ->native(false)
                         ->options([
                             'SD' => 'SD',
                             'MI' => 'MI',
@@ -39,6 +39,7 @@ class InstansiForm
                         ]),
                     Select::make('akreditasi')
                         ->required()
+                        ->native(false)
                         ->options([
                             'A' => 'A',
                             'B' => 'B',
@@ -57,21 +58,49 @@ class InstansiForm
                 ->schema([
                     FileUpload::make('logo')
                         ->image()
-                        ->disk('public')
-                        ->directory('instansi')
                         ->imagePreviewHeight('80')
-                        ->label('Logo Instansi'),
+                        ->label('Logo Instansi')
+                        ->directory('instansi')
+                        ->maxSize(1024)
+                        ->visibility('public')
+                        ->disk('public')
+                        ->imageEditor()
+                        ->imageEditorAspectRatios([
+                            '1:1' => '1:1',
+                            '4:3' => '4:3',
+                            '16:9' => '16:9',
+                            null,
+                        ])
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            $npsn = $record?->npsn ?? 'logo_' . time();
+                            $ext = $file->getClientOriginalExtension();
+                            return strtolower($npsn) . '.' . $ext;
+                        }),
                     FileUpload::make('logo_institusi')
                         ->image()
-                        ->disk('public')
-                        ->directory('instansi')
                         ->imagePreviewHeight('80')
-                        ->label('Logo Institusi'),
+                        ->label('Logo Institusi')
+                        ->directory('institusi')
+                        ->maxSize(1024)
+                        ->visibility('public')
+                        ->disk('public')
+                        ->imageEditor()
+                        ->imageEditorAspectRatios([
+                            '1:1' => '1:1',
+                            '4:3' => '4:3',
+                            '16:9' => '16:9',
+                            null,
+                        ])
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            $npsn = $record?->npsn ?? 'logo_institusi_' . time();
+                            $ext = $file->getClientOriginalExtension();
+                            return strtolower($npsn) . '.' . $ext;
+                        }),
                 ]),
 
             Section::make('Pimpinan')
                 ->icon('heroicon-o-user-circle')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextInput::make('nama_pimpinan')->label('Nama Pimpinan')->placeholder('-'),
                     TextInput::make('nip_pimpinan')->label('NIP Pimpinan')->placeholder('-'),
@@ -80,13 +109,12 @@ class InstansiForm
                         ->disk('public')
                         ->directory('instansi/tte')
                         ->imagePreviewHeight('80')
-                        ->label('TTE Pimpinan')
-                        ->columnSpanFull(),
+                        ->label('TTE Pimpinan'),
                 ]),
 
             Section::make('Panitia')
                 ->icon('heroicon-o-user-circle')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextInput::make('nama_ketua')->label('Nama Ketua Panitia')->placeholder('-'),
                     TextInput::make('nip_ketua')->label('NIP Ketua Panitia')->placeholder('-'),
@@ -95,8 +123,7 @@ class InstansiForm
                         ->disk('public')
                         ->directory('instansi/tte')
                         ->imagePreviewHeight('80')
-                        ->label('TTE Ketua Panitia')
-                        ->columnSpanFull(),
+                        ->label('TTE Ketua Panitia'),
                 ]),
         ]);
     }

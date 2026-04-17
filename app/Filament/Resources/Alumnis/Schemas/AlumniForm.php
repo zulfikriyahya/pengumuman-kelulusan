@@ -15,8 +15,32 @@ class AlumniForm
         return $schema->components([
             Section::make('Identitas Alumni')
                 ->icon('heroicon-o-academic-cap')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
+                    FileUpload::make('avatar')
+                        ->hiddenLabel()
+                        ->avatar()
+                        ->image()
+                        ->directory('alumni')
+                        ->maxSize(1024)
+                        ->visibility('public')
+                        ->disk('public')
+                        ->imageEditor()
+                        ->columnSpanFull()
+                        ->imageEditorAspectRatios([
+                            '1:1' => '1:1',
+                            null,
+                        ])
+                        ->circleCropper()
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            $nisn = $record?->nisn ?? 'alumni_' . time();
+                            $ext = $file->getClientOriginalExtension();
+                            return strtolower($nisn) . '.' . $ext;
+                        })
+                        ->extraAttributes([
+                            'class' => 'flex flex-col items-center',
+                        ])
+                        ->columnSpanFull(),
                     TextInput::make('nama')
                         ->required()
                         ->maxLength(255),
@@ -29,12 +53,6 @@ class AlumniForm
                         ->numeric()
                         ->minValue(2000)
                         ->maxValue(now()->year),
-                    FileUpload::make('avatar')
-                        ->image()
-                        ->disk('public')
-                        ->directory('alumni')
-                        ->imagePreviewHeight('80')
-                        ->columnSpanFull(),
                 ]),
 
             Section::make('Kutipan')

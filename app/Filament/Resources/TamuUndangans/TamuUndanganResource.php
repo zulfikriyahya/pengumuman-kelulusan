@@ -22,8 +22,6 @@ class TamuUndanganResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $recordTitleAttribute = 'id';
-
     public static function form(Schema $schema): Schema
     {
         return TamuUndanganForm::configure($schema);

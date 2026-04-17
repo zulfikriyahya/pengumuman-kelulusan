@@ -66,12 +66,6 @@
 
     @include('pdf._ttd')
 
-    @if ($siswa->barcode_url)
-        <div class="qr-box">
-            <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-            <p>Scan untuk verifikasi</p>
-        </div>
-    @endif
 </body>
 
 </html>

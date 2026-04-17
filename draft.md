@@ -74,21 +74,13 @@ _PHP dependencies and project metadata._
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "*",
         "filament/filament": "*",
-        "laravel-shift/blueprint": "*",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "*",
         "simplesoftwareio/simple-qrcode": "*"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/boost": "^2.4",
-        "laravel/pail": "^1.2.5",
-        "laravel/pint": "^1.27",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.5",
-        "pestphp/pest-plugin-laravel": "^4.1"
+        "laravel/pint": "^1.27"
     },
     "autoload": {
         "psr-4": {
@@ -178,6 +170,9 @@ _Node.js dependencies and build scripts._
         "laravel-vite-plugin": "^3.0.0",
         "tailwindcss": "^4.0.0",
         "vite": "^8.0.0"
+    },
+    "dependencies": {
+        "chartjs-plugin-datalabels": "^2.2.0"
     }
 }
 
@@ -430,6 +425,2445 @@ enum StatusSiswa: string
             self::TidakLulus => 'danger',
             self::LulusBersyarat => 'warning',
         };
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/AlumniResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis;
+
+use App\Filament\Resources\Alumnis\Pages\CreateAlumni;
+use App\Filament\Resources\Alumnis\Pages\EditAlumni;
+use App\Filament\Resources\Alumnis\Pages\ListAlumnis;
+use App\Filament\Resources\Alumnis\Pages\ViewAlumni;
+use App\Filament\Resources\Alumnis\Schemas\AlumniForm;
+use App\Filament\Resources\Alumnis\Schemas\AlumniInfolist;
+use App\Filament\Resources\Alumnis\Tables\AlumnisTable;
+use App\Models\Alumni;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class AlumniResource extends Resource
+{
+    protected static ?string $model = Alumni::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
+
+    protected static ?string $recordTitleAttribute = 'nama';
+
+    public static function form(Schema $schema): Schema
+    {
+        return AlumniForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return AlumniInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return AlumnisTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListAlumnis::route('/'),
+            'create' => CreateAlumni::route('/create'),
+            'view' => ViewAlumni::route('/{record}'),
+            'edit' => EditAlumni::route('/{record}/edit'),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Pages/CreateAlumni.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Pages;
+
+use App\Filament\Resources\Alumnis\AlumniResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateAlumni extends CreateRecord
+{
+    protected static string $resource = AlumniResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Pages/EditAlumni.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Pages;
+
+use App\Filament\Resources\Alumnis\AlumniResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditAlumni extends EditRecord
+{
+    protected static string $resource = AlumniResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Pages/ListAlumnis.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Pages;
+
+use App\Filament\Resources\Alumnis\AlumniResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListAlumnis extends ListRecords
+{
+    protected static string $resource = AlumniResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Pages/ViewAlumni.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Pages;
+
+use App\Filament\Resources\Alumnis\AlumniResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewAlumni extends ViewRecord
+{
+    protected static string $resource = AlumniResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Schemas/AlumniForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Schemas;
+
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class AlumniForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Alumni')
+                ->icon('heroicon-o-academic-cap')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('nisn')
+                        ->required()
+                        ->maxLength(10)
+                        ->label('NISN'),
+                    TextInput::make('tahun_lulus')
+                        ->required()
+                        ->numeric()
+                        ->minValue(2000)
+                        ->maxValue(now()->year),
+                    FileUpload::make('avatar')
+                        ->image()
+                        ->disk('public')
+                        ->directory('alumni')
+                        ->imagePreviewHeight('80')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Kutipan')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->schema([
+                    Textarea::make('quote')
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Schemas/AlumniInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Schemas;
+
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class AlumniInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Alumni')
+                ->icon('heroicon-o-academic-cap')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama'),
+                    TextEntry::make('nisn')->label('NISN'),
+                    TextEntry::make('tahun_lulus'),
+                    ImageEntry::make('avatar')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Kutipan')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->schema([
+                    TextEntry::make('quote')
+                        ->placeholder('-')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Waktu')
+                ->icon('heroicon-o-clock')
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Alumnis/Tables/AlumnisTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Alumnis\Tables;
+
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class AlumnisTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('avatar')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(asset('images/default.png')),
+                TextColumn::make('nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('nisn')
+                    ->label('NISN')
+                    ->searchable(),
+                TextColumn::make('tahun_lulus')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->dateTime('d F Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->defaultSort('tahun_lulus', 'desc')
+            ->filters([])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/InstansiResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis;
+
+use App\Filament\Resources\Instansis\Pages\CreateInstansi;
+use App\Filament\Resources\Instansis\Pages\EditInstansi;
+use App\Filament\Resources\Instansis\Pages\ListInstansis;
+use App\Filament\Resources\Instansis\Pages\ViewInstansi;
+use App\Filament\Resources\Instansis\Schemas\InstansiForm;
+use App\Filament\Resources\Instansis\Schemas\InstansiInfolist;
+use App\Filament\Resources\Instansis\Tables\InstansisTable;
+use App\Models\Instansi;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class InstansiResource extends Resource
+{
+    protected static ?string $model = Instansi::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingOffice2;
+
+    protected static ?string $recordTitleAttribute = 'nama';
+
+    public static function form(Schema $schema): Schema
+    {
+        return InstansiForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return InstansiInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return InstansisTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListInstansis::route('/'),
+            'create' => CreateInstansi::route('/create'),
+            'view' => ViewInstansi::route('/{record}'),
+            'edit' => EditInstansi::route('/{record}/edit'),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Pages/CreateInstansi.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Pages;
+
+use App\Filament\Resources\Instansis\InstansiResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateInstansi extends CreateRecord
+{
+    protected static string $resource = InstansiResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Pages/EditInstansi.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Pages;
+
+use App\Filament\Resources\Instansis\InstansiResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditInstansi extends EditRecord
+{
+    protected static string $resource = InstansiResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Pages/ListInstansis.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Pages;
+
+use App\Filament\Resources\Instansis\InstansiResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListInstansis extends ListRecords
+{
+    protected static string $resource = InstansiResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Pages/ViewInstansi.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Pages;
+
+use App\Filament\Resources\Instansis\InstansiResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewInstansi extends ViewRecord
+{
+    protected static string $resource = InstansiResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Schemas/InstansiForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Schemas;
+
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class InstansiForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Instansi')
+                ->icon('heroicon-o-building-office-2')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama')
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    TextInput::make('npsn')
+                        ->required()
+                        ->label('NPSN')
+                        ->maxLength(20),
+                    Select::make('jenjang')
+                        ->required()
+                        ->options([
+                            'SD' => 'SD',
+                            'MI' => 'MI',
+                            'SMP' => 'SMP',
+                            'MTS' => 'MTS',
+                            'SMA' => 'SMA',
+                            'SMK' => 'SMK',
+                            'MA' => 'MA',
+                        ]),
+                    Select::make('akreditasi')
+                        ->required()
+                        ->options([
+                            'A' => 'A',
+                            'B' => 'B',
+                            'C' => 'C',
+                            'TT' => 'TT',
+                        ]),
+                    TextInput::make('nomor_surat'),
+                    Toggle::make('status')
+                        ->label('Aktif')
+                        ->inline(false),
+                ]),
+
+            Section::make('Logo & Aset')
+                ->icon('heroicon-o-photo')
+                ->columns(2)
+                ->schema([
+                    FileUpload::make('logo')
+                        ->image()
+                        ->disk('public')
+                        ->directory('instansi')
+                        ->imagePreviewHeight('80')
+                        ->label('Logo Instansi'),
+                    FileUpload::make('logo_institusi')
+                        ->image()
+                        ->disk('public')
+                        ->directory('instansi')
+                        ->imagePreviewHeight('80')
+                        ->label('Logo Institusi'),
+                ]),
+
+            Section::make('Pimpinan')
+                ->icon('heroicon-o-user-circle')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama_pimpinan')->label('Nama Pimpinan')->placeholder('-'),
+                    TextInput::make('nip_pimpinan')->label('NIP Pimpinan')->placeholder('-'),
+                    FileUpload::make('tte_pimpinan')
+                        ->image()
+                        ->disk('public')
+                        ->directory('instansi/tte')
+                        ->imagePreviewHeight('80')
+                        ->label('TTE Pimpinan')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Panitia')
+                ->icon('heroicon-o-user-circle')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama_ketua')->label('Nama Ketua Panitia')->placeholder('-'),
+                    TextInput::make('nip_ketua')->label('NIP Ketua Panitia')->placeholder('-'),
+                    FileUpload::make('tte_ketua')
+                        ->image()
+                        ->disk('public')
+                        ->directory('instansi/tte')
+                        ->imagePreviewHeight('80')
+                        ->label('TTE Ketua Panitia')
+                        ->columnSpanFull(),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Schemas/InstansiInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Schemas;
+
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class InstansiInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Instansi')
+                ->icon('heroicon-o-building-office-2')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama')->columnSpanFull(),
+                    TextEntry::make('npsn')->label('NPSN'),
+                    TextEntry::make('jenjang'),
+                    TextEntry::make('akreditasi'),
+                    TextEntry::make('nomor_surat')->placeholder('-'),
+                    IconEntry::make('status')->boolean()->label('Aktif'),
+                ]),
+
+            Section::make('Logo & Aset')
+                ->icon('heroicon-o-photo')
+                ->columns(2)
+                ->schema([
+                    ImageEntry::make('logo')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->label('Logo Instansi'),
+                    ImageEntry::make('logo_institusi')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->label('Logo Institusi'),
+                ]),
+
+            Section::make('Pimpinan')
+                ->icon('heroicon-o-user-circle')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama_pimpinan')->label('Nama Pimpinan')->placeholder('-'),
+                    TextEntry::make('nip_pimpinan')->label('NIP Pimpinan')->placeholder('-'),
+                    ImageEntry::make('tte_pimpinan')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->label('TTE Pimpinan')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Panitia')
+                ->icon('heroicon-o-user-circle')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama_ketua')->label('Nama Ketua Panitia')->placeholder('-'),
+                    TextEntry::make('nip_ketua')->label('NIP Ketua Panitia')->placeholder('-'),
+                    ImageEntry::make('tte_ketua')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->label('TTE Ketua Panitia')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Waktu')
+                ->icon('heroicon-o-clock')
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Instansis/Tables/InstansisTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Instansis\Tables;
+
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class InstansisTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('logo')
+                    ->disk('public')
+                    ->height(40)
+                    ->defaultImageUrl(asset('images/default.png')),
+                TextColumn::make('nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('npsn')
+                    ->label('NPSN')
+                    ->searchable(),
+                TextColumn::make('jenjang')
+                    ->searchable(),
+                TextColumn::make('akreditasi')
+                    ->searchable(),
+                IconColumn::make('status')
+                    ->boolean()
+                    ->label('Aktif'),
+                TextColumn::make('created_at')
+                    ->dateTime('d F Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Pages/CreatePersonil.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Pages;
+
+use App\Filament\Resources\Personils\PersonilResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreatePersonil extends CreateRecord
+{
+    protected static string $resource = PersonilResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Pages/EditPersonil.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Pages;
+
+use App\Filament\Resources\Personils\PersonilResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditPersonil extends EditRecord
+{
+    protected static string $resource = PersonilResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Pages/ListPersonils.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Pages;
+
+use App\Filament\Resources\Personils\PersonilResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListPersonils extends ListRecords
+{
+    protected static string $resource = PersonilResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Pages/ViewPersonil.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Pages;
+
+use App\Filament\Resources\Personils\PersonilResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewPersonil extends ViewRecord
+{
+    protected static string $resource = PersonilResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/PersonilResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils;
+
+use App\Filament\Resources\Personils\Pages\CreatePersonil;
+use App\Filament\Resources\Personils\Pages\EditPersonil;
+use App\Filament\Resources\Personils\Pages\ListPersonils;
+use App\Filament\Resources\Personils\Pages\ViewPersonil;
+use App\Filament\Resources\Personils\Schemas\PersonilForm;
+use App\Filament\Resources\Personils\Schemas\PersonilInfolist;
+use App\Filament\Resources\Personils\Tables\PersonilsTable;
+use App\Models\Personil;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class PersonilResource extends Resource
+{
+    protected static ?string $model = Personil::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
+
+    protected static ?string $recordTitleAttribute = 'nama';
+
+    public static function form(Schema $schema): Schema
+    {
+        return PersonilForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return PersonilInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return PersonilsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListPersonils::route('/'),
+            'create' => CreatePersonil::route('/create'),
+            'view' => ViewPersonil::route('/{record}'),
+            'edit' => EditPersonil::route('/{record}/edit'),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Schemas/PersonilForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Schemas;
+
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class PersonilForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Personil')
+                ->icon('heroicon-o-identification')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('jabatan')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('nip')
+                        ->label('NIP')
+                        ->maxLength(30),
+                    TextInput::make('telepon')
+                        ->tel()
+                        ->maxLength(15),
+                    TextInput::make('sosial_media')
+                        ->label('Sosial Media')
+                        ->url(),
+                    FileUpload::make('foto')
+                        ->image()
+                        ->disk('public')
+                        ->directory('personil')
+                        ->imagePreviewHeight('80')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Kutipan')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->schema([
+                    Textarea::make('quote')
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Schemas/PersonilInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Schemas;
+
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class PersonilInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Personil')
+                ->icon('heroicon-o-identification')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama'),
+                    TextEntry::make('jabatan'),
+                    TextEntry::make('nip')->label('NIP')->placeholder('-'),
+                    TextEntry::make('telepon')->placeholder('-'),
+                    TextEntry::make('sosial_media')->label('Sosial Media')->placeholder('-'),
+                    ImageEntry::make('foto')
+                        ->disk('public')
+                        ->height(80)
+                        ->placeholder('-')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Kutipan')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->schema([
+                    TextEntry::make('quote')
+                        ->placeholder('-')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Waktu')
+                ->icon('heroicon-o-clock')
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Personils/Tables/PersonilsTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Personils\Tables;
+
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class PersonilsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('foto')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(asset('images/default.png')),
+                TextColumn::make('nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('jabatan')
+                    ->searchable(),
+                TextColumn::make('nip')
+                    ->label('NIP')
+                    ->searchable(),
+                TextColumn::make('telepon')
+                    ->searchable(),
+                TextColumn::make('created_at')
+                    ->dateTime('d F Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Pages/CreateSiswa.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Pages;
+
+use App\Filament\Resources\Siswas\SiswaResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateSiswa extends CreateRecord
+{
+    protected static string $resource = SiswaResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Pages/EditSiswa.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Pages;
+
+use App\Filament\Resources\Siswas\SiswaResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditSiswa extends EditRecord
+{
+    protected static string $resource = SiswaResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Pages/ListSiswas.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Pages;
+
+use App\Filament\Resources\Siswas\SiswaResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListSiswas extends ListRecords
+{
+    protected static string $resource = SiswaResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Pages/ViewSiswa.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Pages;
+
+use App\Filament\Resources\Siswas\SiswaResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewSiswa extends ViewRecord
+{
+    protected static string $resource = SiswaResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Schemas/SiswaForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Schemas;
+
+use App\Enums\StatusSiswa;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class SiswaForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Siswa')
+                ->icon('heroicon-o-user')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('nama')
+                        ->required()
+                        ->maxLength(255),
+                    TextInput::make('nisn')
+                        ->required()
+                        ->label('NISN')
+                        ->maxLength(10),
+                    TextInput::make('nama_orangtua')
+                        ->label('Nama Orang Tua')
+                        ->maxLength(255),
+                    TextInput::make('telepon')
+                        ->tel()
+                        ->maxLength(15),
+                ]),
+
+            Section::make('Data Sistem')
+                ->columns(2)
+                ->icon('heroicon-o-circle-stack')
+                ->schema([
+                    Select::make('status')
+                        ->options(StatusSiswa::class)
+                        ->required()
+                        ->default(StatusSiswa::Lulus),
+                    FileUpload::make('berkas_skl')->label('Berkas SKL')
+                        ->directory('berkas-skl')
+                        ->maxSize(2048) // 2MB
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->helperText('Unggah berkas SKL dalam format PDF dengan ukuran maksimal 2MB.'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Schemas/SiswaInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Schemas;
+
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class SiswaInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas Siswa')
+                ->icon('heroicon-o-user')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('nama'),
+                    TextEntry::make('nama_orangtua')->label('Nama Orang Tua')->placeholder('-'),
+                    TextEntry::make('nisn')->label('NISN'),
+                    TextEntry::make('telepon')->placeholder('-'),
+                    TextEntry::make('status')
+                        ->badge()
+                        ->color(fn($state) => $state?->color()),
+                ]),
+
+            Section::make('Data Sistem')
+                ->icon('heroicon-o-circle-stack')
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('berkas_skl')->placeholder('-'),
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/SiswaResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas;
+
+use App\Filament\Resources\Siswas\Pages\CreateSiswa;
+use App\Filament\Resources\Siswas\Pages\EditSiswa;
+use App\Filament\Resources\Siswas\Pages\ListSiswas;
+use App\Filament\Resources\Siswas\Pages\ViewSiswa;
+use App\Filament\Resources\Siswas\Schemas\SiswaForm;
+use App\Filament\Resources\Siswas\Schemas\SiswaInfolist;
+use App\Filament\Resources\Siswas\Tables\SiswasTable;
+use App\Models\Siswa;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class SiswaResource extends Resource
+{
+    protected static ?string $model = Siswa::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+
+    protected static ?string $recordTitleAttribute = 'nama';
+
+    public static function form(Schema $schema): Schema
+    {
+        return SiswaForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return SiswaInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return SiswasTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListSiswas::route('/'),
+            'create' => CreateSiswa::route('/create'),
+            'view' => ViewSiswa::route('/{record}'),
+            'edit' => EditSiswa::route('/{record}/edit'),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/Siswas/Tables/SiswasTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\Siswas\Tables;
+
+use App\Enums\StatusSiswa;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class SiswasTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('nisn')
+                    ->label('NISN')
+                    ->searchable(),
+                TextColumn::make('nama_orangtua')
+                    ->label('Nama Orang Tua')
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('telepon')
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn ($state) => $state?->color()),
+                TextColumn::make('created_at')
+                    ->dateTime('d F Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options(StatusSiswa::class),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Pages/CreateTahunPelajaran.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Pages;
+
+use App\Filament\Resources\TahunPelajarans\TahunPelajaranResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateTahunPelajaran extends CreateRecord
+{
+    protected static string $resource = TahunPelajaranResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Pages/EditTahunPelajaran.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Pages;
+
+use App\Filament\Resources\TahunPelajarans\TahunPelajaranResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditTahunPelajaran extends EditRecord
+{
+    protected static string $resource = TahunPelajaranResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Pages/ListTahunPelajarans.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Pages;
+
+use App\Filament\Resources\TahunPelajarans\TahunPelajaranResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListTahunPelajarans extends ListRecords
+{
+    protected static string $resource = TahunPelajaranResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Pages/ViewTahunPelajaran.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Pages;
+
+use App\Filament\Resources\TahunPelajarans\TahunPelajaranResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewTahunPelajaran extends ViewRecord
+{
+    protected static string $resource = TahunPelajaranResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Schemas/TahunPelajaranForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Schemas;
+
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class TahunPelajaranForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas')
+                ->icon('heroicon-o-calendar-days')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->required()
+                        ->label('Nama Tahun Pelajaran')
+                        ->columnSpanFull(),
+                    Toggle::make('status')
+                        ->label('Aktif')
+                        ->inline(false),
+                ]),
+
+            Section::make('Jadwal Pengumuman')
+                ->icon('heroicon-o-megaphone')
+                ->columns(2)
+                ->schema([
+                    DateTimePicker::make('jadwal_pengumuman_mulai')
+                        ->required()
+                        ->label('Mulai'),
+                    DateTimePicker::make('jadwal_pengumuman_selesai')
+                        ->required()
+                        ->label('Selesai'),
+                ]),
+
+            Section::make('Jadwal Kelulusan')
+                ->icon('heroicon-o-academic-cap')
+                ->columns(2)
+                ->schema([
+                    DateTimePicker::make('jadwal_kelulusan_mulai')
+                        ->label('Mulai'),
+                    DateTimePicker::make('jadwal_kelulusan_selesai')
+                        ->label('Selesai'),
+                    TextInput::make('jadwal_kelulusan_tempat')
+                        ->label('Tempat')
+                        ->columnSpanFull(),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Schemas/TahunPelajaranInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Schemas;
+
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class TahunPelajaranInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make('Identitas')
+                ->icon('heroicon-o-calendar-days')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('name')->label('Nama Tahun Pelajaran')->columnSpanFull(),
+                    IconEntry::make('status')->boolean()->label('Aktif'),
+                ]),
+
+            Section::make('Jadwal Pengumuman')
+                ->icon('heroicon-o-megaphone')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('jadwal_pengumuman_mulai')->dateTime('d F Y H:i')->label('Mulai'),
+                    TextEntry::make('jadwal_pengumuman_selesai')->dateTime('d F Y H:i')->label('Selesai'),
+                ]),
+
+            Section::make('Jadwal Kelulusan')
+                ->icon('heroicon-o-academic-cap')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('jadwal_kelulusan_mulai')->dateTime('d F Y H:i')->label('Mulai')->placeholder('-'),
+                    TextEntry::make('jadwal_kelulusan_selesai')->dateTime('d F Y H:i')->label('Selesai')->placeholder('-'),
+                    TextEntry::make('jadwal_kelulusan_tempat')->label('Tempat')->placeholder('-')->columnSpanFull(),
+                ]),
+
+            Section::make('Waktu')
+                ->icon('heroicon-o-clock')
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+                ]),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/Tables/TahunPelajaransTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans\Tables;
+
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
+
+class TahunPelajaransTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->label('Tahun Pelajaran')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('jadwal_pengumuman_mulai')
+                    ->label('Pengumuman Mulai')
+                    ->dateTime('d F Y H:i')
+                    ->sortable(),
+                TextColumn::make('jadwal_pengumuman_selesai')
+                    ->label('Pengumuman Selesai')
+                    ->dateTime('d F Y H:i')
+                    ->sortable(),
+                TextColumn::make('jadwal_kelulusan_tempat')
+                    ->label('Tempat Kelulusan')
+                    ->searchable()
+                    ->toggleable(),
+                IconColumn::make('status')
+                    ->boolean()
+                    ->label('Aktif'),
+                TextColumn::make('created_at')
+                    ->dateTime('d F Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                TernaryFilter::make('status')->label('Aktif'),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TahunPelajarans/TahunPelajaranResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TahunPelajarans;
+
+use App\Filament\Resources\TahunPelajarans\Pages\CreateTahunPelajaran;
+use App\Filament\Resources\TahunPelajarans\Pages\EditTahunPelajaran;
+use App\Filament\Resources\TahunPelajarans\Pages\ListTahunPelajarans;
+use App\Filament\Resources\TahunPelajarans\Pages\ViewTahunPelajaran;
+use App\Filament\Resources\TahunPelajarans\Schemas\TahunPelajaranForm;
+use App\Filament\Resources\TahunPelajarans\Schemas\TahunPelajaranInfolist;
+use App\Filament\Resources\TahunPelajarans\Tables\TahunPelajaransTable;
+use App\Models\TahunPelajaran;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class TahunPelajaranResource extends Resource
+{
+    protected static ?string $model = TahunPelajaran::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function form(Schema $schema): Schema
+    {
+        return TahunPelajaranForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return TahunPelajaranInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return TahunPelajaransTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListTahunPelajarans::route('/'),
+            'create' => CreateTahunPelajaran::route('/create'),
+            'view' => ViewTahunPelajaran::route('/{record}'),
+            'edit' => EditTahunPelajaran::route('/{record}/edit'),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Pages/CreateTamuUndangan.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Pages;
+
+use App\Filament\Resources\TamuUndangans\TamuUndanganResource;
+use Filament\Resources\Pages\CreateRecord;
+
+class CreateTamuUndangan extends CreateRecord
+{
+    protected static string $resource = TamuUndanganResource::class;
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Pages/EditTamuUndangan.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Pages;
+
+use App\Filament\Resources\TamuUndangans\TamuUndanganResource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class EditTamuUndangan extends EditRecord
+{
+    protected static string $resource = TamuUndanganResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            ViewAction::make()
+                ->icon(Heroicon::Eye)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Zinc),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Rose),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Pages/ListTamuUndangans.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Pages;
+
+use App\Filament\Resources\TamuUndangans\TamuUndanganResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ListTamuUndangans extends ListRecords
+{
+    protected static string $resource = TamuUndanganResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()
+                ->icon(Heroicon::PlusCircle)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Green),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Pages/ViewTamuUndangan.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Pages;
+
+use App\Filament\Resources\TamuUndangans\TamuUndanganResource;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+
+class ViewTamuUndangan extends ViewRecord
+{
+    protected static string $resource = TamuUndanganResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+    protected function getHeaderActions(): array
+    {
+        return [
+            EditAction::make()
+                ->icon(Heroicon::PencilSquare)
+                ->label('')
+                ->outlined()
+                ->size('sm')
+                ->color(Color::Cyan),
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Schemas/TamuUndanganForm.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Schemas;
+
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
+
+class TamuUndanganForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            // fix: Select relationship
+            Select::make('siswa_id')
+                ->relationship('siswa', 'nama')
+                ->searchable()
+                ->preload()
+                ->required(),
+            TextInput::make('jumlah_tamu')
+                ->numeric()
+                ->default(1)
+                ->minValue(1)
+                ->maxValue(10),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Schemas/TamuUndanganInfolist.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Schemas;
+
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Schema;
+
+class TamuUndanganInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema->components([
+            TextEntry::make('siswa.nama')->label('Siswa'),
+            TextEntry::make('siswa.nisn')->label('NISN')->placeholder('-'),
+            TextEntry::make('jumlah_tamu')->numeric()->placeholder('-'),
+            TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+            TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/Tables/TamuUndangansTable.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans\Tables;
+
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class TamuUndangansTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('siswa.nama_orangtua')->label('Nama Orang Tua')->searchable()->sortable(),
+                TextColumn::make('siswa.nama')->label('Nama Siswa')->searchable()->sortable(),
+                TextColumn::make('siswa.nisn')->label('NISN')->searchable(),
+                TextColumn::make('siswa.telepon')->label('Telepon')->searchable(),
+                TextColumn::make('jumlah_tamu')->label('Jumlah Tamu')->numeric()->sortable()
+                    ->suffix(' orang'),
+                TextColumn::make('siswa.status')->label('Status Kelulusan')->sortable()
+                    ->badge()
+                    ->color(fn ($state) => $state?->color()),
+                TextColumn::make('created_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon(Heroicon::Eye)
+                        ->label('Lihat')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Zinc),
+                    EditAction::make()
+                        ->icon(Heroicon::PencilSquare)
+                        ->label('Ubah')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Blue),
+                    DeleteAction::make()
+                        ->icon(Heroicon::Trash)
+                        ->label('Hapus')
+                        ->outlined()
+                        ->size('sm')
+                        ->color(Color::Red),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Filament/Resources/TamuUndangans/TamuUndanganResource.php`
+
+```php
+<?php
+
+namespace App\Filament\Resources\TamuUndangans;
+
+use App\Filament\Resources\TamuUndangans\Pages\CreateTamuUndangan;
+use App\Filament\Resources\TamuUndangans\Pages\EditTamuUndangan;
+use App\Filament\Resources\TamuUndangans\Pages\ListTamuUndangans;
+use App\Filament\Resources\TamuUndangans\Pages\ViewTamuUndangan;
+use App\Filament\Resources\TamuUndangans\Schemas\TamuUndanganForm;
+use App\Filament\Resources\TamuUndangans\Schemas\TamuUndanganInfolist;
+use App\Filament\Resources\TamuUndangans\Tables\TamuUndangansTable;
+use App\Models\TamuUndangan;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class TamuUndanganResource extends Resource
+{
+    protected static ?string $model = TamuUndangan::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?string $recordTitleAttribute = 'id';
+
+    public static function form(Schema $schema): Schema
+    {
+        return TamuUndanganForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return TamuUndanganInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return TamuUndangansTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListTamuUndangans::route('/'),
+            'create' => CreateTamuUndangan::route('/create'),
+            'view' => ViewTamuUndangan::route('/{record}'),
+            'edit' => EditTamuUndangan::route('/{record}/edit'),
+        ];
     }
 }
 
@@ -1170,6 +3604,326 @@ class BroadcastPesanKelulusan implements ShouldQueue
 
 ---
 
+### 📄 File: `./app/Models/Alumni.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Alumni extends Model
+{
+    use HasFactory, HasUuids;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'nama',
+        'nisn',
+        'tahun_lulus',
+        'avatar',
+        'quote',
+    ];
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/Instansi.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Instansi extends Model
+{
+    use HasFactory, HasUuids;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'nama',
+        'npsn',
+        'logo',
+        'logo_institusi',
+        'nomor_surat',
+        'nama_pimpinan',
+        'nip_pimpinan',
+        'tte_pimpinan',
+        'nama_ketua',
+        'nip_ketua',
+        'tte_ketua',
+        'jenjang',
+        'akreditasi',
+        'status',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => 'boolean',
+        ];
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/Personil.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Personil extends Model
+{
+    use HasFactory, HasUuids;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'nama',
+        'nip',
+        'foto',
+        'telepon',
+        'sosial_media',
+        'jabatan',
+        'quote',
+    ];
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/Siswa.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use App\Enums\StatusSiswa;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Siswa extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $fillable = [
+        'nama',
+        'nama_orangtua',
+        'nisn',
+        'berkas_skl',
+        'telepon',
+        'status',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => StatusSiswa::class,
+        ];
+    }
+
+    public function tamuUndangans(): HasMany
+    {
+        return $this->hasMany(TamuUndangan::class);
+    }
+
+    public function isLulus(): bool
+    {
+        return in_array($this->status, [
+            StatusSiswa::Lulus,
+            StatusSiswa::LulusBersyarat,
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/TahunPelajaran.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class TahunPelajaran extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $fillable = [
+        'name',
+        'jadwal_pengumuman_mulai',
+        'jadwal_pengumuman_selesai',
+        'jadwal_kelulusan_mulai',
+        'jadwal_kelulusan_selesai',
+        'jadwal_kelulusan_tempat',
+        'status',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'jadwal_pengumuman_mulai' => 'datetime',
+            'jadwal_pengumuman_selesai' => 'datetime',
+            'jadwal_kelulusan_mulai' => 'datetime',
+            'jadwal_kelulusan_selesai' => 'datetime',
+            'status' => 'boolean',
+        ];
+    }
+
+    // Apakah halaman pengumuman sedang aktif
+    public function isPengumumanAktif(): bool
+    {
+        $now = now();
+
+        return $this->status
+            && $now->gte($this->jadwal_pengumuman_mulai)
+            && $now->lte($this->jadwal_pengumuman_selesai);
+    }
+
+    // Apakah rentang acara kelulusan sedang aktif
+    public function isKelulusanAktif(): bool
+    {
+        if (! $this->jadwal_kelulusan_mulai || ! $this->jadwal_kelulusan_selesai) {
+            return false;
+        }
+        $now = now();
+
+        return $now->gte($this->jadwal_kelulusan_mulai)
+            && $now->lte($this->jadwal_kelulusan_selesai);
+    }
+
+    // Scope: tahun pelajaran yang sedang aktif
+    public function scopeAktif($query)
+    {
+        return $query->where('status', true);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/TamuUndangan.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class TamuUndangan extends Model
+{
+    use HasFactory, HasUuids;
+
+    protected $fillable = [
+        'siswa_id',
+        'jumlah_tamu',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'jumlah_tamu' => 'integer',
+        ];
+    }
+
+    public function siswa(): BelongsTo
+    {
+        return $this->belongsTo(Siswa::class);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Models/User.php`
+
+```php
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+#[Fillable(['name', 'email', 'password'])]
+#[Hidden(['password', 'remember_token'])]
+class User extends Authenticatable
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+}
+
+```
+
+---
+
 ### 📄 File: `./app/Providers/AppServiceProvider.php`
 
 ```php
@@ -1195,6 +3949,84 @@ class AppServiceProvider extends ServiceProvider
         });
         $instansi = $instansiArray ? (object) $instansiArray : null;
         View::share('instansi', $instansi);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./app/Providers/Filament/AdminPanelProvider.php`
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages\Dashboard;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->login()
+            ->spa()
+            ->breadcrumbs()
+            ->topNavigation()
+            ->maxContentWidth(Width::Full)
+            ->simplePageMaxContentWidth(Width::Small)
+            ->profile()
+            ->registration()
+            ->globalSearch(false)
+            ->databaseNotifications()
+            ->colors([
+                'primary' => Color::Emerald,
+            ])
+            ->font('Lexend')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->pages([
+                Dashboard::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->widgets([
+                AccountWidget::class,
+                FilamentInfoWidget::class,
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
     }
 }
 
@@ -1541,6 +4373,134 @@ return [
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
     ],
+];
+
+```
+
+---
+
+### 📄 File: `./config/filament.php`
+
+```php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Broadcasting
+    |--------------------------------------------------------------------------
+    |
+    | By uncommenting the Laravel Echo configuration, you may connect Filament
+    | to any Pusher-compatible websockets server.
+    |
+    | This will allow your users to receive real-time notifications.
+    |
+    */
+
+    'broadcasting' => [
+
+        // 'echo' => [
+        //     'broadcaster' => 'pusher',
+        //     'key' => env('VITE_PUSHER_APP_KEY'),
+        //     'cluster' => env('VITE_PUSHER_APP_CLUSTER'),
+        //     'wsHost' => env('VITE_PUSHER_HOST'),
+        //     'wsPort' => env('VITE_PUSHER_PORT'),
+        //     'wssPort' => env('VITE_PUSHER_PORT'),
+        //     'authEndpoint' => '/broadcasting/auth',
+        //     'disableStats' => true,
+        //     'encrypted' => true,
+        //     'forceTLS' => env('VITE_PUSHER_SCHEME', 'https') === 'https',
+        // ],
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Filesystem Disk
+    |--------------------------------------------------------------------------
+    |
+    | This is the storage disk Filament will use to store files. You may use
+    | any of the disks defined in the `config/filesystems.php`.
+    |
+    */
+
+    'default_filesystem_disk' => env('FILESYSTEM_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Assets Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the directory where Filament's assets will be published to. It
+    | is relative to the `public` directory of your Laravel application.
+    |
+    | After changing the path, you should run `php artisan filament:assets`.
+    |
+    */
+
+    'assets_path' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the directory that Filament will use to store cache files that
+    | are used to optimize the registration of components.
+    |
+    | After changing the path, you should run `php artisan filament:cache-components`.
+    |
+    */
+
+    'cache_path' => base_path('bootstrap/cache/filament'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Livewire Loading Delay
+    |--------------------------------------------------------------------------
+    |
+    | This sets the delay before loading indicators appear.
+    |
+    | Setting this to 'none' makes indicators appear immediately, which can be
+    | desirable for high-latency connections. Setting it to 'default' applies
+    | Livewire's standard 200ms delay.
+    |
+    */
+
+    'livewire_loading_delay' => 'default',
+
+    /*
+    |--------------------------------------------------------------------------
+    | File Generation
+    |--------------------------------------------------------------------------
+    |
+    | Artisan commands that generate files can be configured here by setting
+    | configuration flags that will impact their location or content.
+    |
+    | Often, this is useful to preserve file generation behavior from a
+    | previous version of Filament, to ensure consistency between older and
+    | newer generated files. These flags are often documented in the upgrade
+    | guide for the version of Filament you are upgrading to.
+    |
+    */
+
+    'file_generation' => [
+        'flags' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | System Route Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This is the prefix used for the system routes that Filament registers,
+    | such as the routes for downloading exports and failed import rows.
+    |
+    */
+
+    'system_route_prefix' => 'filament',
+
 ];
 
 ```
@@ -1905,53 +4865,6 @@ Migrations, seeders, and factories.
 
 ---
 
-### 📄 File: `./database/factories/UserFactory.php`
-
-```php
-<?php
-
-namespace Database\Factories;
-
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-
-/**
- * @extends Factory<User>
- */
-class UserFactory extends Factory
-{
-    protected static ?string $password;
-
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
-    public function definition(): array
-    {
-        return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
-        ];
-    }
-
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
-}
-
-```
-
----
-
 ### 📄 File: `./database/migrations/0001_01_01_000000_create_users_table.php`
 
 ```php
@@ -2232,7 +5145,6 @@ return new class extends Migration
             $table->string('berkas_skl')->nullable();
             $table->string('telepon', 15)->unique()->nullable();
             $table->enum('status', ['Lulus', 'Tidak Lulus', 'Lulus Bersyarat'])->default('Lulus');
-            $table->string('barcode_url')->nullable();
             $table->timestamps();
         });
     }
@@ -2265,7 +5177,6 @@ return new class extends Migration
     {
         Schema::create('tamu_undangans', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // fix: uuid, bukan foreignId()
             $table->uuid('siswa_id');
             $table->foreign('siswa_id')->references('id')->on('siswas')->cascadeOnDelete();
             $table->unsignedSmallInteger('jumlah_tamu')->default(1);
@@ -2365,6 +5276,153 @@ return new class extends Migration
 
 ---
 
+### 📄 File: `./database/migrations/2026_04_16_212753_create_notifications_table.php`
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('notifications');
+    }
+};
+
+```
+
+---
+
+### 📄 File: `./database/seeders/AlumniSeeder.php`
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class AlumniSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $namaAlumni = [
+            'Agung Prasetyo',
+            'Bagas Wicaksono',
+            'Candra Kusuma',
+            'Dita Ayu',
+            'Endra Saputra',
+            'Fadillah Rahma',
+            'Gilang Nugroho',
+            'Hesti Wulandari',
+            'Ivan Kurniawan',
+            'Jihan Nabila',
+            'Khoirul Anam',
+            'Laila Fitri',
+            'Miko Setiawan',
+            'Nina Rahayu',
+            'Omar Abdillah',
+            'Puspita Dewi',
+            'Qurrotul Aini',
+            'Raka Mahendra',
+            'Salma Aulia',
+            'Taufiq Rahman',
+            'Ulul Azmi',
+            'Vina Septiani',
+            'Wahid Fathoni',
+            'Xaverius Budi',
+            'Yeni Permata',
+            'Zaid Mubarak',
+            'Agus Hermawan',
+            'Bella Safira',
+            'Chandra Iswanto',
+            'Desy Natalia',
+            'Elsa Pertiwi',
+            'Faris Mubarok',
+            'Galih Prakoso',
+            'Hana Azzahra',
+            'Imam Syafi\'i',
+            'Juwita Sari',
+            'Kiki Amalia',
+            'Luthfi Hakim',
+            'Maulida Zahrani',
+            'Nando Pratama',
+            'Okta Rinaldi',
+            'Prima Yudhistira',
+            'Qisthi Nabilah',
+            'Rendi Saputro',
+            'Safa Ayu',
+            'Toni Hermawan',
+            'Umi Kulsum',
+            'Vito Surya',
+            'Wilda Rahmawati',
+            'Yuda Permana',
+        ];
+
+        $quotes = [
+            'Belajar tanpa berpikir adalah sia-sia, berpikir tanpa belajar adalah berbahaya.',
+            'Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.',
+            'Pendidikan adalah senjata paling ampuh untuk mengubah dunia.',
+            'Bermimpilah setinggi langit, jika jatuh kau akan jatuh di antara bintang-bintang.',
+            'Jangan pernah menyerah karena hal-hal besar butuh waktu.',
+            'Ilmu tanpa amal seperti pohon tanpa buah.',
+            'Masa depan milik mereka yang percaya pada keindahan mimpi-mimpi mereka.',
+            'Setiap hari adalah kesempatan baru untuk belajar sesuatu yang lebih baik.',
+            'Kerja keras mengalahkan bakat ketika bakat tidak mau bekerja keras.',
+            'Jadi dirimu sendiri, semua orang lain sudah terambil.',
+        ];
+
+        $tahunLulus = ['2020', '2021', '2022', '2023', '2024'];
+        $now = Carbon::now();
+        $alumnis = [];
+
+        for ($i = 0; $i < 50; $i++) {
+            $nisnBase = 2000000000 + ($i * 11 + 3);
+            $alumnis[] = [
+                'id'          => Str::uuid(),
+                'nama'        => $namaAlumni[$i],
+                'nisn'        => str_pad($nisnBase % 10000000000, 10, '0', STR_PAD_LEFT),
+                'tahun_lulus' => $tahunLulus[$i % count($tahunLulus)],
+                'avatar'      => null,
+                'quote'       => $quotes[$i % count($quotes)],
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ];
+        }
+
+        DB::table('alumnis')->insert($alumnis);
+    }
+}
+
+```
+
+---
+
 ### 📄 File: `./database/seeders/DatabaseSeeder.php`
 
 ```php
@@ -2375,15 +5433,360 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
+
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        User::create([
+            'name'              => 'Administrator',
+            'email'             => 'admin@admin.com',
+            'password'          => Hash::make('password'),
+            'email_verified_at' => Carbon::now(),
+            'remember_token'    => Str::random(10),
+        ]);
+
+        $this->call([
+            InstansiSeeder::class,
+            TahunPelajaranSeeder::class,
+            SiswaSeeder::class,
+            AlumniSeeder::class,
+            PersonilSeeder::class,
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./database/seeders/InstansiSeeder.php`
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class InstansiSeeder extends Seeder
+{
+    public function run(): void
+    {
+        DB::table('instansis')->insert([
+            'id'               => Str::uuid(),
+            'nama'             => 'MTs Negeri 1 Pandeglang',
+            'npsn'             => '20123456',
+            'logo'             => null,
+            'logo_institusi'   => null,
+            'nomor_surat'      => '421.3/001/MTSN1/2026',
+            'nama_pimpinan'    => 'Hj. Yanti Mariah, S.S., M.Pd',
+            'nip_pimpinan'     => '111111111111111111',
+            'tte_pimpinan'     => null,
+            'nama_ketua'       => 'Yahya Zulfikri, M.Pd',
+            'nip_ketua'        => '000000000000000000',
+            'tte_ketua'        => null,
+            'jenjang'          => 'MTS',
+            'akreditasi'       => 'A',
+            'status'           => true,
+            'created_at'       => Carbon::now(),
+            'updated_at'       => Carbon::now(),
+        ]);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./database/seeders/PersonilSeeder.php`
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class PersonilSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $personils = [
+            ['nama' => 'Dr. Suwarno, M.Pd',        'nip' => '196501011990031001', 'jabatan' => 'Kepala Sekolah'],
+            ['nama' => 'Dra. Hartini, M.M',         'nip' => '196703151992032002', 'jabatan' => 'Wakil Kepala Sekolah Bidang Kurikulum'],
+            ['nama' => 'Bambang Eko Susilo, S.Pd',  'nip' => '197002201995031003', 'jabatan' => 'Wakil Kepala Sekolah Bidang Kesiswaan'],
+            ['nama' => 'Sri Mulyani, S.Pd',         'nip' => '197108051998032004', 'jabatan' => 'Wakil Kepala Sekolah Bidang Sarana'],
+            ['nama' => 'Agus Triyono, S.Pd',        'nip' => '197305101999031005', 'jabatan' => 'Wakil Kepala Sekolah Bidang Humas'],
+            ['nama' => 'Siti Khoiriyah, S.Pd',      'nip' => '197506152000032006', 'jabatan' => 'Guru Matematika'],
+            ['nama' => 'Hendra Gunawan, S.Pd',      'nip' => '197708202001031007', 'jabatan' => 'Guru Fisika'],
+            ['nama' => 'Dewi Ratnasari, S.Pd',      'nip' => '197809252002032008', 'jabatan' => 'Guru Kimia'],
+            ['nama' => 'Aris Budiman, S.Pd',        'nip' => '197910302003031009', 'jabatan' => 'Guru Biologi'],
+            ['nama' => 'Nurul Hidayah, S.Pd',       'nip' => '198001052004032010', 'jabatan' => 'Guru Bahasa Indonesia'],
+            ['nama' => 'Muhamad Yusuf, S.Pd',       'nip' => '198103102005031011', 'jabatan' => 'Guru Bahasa Inggris'],
+            ['nama' => 'Rina Oktavia, S.Pd',        'nip' => '198205152006032012', 'jabatan' => 'Guru Sejarah'],
+            ['nama' => 'Dedi Kurniawan, S.Pd',      'nip' => '198307202007031013', 'jabatan' => 'Guru Geografi'],
+            ['nama' => 'Fitri Handayani, S.Pd',     'nip' => '198409252008032014', 'jabatan' => 'Guru Ekonomi'],
+            ['nama' => 'Eko Prasetyo, S.Pd',        'nip' => '198511302009031015', 'jabatan' => 'Guru Sosiologi'],
+            ['nama' => 'Anita Sari, S.Pd',          'nip' => '198612052010032016', 'jabatan' => 'Guru PKn'],
+            ['nama' => 'Rudi Hermawan, S.Pd',       'nip' => '198714102011031017', 'jabatan' => 'Guru Pendidikan Agama Islam'],
+            ['nama' => 'Lestari Wulandari, S.Pd',   'nip' => '198816152012032018', 'jabatan' => 'Guru Seni Budaya'],
+            ['nama' => 'Wahyu Setiawan, S.Pd',      'nip' => '198918202013031019', 'jabatan' => 'Guru Penjasorkes'],
+            ['nama' => 'Mega Puspita, S.Kom',       'nip' => '199020252014032020', 'jabatan' => 'Guru TIK'],
+            ['nama' => 'Fajar Nugroho, S.Pd',       'nip' => '199122302015031021', 'jabatan' => 'Guru Bimbingan Konseling'],
+            ['nama' => 'Ratna Dewi, S.Pd',          'nip' => '199224052016032022', 'jabatan' => 'Guru Bimbingan Konseling'],
+            ['nama' => 'Surya Darma, S.E',          'nip' => '199326102017031023', 'jabatan' => 'Kepala Tata Usaha'],
+            ['nama' => 'Yanti Andriani, S.E',       'nip' => '199428152018032024', 'jabatan' => 'Staf Tata Usaha Keuangan'],
+            ['nama' => 'Bimo Saputro, A.Md',        'nip' => '199530202019031025', 'jabatan' => 'Staf Tata Usaha Kepegawaian'],
+            ['nama' => 'Dian Fitriani, A.Md',       'nip' => '199632252020032026', 'jabatan' => 'Staf Tata Usaha Umum'],
+            ['nama' => 'Adi Santoso, S.Pd',         'nip' => '199734302021031027', 'jabatan' => 'Guru Matematika'],
+            ['nama' => 'Tini Rahayu, S.Pd',         'nip' => '199836052022032028', 'jabatan' => 'Guru Bahasa Jawa'],
+            ['nama' => 'Hadi Purnomo, S.Pd',        'nip' => '199938102023031029', 'jabatan' => 'Guru Prakarya'],
+            ['nama' => 'Winda Safitri, S.Pd',       'nip' => '200040152024032030', 'jabatan' => 'Guru Bahasa Inggris'],
+            ['nama' => 'Sigit Wahyono, S.Pd',       'nip' => null,                 'jabatan' => 'Guru Honorer Matematika'],
+            ['nama' => 'Layla Indriani, S.Pd',      'nip' => null,                 'jabatan' => 'Guru Honorer IPA'],
+            ['nama' => 'Bayu Nugroho, S.Pd',        'nip' => null,                 'jabatan' => 'Guru Honorer IPS'],
+            ['nama' => 'Rosita Amelia, S.Pd',       'nip' => null,                 'jabatan' => 'Guru Honorer Bahasa Indonesia'],
+            ['nama' => 'Dony Setiawan, S.Kom',      'nip' => null,                 'jabatan' => 'Guru Honorer TIK'],
+            ['nama' => 'Ani Kusumawati, S.Pd',      'nip' => null,                 'jabatan' => 'Guru Honorer Seni Budaya'],
+            ['nama' => 'Rohmat Efendi',              'nip' => null,                 'jabatan' => 'Petugas Perpustakaan'],
+            ['nama' => 'Suyono',                     'nip' => null,                 'jabatan' => 'Petugas Laboratorium'],
+            ['nama' => 'Marno Susanto',              'nip' => null,                 'jabatan' => 'Petugas Kebersihan'],
+            ['nama' => 'Parmin',                     'nip' => null,                 'jabatan' => 'Petugas Kebersihan'],
+            ['nama' => 'Sutejo',                     'nip' => null,                 'jabatan' => 'Petugas Keamanan'],
+            ['nama' => 'Sarno',                      'nip' => null,                 'jabatan' => 'Petugas Keamanan'],
+            ['nama' => 'Didik Prasetyo',             'nip' => null,                 'jabatan' => 'Petugas UKS'],
+            ['nama' => 'Endah Rahmawati, A.Md',     'nip' => null,                 'jabatan' => 'Petugas Perpustakaan'],
+            ['nama' => 'Haryono',                    'nip' => null,                 'jabatan' => 'Petugas Kantin'],
+            ['nama' => 'Srimulyono, S.Pd',          'nip' => '198540012025031046', 'jabatan' => 'Koordinator Ekskul'],
+            ['nama' => 'Dita Permata, S.Pd',        'nip' => null,                 'jabatan' => 'Pembina OSIS'],
+            ['nama' => 'Fery Ardian, S.Pd',         'nip' => null,                 'jabatan' => 'Pembina Pramuka'],
+            ['nama' => 'Nuning Listiani, S.Pd',     'nip' => null,                 'jabatan' => 'Pembina PMR'],
+            ['nama' => 'Galuh Prabowo, S.Pd',       'nip' => null,                 'jabatan' => 'Pembina Olahraga'],
+        ];
+
+        $quotes = [
+            'Mendidik bukan sekadar mengajar, tapi membentuk karakter generasi bangsa.',
+            'Guru yang baik bukan yang paling pintar, tapi yang paling sabar.',
+            'Setiap murid adalah bintang yang menunggu untuk bersinar.',
+            'Investasi terbaik adalah investasi pada pendidikan.',
+            'Mengajar adalah profesi yang menciptakan semua profesi lainnya.',
+        ];
+
+        $now = Carbon::now();
+        $data = [];
+
+        foreach ($personils as $i => $p) {
+            $data[] = [
+                'id'           => Str::uuid(),
+                'nama'         => $p['nama'],
+                'nip'          => $p['nip'],
+                'foto'         => null,
+                'telepon'      => null,
+                'sosial_media' => null,
+                'jabatan'      => $p['jabatan'],
+                'quote'        => $quotes[$i % count($quotes)],
+                'created_at'   => $now,
+                'updated_at'   => $now,
+            ];
+        }
+
+        DB::table('personils')->insert($data);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./database/seeders/SiswaSeeder.php`
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class SiswaSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $statusOptions = ['Lulus', 'Tidak Lulus', 'Lulus Bersyarat'];
+
+        $namaSiswa = [
+            'Ahmad Fauzi',
+            'Budi Santoso',
+            'Citra Dewi',
+            'Dian Pratiwi',
+            'Eko Wahyudi',
+            'Fitri Rahayu',
+            'Gilang Permana',
+            'Hani Safitri',
+            'Irfan Maulana',
+            'Joko Susilo',
+            'Kartika Sari',
+            'Lukman Hakim',
+            'Maya Anggraini',
+            'Nanda Kurniawan',
+            'Olivia Putri',
+            'Putra Ramadhan',
+            'Qori Hidayah',
+            'Rizky Aditya',
+            'Siti Aisyah',
+            'Teguh Wibowo',
+            'Ulfa Nurjanah',
+            'Vino Saputra',
+            'Wulandari Susanto',
+            'Xena Maharani',
+            'Yusuf Effendi',
+            'Zahra Nadia',
+            'Andi Firmansyah',
+            'Bella Kusuma',
+            'Cahyo Nugroho',
+            'Devi Permatasari',
+            'Erwin Setiawan',
+            'Fanny Oktavia',
+            'Gunawan Prasetyo',
+            'Hendra Wijaya',
+            'Indah Lestari',
+            'Jefri Andriyanto',
+            'Krisna Bayu',
+            'Lina Marlina',
+            'Muhamad Iqbal',
+            'Novi Andriani',
+            'Oscar Pratama',
+            'Putri Handayani',
+            'Qodir Maulana',
+            'Reni Astuti',
+            'Syahrul Ramli',
+            'Tia Ratnasari',
+            'Umar Faruq',
+            'Viska Amelia',
+            'Wahyu Hidayat',
+            'Zulkifli Nasir',
+        ];
+
+        $namaOrangTua = [
+            'Slamet Riyadi',
+            'Bambang Supriyanto',
+            'Heru Santoso',
+            'Agus Setiawan',
+            'Darmawan',
+            'Sunarto',
+            'Wiyono',
+            'Sukirman',
+            'Rohmad',
+            'Parwoto',
+            'Suharto',
+            'Mulyadi',
+            'Triyono',
+            'Sugiyanto',
+            'Purwanto',
+            'Sumarno',
+            'Hartono',
+            'Widodo',
+            'Sarjono',
+            'Budiman',
+            'Sutrisno',
+            'Ngadimin',
+            'Siswanto',
+            'Prayitno',
+            'Wahyono',
+            'Suprapto',
+            'Teguh Santosa',
+            'Kusnan',
+            'Sumardi',
+            'Bowo Leksono',
+            'Arifin',
+            'Sugiarto',
+            'Hari Purnomo',
+            'Basuki',
+            'Jatmiko',
+            'Riyanto',
+            'Susanto',
+            'Karyadi',
+            'Edi Purnomo',
+            'Sodik',
+            'Marwoto',
+            'Sutarno',
+            'Darwis',
+            'Harun',
+            'Kurniadi',
+            'Sunaryo',
+            'Winarto',
+            'Paimin',
+            'Nuryanto',
+            'Supardi',
+        ];
+
+        $now = Carbon::now();
+        $siswas = [];
+
+        for ($i = 0; $i < 50; $i++) {
+            $nisnBase = 1000000000 + ($i * 13 + 7); // unik, deterministik
+            $siswas[] = [
+                'id'            => Str::uuid(),
+                'nama'          => $namaSiswa[$i],
+                'nama_orangtua' => $namaOrangTua[$i],
+                'nisn'          => str_pad($nisnBase, 10, '0', STR_PAD_LEFT),
+                'berkas_skl'    => null,
+                'telepon'       => '08' . str_pad(10000000 + ($i * 77777), 10, '0', STR_PAD_LEFT),
+                'status'        => $statusOptions[$i % 3 === 0 ? ($i % 2 === 0 ? 1 : 2) : 0],
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ];
+        }
+
+        DB::table('siswas')->insert($siswas);
+    }
+}
+
+```
+
+---
+
+### 📄 File: `./database/seeders/TahunPelajaranSeeder.php`
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+
+class TahunPelajaranSeeder extends Seeder
+{
+    public function run(): void
+    {
+        DB::table('tahun_pelajarans')->insert([
+            'id'                          => Str::uuid(),
+            'name'                        => '2025/2026',
+            'jadwal_pengumuman_mulai'     => Carbon::create(2026, 5, 1, 8, 0, 0),
+            'jadwal_pengumuman_selesai'   => Carbon::create(2026, 5, 31, 23, 59, 59),
+            'jadwal_kelulusan_mulai'      => Carbon::create(2026, 6, 7, 8, 0, 0),
+            'jadwal_kelulusan_selesai'    => Carbon::create(2026, 6, 7, 12, 0, 0),
+            'jadwal_kelulusan_tempat'     => 'Aula SMA Negeri 1 Contoh Kota',
+            'status'                      => true,
+            'created_at'                  => Carbon::now(),
+            'updated_at'                  => Carbon::now(),
         ]);
     }
 }
@@ -3215,35 +6618,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                         <div class="state-sub">Hubungi madrasah untuk informasi lebih lanjut.</div>
                     </div>
                 @elseif ($sudahBuka)
-                    <div class="amplop-section" id="amplop-section">
-                        <button onclick="bukaAmplop()" id="amplop-btn" class="amplop-btn" aria-label="Buka amplop">
-                            <div id="amplop"
-                                style="position:relative;width:270px;height:180px;transition:all .5s ease;filter:drop-shadow(0 14px 36px rgba(13,148,136,.28))">
-                                <svg viewBox="0 0 270 180" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                    style="width:100%;height:100%">
-                                    <rect width="270" height="180" rx="15" fill="#0d9488" />
-                                    <rect width="270" height="180" rx="15" fill="url(#eg)" />
-                                    <path d="M0 180 L135 104 L270 180Z" fill="#0f766e" />
-                                    <path id="amplop-lid" d="M0 20 L135 102 L270 20 L270 0 L0 0Z" fill="#14b8a6"
-                                        style="transform-origin:50% 0%;transition:transform .5s ease,opacity .5s ease;" />
-                                    <path d="M0 20 L135 102 L270 20" stroke="rgba(94,234,212,.35)" stroke-width="1.5"
-                                        fill="none" />
-                                    <text x="135" y="150" text-anchor="middle" fill="rgba(255,255,255,.75)" font-size="10"
-                                        font-family="var(--font-body),sans-serif" font-weight="600"
-                                        letter-spacing="0.5">Ketuk untuk membuka</text>
-                                    <defs>
-                                        <linearGradient id="eg" x1="0" y1="0" x2="270"
-                                            y2="180" gradientUnits="userSpaceOnUse">
-                                            <stop offset="0%" stop-color="rgba(20,184,166,.28)" />
-                                            <stop offset="100%" stop-color="rgba(13,148,136,0)" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                            </div>
-                            <span class="amplop-hint">Ketuk amplop &uarr;</span>
-                        </button>
-                    </div>
-
                     <div id="cari-section" class="hidden" style="padding:0 1rem">
                         <div class="search-card">
                             <div class="search-card-head">
@@ -3431,13 +6805,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
                     sebagaimana mestinya.</p>
 
                 @include('partials._ttd')
-
-                @if ($siswa->barcode_url)
-                    <div class="qr-block">
-                        <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-                        <p>Scan untuk verifikasi</p>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -3536,12 +6903,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
                 @include('partials._ttd')
 
-                @if ($siswa->barcode_url)
-                    <div class="qr-block">
-                        <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-                        <p>Scan QR untuk verifikasi kehadiran di lokasi</p>
-                    </div>
-                @endif
             </div>
         </div>
 
@@ -5017,12 +8378,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
     @include('pdf._ttd')
 
-    @if ($siswa->barcode_url)
-        <div class="qr-box">
-            <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-            <p>Scan untuk verifikasi</p>
-        </div>
-    @endif
 </body>
 
 </html>
@@ -5117,12 +8472,6 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
     @include('pdf._ttd')
 
-    @if ($siswa->barcode_url)
-        <div class="qr-box">
-            <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-            <p>Scan untuk verifikasi kehadiran di lokasi acara</p>
-        </div>
-    @endif
 </body>
 
 </html>

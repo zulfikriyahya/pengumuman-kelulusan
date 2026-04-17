@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Personils\Schemas;
 
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -15,14 +16,22 @@ class PersonilForm
         return $schema->components([
             Section::make('Identitas Personil')
                 ->icon('heroicon-o-identification')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextInput::make('nama')
                         ->required()
                         ->maxLength(255),
-                    TextInput::make('jabatan')
+                    Select::make('jabatan')
                         ->required()
-                        ->maxLength(255),
+                        ->native(false)
+                        ->options([
+                            'Kepala Madrasah' => 'Kepala Madrasah',
+                            'Wakil Kepala Madrasah' => 'Wakil Kepala Madrasah',
+                            'Komite Madrasah' => 'Komite Madrasah',
+                            'Guru' => 'Guru',
+                            'Staff' => 'Staff',
+                            'Outsourcing' => 'Outsourcing',
+                        ]),
                     TextInput::make('nip')
                         ->label('NIP')
                         ->maxLength(30),
@@ -34,10 +43,24 @@ class PersonilForm
                         ->url(),
                     FileUpload::make('foto')
                         ->image()
-                        ->disk('public')
-                        ->directory('personil')
                         ->imagePreviewHeight('80')
-                        ->columnSpanFull(),
+                        ->label('Foto')
+                        ->directory('personil')
+                        ->maxSize(1024)
+                        ->visibility('public')
+                        ->disk('public')
+                        ->imageEditor()
+                        ->imageEditorAspectRatios([
+                            '1:1' => '1:1',
+                            '4:3' => '4:3',
+                            '16:9' => '16:9',
+                            null,
+                        ])
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            $nip = $record?->nip ?? 'foto_' . time();
+                            $ext = $file->getClientOriginalExtension();
+                            return strtolower($nip) . '.' . $ext;
+                        }),
                 ]),
 
             Section::make('Kutipan')

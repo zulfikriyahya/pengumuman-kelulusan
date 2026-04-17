@@ -12,6 +12,10 @@ class ViewTahunPelajaran extends ViewRecord
 {
     protected static string $resource = TahunPelajaranResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     protected function getHeaderActions(): array
     {
         return [

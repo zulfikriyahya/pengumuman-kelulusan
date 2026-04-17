@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Siswas\Schemas;
 
 use App\Enums\StatusSiswa;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -18,36 +19,35 @@ class SiswaForm
                 ->columns(2)
                 ->schema([
                     TextInput::make('nama')
+                        ->label('Nama Siswa')
                         ->required()
-                        ->maxLength(255),
-                    TextInput::make('nama_orangtua')
-                        ->label('Nama Orang Tua')
                         ->maxLength(255),
                     TextInput::make('nisn')
                         ->required()
                         ->label('NISN')
                         ->maxLength(10),
+                    TextInput::make('nama_orangtua')
+                        ->label('Nama Orang Tua')
+                        ->maxLength(255),
                     TextInput::make('telepon')
                         ->tel()
                         ->maxLength(15),
-                    Select::make('status')
-                        ->options(StatusSiswa::class)
-                        ->required()
-                        ->default(StatusSiswa::Lulus),
                 ]),
 
             Section::make('Data Sistem')
-                ->icon('heroicon-o-circle-stack')
                 ->columns(2)
-                ->collapsed()
+                ->icon('heroicon-o-circle-stack')
                 ->schema([
-                    TextInput::make('berkas_skl')
-                        ->readOnly()
-                        ->helperText('Diisi otomatis saat import SKL.'),
-                    TextInput::make('barcode_url')
-                        ->url()
-                        ->readOnly()
-                        ->helperText('Diisi otomatis saat import siswa.'),
+                    Select::make('status')
+                        ->options(StatusSiswa::class)
+                        ->native(false)
+                        ->required()
+                        ->default(StatusSiswa::Lulus),
+                    FileUpload::make('berkas_skl')->label('Berkas SKL')
+                        ->directory('berkas-skl')
+                        ->maxSize(2048) // 2MB
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->helperText('Unggah berkas SKL dalam format PDF dengan ukuran maksimal 2MB.'),
                 ]),
         ]);
     }

@@ -35,8 +35,7 @@ class SiswasTable
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('status')
-                    ->badge()
-                    ->color(fn ($state) => $state?->color()),
+                    ->badge(),
                 TextColumn::make('created_at')
                     ->dateTime('d F Y H:i')
                     ->sortable()

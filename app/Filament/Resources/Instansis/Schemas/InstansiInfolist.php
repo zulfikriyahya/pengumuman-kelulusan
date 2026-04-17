@@ -15,13 +15,18 @@ class InstansiInfolist
         return $schema->components([
             Section::make('Identitas Instansi')
                 ->icon('heroicon-o-building-office-2')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
-                    TextEntry::make('nama')->columnSpanFull(),
-                    TextEntry::make('npsn')->label('NPSN'),
-                    TextEntry::make('jenjang'),
-                    TextEntry::make('akreditasi'),
-                    TextEntry::make('nomor_surat')->placeholder('-'),
+                    TextEntry::make('nama'),
+                    TextEntry::make('npsn')
+                        ->label('NPSN'),
+                    TextEntry::make('jenjang')
+                        ->badge(),
+                    TextEntry::make('akreditasi')
+                        ->badge(),
+                    TextEntry::make('nomor_surat')
+                        ->label('Nomor Surat Undangan')->placeholder('-')
+                        ->badge(),
                     IconEntry::make('status')->boolean()->label('Aktif'),
                 ]),
 
@@ -43,7 +48,7 @@ class InstansiInfolist
 
             Section::make('Pimpinan')
                 ->icon('heroicon-o-user-circle')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextEntry::make('nama_pimpinan')->label('Nama Pimpinan')->placeholder('-'),
                     TextEntry::make('nip_pimpinan')->label('NIP Pimpinan')->placeholder('-'),
@@ -51,13 +56,12 @@ class InstansiInfolist
                         ->disk('public')
                         ->height(80)
                         ->placeholder('-')
-                        ->label('TTE Pimpinan')
-                        ->columnSpanFull(),
+                        ->label('TTE Pimpinan'),
                 ]),
 
             Section::make('Panitia')
                 ->icon('heroicon-o-user-circle')
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     TextEntry::make('nama_ketua')->label('Nama Ketua Panitia')->placeholder('-'),
                     TextEntry::make('nip_ketua')->label('NIP Ketua Panitia')->placeholder('-'),
@@ -65,14 +69,14 @@ class InstansiInfolist
                         ->disk('public')
                         ->height(80)
                         ->placeholder('-')
-                        ->label('TTE Ketua Panitia')
-                        ->columnSpanFull(),
+                        ->label('TTE Ketua Panitia'),
                 ]),
 
             Section::make('Waktu')
                 ->icon('heroicon-o-clock')
                 ->columns(2)
                 ->collapsed()
+                ->columnSpanFull()
                 ->schema([
                     TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
                     TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),

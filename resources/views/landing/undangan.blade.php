@@ -81,12 +81,6 @@
 
                 @include('partials._ttd')
 
-                @if ($siswa->barcode_url)
-                    <div class="qr-block">
-                        <img src="{{ $siswa->barcode_url }}" alt="QR Code">
-                        <p>Scan QR untuk verifikasi kehadiran di lokasi</p>
-                    </div>
-                @endif
             </div>
         </div>
 

@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('berkas_skl')->nullable();
             $table->string('telepon', 15)->unique()->nullable();
             $table->enum('status', ['Lulus', 'Tidak Lulus', 'Lulus Bersyarat'])->default('Lulus');
-            $table->string('barcode_url')->nullable();
             $table->timestamps();
         });
     }

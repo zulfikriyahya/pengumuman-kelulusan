@@ -12,6 +12,10 @@ class ListAlumnis extends ListRecords
 {
     protected static string $resource = AlumniResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     protected function getHeaderActions(): array
     {
         return [

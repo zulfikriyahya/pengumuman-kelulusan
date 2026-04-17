@@ -19,7 +19,6 @@ class Siswa extends Model
         'berkas_skl',
         'telepon',
         'status',
-        'barcode_url',
     ];
 
     protected function casts(): array

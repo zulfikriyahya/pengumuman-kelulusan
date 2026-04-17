@@ -14,16 +14,27 @@ class AlumniInfolist
         return $schema->components([
             Section::make('Identitas Alumni')
                 ->icon('heroicon-o-academic-cap')
-                ->columns(2)
+                ->columns(4)
                 ->schema([
+                    ImageEntry::make('avatar')
+                        ->disk('public')
+                        ->hiddenLabel()
+                        ->height(80)
+                        ->placeholder('-')
+                        ->extraAttributes([
+                            'class' => 'flex flex-col items-center',
+                        ]),
                     TextEntry::make('nama'),
                     TextEntry::make('nisn')->label('NISN'),
                     TextEntry::make('tahun_lulus'),
-                    ImageEntry::make('avatar')
-                        ->disk('public')
-                        ->height(80)
-                        ->placeholder('-')
-                        ->columnSpanFull(),
+                ]),
+
+            Section::make('Waktu')
+                ->icon('heroicon-o-clock')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
+                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
                 ]),
 
             Section::make('Kutipan')
@@ -32,16 +43,10 @@ class AlumniInfolist
                     TextEntry::make('quote')
                         ->placeholder('-')
                         ->columnSpanFull(),
-                ]),
-
-            Section::make('Waktu')
-                ->icon('heroicon-o-clock')
-                ->columns(2)
+                ])
                 ->collapsed()
-                ->schema([
-                    TextEntry::make('created_at')->dateTime('d F Y H:i')->placeholder('-'),
-                    TextEntry::make('updated_at')->dateTime('d F Y H:i')->placeholder('-'),
-                ]),
+                ->columnSpanFull(),
+
         ]);
     }
 }

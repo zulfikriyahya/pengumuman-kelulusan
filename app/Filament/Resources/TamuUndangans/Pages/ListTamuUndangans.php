@@ -12,6 +12,10 @@ class ListTamuUndangans extends ListRecords
 {
     protected static string $resource = TamuUndanganResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     protected function getHeaderActions(): array
     {
         return [

@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::create('tamu_undangans', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            // fix: uuid, bukan foreignId()
             $table->uuid('siswa_id');
             $table->foreign('siswa_id')->references('id')->on('siswas')->cascadeOnDelete();
             $table->unsignedSmallInteger('jumlah_tamu')->default(1);
