@@ -18,8 +18,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'wapi' => [
-        'url' => env('WAPI_URL', 'https://wapi.zedlabs.id/send/messages'),
-        'token' => env('WAPI_TOKEN'),
+    'whatsapp' => [
+        'endpoint' => env('WHATSAPP_ENDPOINT'),
+        'api_key' => env('WHATSAPP_API_KEY'),
     ],
 ];

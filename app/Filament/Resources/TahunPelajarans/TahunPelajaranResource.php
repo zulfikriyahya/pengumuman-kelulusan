@@ -20,7 +20,11 @@ class TahunPelajaranResource extends Resource
 {
     protected static ?string $model = TahunPelajaran::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Tahun Pelajaran';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'name';
 

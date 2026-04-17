@@ -20,8 +20,11 @@ class AlumniResource extends Resource
 {
     protected static ?string $model = Alumni::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Alumni';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
-
+    protected static ?int $navigationSort = 4;
     protected static ?string $recordTitleAttribute = 'nama';
 
     public static function form(Schema $schema): Schema

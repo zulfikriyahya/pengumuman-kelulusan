@@ -457,6 +457,9 @@ class AlumniResource extends Resource
 {
     protected static ?string $model = Alumni::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
     protected static ?string $recordTitleAttribute = 'nama';
@@ -854,6 +857,9 @@ class InstansiResource extends Resource
 {
     protected static ?string $model = Instansi::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingOffice2;
 
     protected static ?string $recordTitleAttribute = 'nama';
@@ -1484,6 +1490,9 @@ class PersonilResource extends Resource
 {
     protected static ?string $model = Personil::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
 
     protected static ?string $recordTitleAttribute = 'nama';
@@ -1991,6 +2000,9 @@ class SiswaResource extends Resource
 {
     protected static ?string $model = Siswa::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
     protected static ?string $recordTitleAttribute = 'nama';
@@ -2490,6 +2502,9 @@ class TahunPelajaranResource extends Resource
 {
     protected static ?string $model = TahunPelajaran::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -2830,6 +2845,9 @@ class TamuUndanganResource extends Resource
 {
     protected static ?string $model = TamuUndangan::class;
 
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
     protected static ?string $recordTitleAttribute = 'id';

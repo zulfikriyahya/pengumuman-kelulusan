@@ -15,13 +15,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class PersonilResource extends Resource
 {
     protected static ?string $model = Personil::class;
+    protected static bool $shouldRegisterNavigation = true;
+    // protected static string|UnitEnum|null $navigationGroup = 'Personil';
+    protected static ?string $navigationLabel = 'Personil';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;
-
+    protected static ?int $navigationSort = 3;
     protected static ?string $recordTitleAttribute = 'nama';
 
     public static function form(Schema $schema): Schema

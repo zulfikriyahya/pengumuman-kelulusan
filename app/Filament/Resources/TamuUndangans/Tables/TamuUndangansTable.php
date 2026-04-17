@@ -26,8 +26,7 @@ class TamuUndangansTable
                 TextColumn::make('jumlah_tamu')->label('Jumlah Tamu')->numeric()->sortable()
                     ->suffix(' orang'),
                 TextColumn::make('siswa.status')->label('Status Kelulusan')->sortable()
-                    ->badge()
-                    ->color(fn ($state) => $state?->color()),
+                    ->badge(),
                 TextColumn::make('created_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')->dateTime('d F Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
