@@ -54,8 +54,8 @@ class InstansiResource extends Resource
     {
         return [
             'index' => ListInstansis::route('/'),
-            'create' => CreateInstansi::route('/create'),
-            'view' => ViewInstansi::route('/{record}'),
+            // 'create' => CreateInstansi::route('/create'),
+            // 'view' => ViewInstansi::route('/{record}'),
             'edit' => EditInstansi::route('/{record}/edit'),
         ];
     }

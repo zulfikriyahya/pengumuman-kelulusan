@@ -26,6 +26,17 @@ class ListAlumnis extends ListRecords
         return static::getResource()::getUrl('index');
     }
 
+    private function resolveUpload(string $filename): string
+    {
+        $path = storage_path('app/private/' . $filename);
+
+        if (! file_exists($path)) {
+            throw new \RuntimeException("Uploaded file not found: {$filename}");
+        }
+
+        return $path;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -46,36 +57,43 @@ class ListAlumnis extends ListRecords
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'application/vnd.ms-excel',
                         ])
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
                         ->maxSize(5120)
                         ->required()
                         ->helperText('Kolom wajib: nama, nisn, tahun_lulus. Opsional: quote. Maks. 5 MB.'),
                 ])
                 ->action(function (array $data): void {
-                    $path = storage_path('app/livewire-tmp/' . $data['file']);
+                    $path = $this->resolveUpload($data['file']);
 
-                    $import = new AlumniImport();
-                    Excel::import($import, $path);
+                    try {
+                        $import = new AlumniImport();
+                        Excel::import($import, $path);
 
-                    $failures = $import->failures();
-                    $berhasil = $import->getBerhasil();
+                        $failures = $import->failures();
+                        $berhasil = $import->getBerhasil();
 
-                    if ($failures->count() > 0) {
-                        $messages = collect($failures)
-                            ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
-                            ->take(5)
-                            ->join("\n");
+                        if ($failures->count() > 0) {
+                            $messages = collect($failures)
+                                ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
+                                ->take(5)
+                                ->join("\n");
 
-                        Notification::make()
-                            ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
-                            ->body($messages)
-                            ->warning()
-                            ->persistent()
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->title("{$berhasil} data alumni berhasil diimpor!")
-                            ->success()
-                            ->send();
+                            Notification::make()
+                                ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
+                                ->body($messages)
+                                ->warning()
+                                ->persistent()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title("{$berhasil} data alumni berhasil diimpor!")
+                                ->success()
+                                ->send();
+                        }
+                    } finally {
+                        @unlink($path);
                     }
                 }),
 
@@ -93,8 +111,7 @@ class ListAlumnis extends ListRecords
                         ->label('Filter Tahun Lulus')
                         ->placeholder('Semua Tahun')
                         ->options(
-                            fn() =>
-                            Alumni::query()
+                            fn() => Alumni::query()
                                 ->distinct()
                                 ->orderByDesc('tahun_lulus')
                                 ->pluck('tahun_lulus', 'tahun_lulus')
@@ -121,37 +138,44 @@ class ListAlumnis extends ListRecords
                     FileUpload::make('zip_file')
                         ->label('File ZIP berisi avatar')
                         ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
-                        ->maxSize(204800) // 200 MB
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
+                        ->maxSize(204800)
                         ->required()
                         ->helperText('Maks. 200 MB. Nama file = NISN 10 digit, contoh: 0012345678.jpg'),
                 ])
                 ->action(function (array $data): void {
-                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+                    $path = $this->resolveUpload($data['zip_file']);
 
-                    $result = (new ImportFoto())->execute(
-                        zipPath: $zipPath,
-                        modelClass: Alumni::class,
-                        identifierCol: 'nisn',
-                        fotoCol: 'avatar',
-                        storageDir: 'avatar-alumni',
-                    );
+                    try {
+                        $result = (new ImportFoto())->execute(
+                            zipPath: $path,
+                            modelClass: Alumni::class,
+                            identifierCol: 'nisn',
+                            fotoCol: 'avatar',
+                            storageDir: 'avatar-alumni',
+                        );
 
-                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                    $title = "Avatar alumni: {$result['berhasil']} berhasil"
-                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                        $title     = "Avatar alumni: {$result['berhasil']} berhasil"
+                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
 
-                    $body = implode("\n", array_slice($result['log'], 0, 8));
-                    if (count($result['log']) > 8) {
-                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        $body = implode("\n", array_slice($result['log'], 0, 8));
+                        if (count($result['log']) > 8) {
+                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        }
+
+                        Notification::make()
+                            ->title($title)
+                            ->body($body)
+                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                            ->persistent()
+                            ->send();
+                    } finally {
+                        @unlink($path);
                     }
-
-                    Notification::make()
-                        ->title($title)
-                        ->body($body)
-                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                        ->persistent()
-                        ->send();
                 }),
 
             // ── 4. Unduh Template Excel ────────────────────────────────

@@ -24,3 +24,11 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .blueprint
+/storage/app/private/imports-tmp/
+/storage/app/private/imports-tmp/*
+/storage/app/private/exports-tmp/
+/storage/app/private/exports-tmp/*
+/storage/app/private/exports/
+/storage/app/private/exports/*
+/storage/app/private/imports/
+/storage/app/private/imports/*

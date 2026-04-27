@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TahunPelajarans\Tables;
 
+use App\Models\TahunPelajaran;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -23,39 +24,39 @@ class TahunPelajaransTable
             ->columns([
                 TextColumn::make('name')
                     ->label('Tahun Pelajaran')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(TahunPelajaran::count() >= 10)
+                    ->sortable(TahunPelajaran::count() >= 10),
                 TextColumn::make('jadwal_pengumuman_mulai')
                     ->label('Pengumuman Mulai')
                     ->dateTime('d F Y H:i')
-                    ->sortable(),
+                    ->sortable(TahunPelajaran::count() >= 10),
                 TextColumn::make('jadwal_pengumuman_selesai')
                     ->label('Pengumuman Selesai')
                     ->dateTime('d F Y H:i')
-                    ->sortable(),
+                    ->sortable(TahunPelajaran::count() >= 10),
                 TextColumn::make('jadwal_kelulusan_tempat')
                     ->label('Tempat Kelulusan')
-                    ->searchable()
-                    ->toggleable(),
+                    ->searchable(TahunPelajaran::count() >= 10),
+                // ->toggleable(),
                 IconColumn::make('status')
                     ->boolean()
                     ->label('Aktif'),
-                TextColumn::make('created_at')
-                    ->dateTime('d F Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // TextColumn::make('created_at')
+                //     ->dateTime('d F Y H:i')
+                //     ->sortable(TahunPelajaran::count() >= 10)
+                //     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                TernaryFilter::make('status')->label('Aktif'),
-            ])
+            // ->filters([
+            //     TernaryFilter::make('status')->label('Aktif'),
+            // ])
             ->recordActions([
                 ActionGroup::make([
-                    ViewAction::make()
-                        ->icon(Heroicon::Eye)
-                        ->label('Lihat')
-                        ->outlined()
-                        ->size('sm')
-                        ->color(Color::Zinc),
+                    // ViewAction::make()
+                    //     ->icon(Heroicon::Eye)
+                    //     ->label('Lihat')
+                    //     ->outlined()
+                    //     ->size('sm')
+                    //     ->color(Color::Zinc),
                     EditAction::make()
                         ->icon(Heroicon::PencilSquare)
                         ->label('Ubah')

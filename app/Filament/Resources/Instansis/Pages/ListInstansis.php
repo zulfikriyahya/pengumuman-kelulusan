@@ -16,15 +16,15 @@ class ListInstansis extends ListRecords
     {
         return static::getResource()::getUrl('index');
     }
-    protected function getHeaderActions(): array
-    {
-        return [
-            CreateAction::make()
-                ->icon(Heroicon::PlusCircle)
-                ->label('')
-                ->outlined()
-                ->size('sm')
-                ->color(Color::Green),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         CreateAction::make()
+    //             ->icon(Heroicon::PlusCircle)
+    //             ->label('')
+    //             ->outlined()
+    //             ->size('sm')
+    //             ->color(Color::Green),
+    //     ];
+    // }
 }

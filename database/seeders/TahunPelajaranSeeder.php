@@ -18,7 +18,7 @@ class TahunPelajaranSeeder extends Seeder
             'jadwal_pengumuman_selesai'   => Carbon::create(2026, 5, 31, 23, 59, 59),
             'jadwal_kelulusan_mulai'      => Carbon::create(2026, 6, 7, 8, 0, 0),
             'jadwal_kelulusan_selesai'    => Carbon::create(2026, 6, 7, 12, 0, 0),
-            'jadwal_kelulusan_tempat'     => 'Aula SMA Negeri 1 Contoh Kota',
+            'jadwal_kelulusan_tempat'     => 'Aula Gedung Diklat Kabupaten Pandeglang',
             'status'                      => true,
             'created_at'                  => Carbon::now(),
             'updated_at'                  => Carbon::now(),

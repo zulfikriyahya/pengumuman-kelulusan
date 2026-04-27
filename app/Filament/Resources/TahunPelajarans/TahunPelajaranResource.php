@@ -55,7 +55,7 @@ class TahunPelajaranResource extends Resource
         return [
             'index' => ListTahunPelajarans::route('/'),
             'create' => CreateTahunPelajaran::route('/create'),
-            'view' => ViewTahunPelajaran::route('/{record}'),
+            // 'view' => ViewTahunPelajaran::route('/{record}'),
             'edit' => EditTahunPelajaran::route('/{record}/edit'),
         ];
     }

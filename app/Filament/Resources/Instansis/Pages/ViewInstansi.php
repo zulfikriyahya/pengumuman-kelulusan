@@ -16,15 +16,15 @@ class ViewInstansi extends ViewRecord
     {
         return static::getResource()::getUrl('index');
     }
-    protected function getHeaderActions(): array
-    {
-        return [
-            EditAction::make()
-                ->icon(Heroicon::PencilSquare)
-                ->label('')
-                ->outlined()
-                ->size('sm')
-                ->color(Color::Cyan),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         EditAction::make()
+    //             ->icon(Heroicon::PencilSquare)
+    //             ->label('')
+    //             ->outlined()
+    //             ->size('sm')
+    //             ->color(Color::Cyan),
+    //     ];
+    // }
 }

@@ -17,21 +17,21 @@ class EditInstansi extends EditRecord
     {
         return static::getResource()::getUrl('index');
     }
-    protected function getHeaderActions(): array
-    {
-        return [
-            ViewAction::make()
-                ->icon(Heroicon::Eye)
-                ->label('')
-                ->outlined()
-                ->size('sm')
-                ->color(Color::Zinc),
-            DeleteAction::make()
-                ->icon(Heroicon::Trash)
-                ->label('')
-                ->outlined()
-                ->size('sm')
-                ->color(Color::Rose),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         ViewAction::make()
+    //             ->icon(Heroicon::Eye)
+    //             ->label('')
+    //             ->outlined()
+    //             ->size('sm')
+    //             ->color(Color::Zinc),
+    //         DeleteAction::make()
+    //             ->icon(Heroicon::Trash)
+    //             ->label('')
+    //             ->outlined()
+    //             ->size('sm')
+    //             ->color(Color::Rose),
+    //     ];
+    // }
 }

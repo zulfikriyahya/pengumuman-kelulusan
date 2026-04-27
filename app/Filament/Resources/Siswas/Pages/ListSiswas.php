@@ -28,6 +28,29 @@ class ListSiswas extends ListRecords
         return static::getResource()::getUrl('index');
     }
 
+    /**
+     * Resolve a Filament/Livewire uploaded file to a stable absolute path.
+     *
+     * By configuring FileUpload with ->disk('local')->directory('imports-tmp'),
+     * Filament stores the file immediately on upload to:
+     *   storage/app/private/imports-tmp/{filename}
+     *
+     * $data['file'] will contain the filename string, e.g. "abc123.xlsx".
+     * Caller is responsible for @unlink($path) after use.
+     */
+    private function resolveUpload(string $filename): string
+    {
+        $path = storage_path('app/private/' . $filename);
+
+        if (! file_exists($path)) {
+            throw new \RuntimeException(
+                "Uploaded file not found: {$filename}"
+            );
+        }
+
+        return $path;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -38,6 +61,7 @@ class ListSiswas extends ListRecords
                 ->color(Color::Blue)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Data Siswa dari Excel')
                 ->modalDescription('Upload file Excel (.xlsx). Gunakan template agar format kolom sesuai.')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -48,36 +72,43 @@ class ListSiswas extends ListRecords
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'application/vnd.ms-excel',
                         ])
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
                         ->maxSize(5120)
                         ->required()
                         ->helperText('Kolom wajib: nama, nisn. Opsional: nama_orangtua, telepon, status. Maks. 5 MB.'),
                 ])
                 ->action(function (array $data): void {
-                    $path = storage_path('app/livewire-tmp/' . $data['file']);
+                    $path = $this->resolveUpload($data['file']);
 
-                    $import = new SiswaImport();
-                    Excel::import($import, $path);
+                    try {
+                        $import = new SiswaImport();
+                        Excel::import($import, $path);
 
-                    $failures = $import->failures();
-                    $berhasil = $import->getBerhasil();
+                        $failures = $import->failures();
+                        $berhasil = $import->getBerhasil();
 
-                    if ($failures->count() > 0) {
-                        $messages = collect($failures)
-                            ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
-                            ->take(5)
-                            ->join("\n");
+                        if ($failures->count() > 0) {
+                            $messages = collect($failures)
+                                ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
+                                ->take(5)
+                                ->join("\n");
 
-                        Notification::make()
-                            ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
-                            ->body($messages)
-                            ->warning()
-                            ->persistent()
-                            ->send();
-                    } else {
-                        Notification::make()
-                            ->title("{$berhasil} data siswa berhasil diimpor!")
-                            ->success()
-                            ->send();
+                            Notification::make()
+                                ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
+                                ->body($messages)
+                                ->warning()
+                                ->persistent()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title("{$berhasil} data siswa berhasil diimpor!")
+                                ->success()
+                                ->send();
+                        }
+                    } finally {
+                        @unlink($path);
                     }
                 }),
 
@@ -88,6 +119,7 @@ class ListSiswas extends ListRecords
                 ->color(Color::Emerald)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Export Data Siswa')
                 ->modalSubmitActionLabel('Export Sekarang')
                 ->form([
@@ -110,6 +142,7 @@ class ListSiswas extends ListRecords
                 ->color(Color::Purple)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Berkas SKL dari ZIP')
                 ->modalDescription('Upload 1 file ZIP yang berisi file-file PDF. Nama setiap PDF harus berupa NISN 10 digit, contoh: 0012345678.pdf')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -117,31 +150,38 @@ class ListSiswas extends ListRecords
                     FileUpload::make('zip_file')
                         ->label('File ZIP berisi PDF SKL')
                         ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
-                        ->maxSize(102400) // 100 MB
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
+                        ->maxSize(102400)
                         ->required()
                         ->helperText('Maks. 100 MB. Nama file PDF = NISN 10 digit, contoh: 0012345678.pdf'),
                 ])
                 ->action(function (array $data): void {
-                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+                    $path = $this->resolveUpload($data['zip_file']);
 
-                    $result = (new ImportDokumenSkl())->executeFromZip($zipPath);
+                    try {
+                        $result = (new ImportDokumenSkl())->executeFromZip($path);
 
-                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                    $title = "SKL: {$result['berhasil']} berhasil"
-                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                        $title     = "SKL: {$result['berhasil']} berhasil"
+                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
 
-                    $body = implode("\n", array_slice($result['log'], 0, 8));
-                    if (count($result['log']) > 8) {
-                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        $body = implode("\n", array_slice($result['log'], 0, 8));
+                        if (count($result['log']) > 8) {
+                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        }
+
+                        Notification::make()
+                            ->title($title)
+                            ->body($body)
+                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                            ->persistent()
+                            ->send();
+                    } finally {
+                        @unlink($path);
                     }
-
-                    Notification::make()
-                        ->title($title)
-                        ->body($body)
-                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                        ->persistent()
-                        ->send();
                 }),
 
             // ── 4. Import Foto Siswa (ZIP) ─────────────────────────────
@@ -151,6 +191,7 @@ class ListSiswas extends ListRecords
                 ->color(Color::Orange)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Foto Siswa dari ZIP')
                 ->modalDescription('Upload 1 file ZIP berisi foto siswa. Nama file harus berupa NISN 10 digit. Format yang didukung: jpg, jpeg, png, webp.')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -158,37 +199,44 @@ class ListSiswas extends ListRecords
                     FileUpload::make('zip_file')
                         ->label('File ZIP berisi foto')
                         ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
-                        ->maxSize(204800) // 200 MB
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
+                        ->maxSize(204800)
                         ->required()
                         ->helperText('Maks. 200 MB. Nama file = NISN 10 digit, contoh: 0012345678.jpg'),
                 ])
                 ->action(function (array $data): void {
-                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+                    $path = $this->resolveUpload($data['zip_file']);
 
-                    $result = (new ImportFoto())->execute(
-                        zipPath: $zipPath,
-                        modelClass: Siswa::class,
-                        identifierCol: 'nisn',
-                        fotoCol: 'foto',
-                        storageDir: 'foto-siswa',
-                    );
+                    try {
+                        $result = (new ImportFoto())->execute(
+                            zipPath: $path,
+                            modelClass: Siswa::class,
+                            identifierCol: 'nisn',
+                            fotoCol: 'foto',
+                            storageDir: 'foto-siswa',
+                        );
 
-                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                    $title = "Foto siswa: {$result['berhasil']} berhasil"
-                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                        $title     = "Foto siswa: {$result['berhasil']} berhasil"
+                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
 
-                    $body = implode("\n", array_slice($result['log'], 0, 8));
-                    if (count($result['log']) > 8) {
-                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        $body = implode("\n", array_slice($result['log'], 0, 8));
+                        if (count($result['log']) > 8) {
+                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        }
+
+                        Notification::make()
+                            ->title($title)
+                            ->body($body)
+                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                            ->persistent()
+                            ->send();
+                    } finally {
+                        @unlink($path);
                     }
-
-                    Notification::make()
-                        ->title($title)
-                        ->body($body)
-                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                        ->persistent()
-                        ->send();
                 }),
 
             // ── 5. Unduh Template Excel ────────────────────────────────
@@ -198,6 +246,9 @@ class ListSiswas extends ListRecords
                 ->color(Color::Gray)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
+                ->modalHeading('Unduh Template Excel')
+                ->modalDescription('Apakah Anda yakin ingin mengunduh template Excel untuk mengisi data siswa?')
                 ->action(function () {
                     return Excel::download(
                         new class implements

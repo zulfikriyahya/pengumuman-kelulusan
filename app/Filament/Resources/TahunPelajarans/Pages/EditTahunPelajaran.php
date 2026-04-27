@@ -20,12 +20,12 @@ class EditTahunPelajaran extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make()
-                ->icon(Heroicon::Eye)
-                ->label('')
-                ->outlined()
-                ->size('sm')
-                ->color(Color::Zinc),
+            // ViewAction::make()
+            //     ->icon(Heroicon::Eye)
+            //     ->label('')
+            //     ->outlined()
+            //     ->size('sm')
+            //     ->color(Color::Zinc),
             DeleteAction::make()
                 ->icon(Heroicon::Trash)
                 ->label('')
