@@ -20,7 +20,7 @@ class AlumnisTable
     {
         return $table
             ->columns([
-                ImageColumn::make('avatar')
+                ImageColumn::make('foto')
                     ->disk('public')
                     ->circular()
                     ->defaultImageUrl(asset('images/default.png')),

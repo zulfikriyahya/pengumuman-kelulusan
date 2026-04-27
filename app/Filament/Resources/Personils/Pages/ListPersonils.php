@@ -46,6 +46,7 @@ class ListPersonils extends ListRecords
                 ->color(Color::Blue)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Data Personil dari Excel')
                 ->modalDescription('Upload file Excel (.xlsx). Gunakan template agar format kolom sesuai.')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -103,6 +104,7 @@ class ListPersonils extends ListRecords
                 ->color(Color::Emerald)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->action(function () {
                     return Excel::download(
                         new PersonilExport(),
@@ -117,6 +119,7 @@ class ListPersonils extends ListRecords
                 ->color(Color::Orange)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Foto Personil dari ZIP')
                 ->modalDescription('Upload 1 file ZIP berisi foto personil. Nama file harus berupa NIP. Format yang didukung: jpg, jpeg, png, webp. Untuk personil tanpa NIP, gunakan fitur edit manual.')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -171,6 +174,7 @@ class ListPersonils extends ListRecords
                 ->color(Color::Gray)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->action(function () {
                     return Excel::download(
                         new class implements

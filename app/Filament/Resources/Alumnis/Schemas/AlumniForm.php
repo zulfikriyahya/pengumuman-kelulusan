@@ -17,7 +17,7 @@ class AlumniForm
                 ->icon('heroicon-o-academic-cap')
                 ->columns(3)
                 ->schema([
-                    FileUpload::make('avatar')
+                    FileUpload::make('foto')
                         ->hiddenLabel()
                         ->avatar()
                         ->image()

@@ -16,7 +16,7 @@ class AlumniInfolist
                 ->icon('heroicon-o-academic-cap')
                 ->columns(4)
                 ->schema([
-                    ImageEntry::make('avatar')
+                    ImageEntry::make('foto')
                         ->disk('public')
                         ->hiddenLabel()
                         ->height(80)

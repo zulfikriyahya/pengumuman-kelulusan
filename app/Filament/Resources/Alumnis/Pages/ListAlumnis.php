@@ -47,6 +47,7 @@ class ListAlumnis extends ListRecords
                 ->color(Color::Blue)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Import Data Alumni dari Excel')
                 ->modalDescription('Upload file Excel (.xlsx). Gunakan template agar format kolom sesuai.')
                 ->modalSubmitActionLabel('Import Sekarang')
@@ -104,6 +105,7 @@ class ListAlumnis extends ListRecords
                 ->color(Color::Emerald)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->modalHeading('Export Data Alumni')
                 ->modalSubmitActionLabel('Export Sekarang')
                 ->form([
@@ -124,19 +126,20 @@ class ListAlumnis extends ListRecords
                     );
                 }),
 
-            // ── 3. Import Avatar Alumni (ZIP) ──────────────────────────
-            Action::make('import_avatar')
-                ->label('Import Avatar (ZIP)')
+            // ── 3. Import Foto Alumni (ZIP) ──────────────────────────
+            Action::make('import_foto')
+                ->label('Import Foto (ZIP)')
                 ->icon(Heroicon::Photo)
                 ->color(Color::Orange)
                 ->outlined()
                 ->size('sm')
-                ->modalHeading('Import Avatar Alumni dari ZIP')
-                ->modalDescription('Upload 1 file ZIP berisi foto/avatar alumni. Nama file harus berupa NISN 10 digit. Format yang didukung: jpg, jpeg, png, webp.')
+                ->requiresConfirmation()
+                ->modalHeading('Import Foto Alumni dari ZIP')
+                ->modalDescription('Upload 1 file ZIP berisi foto alumni. Nama file harus berupa NISN 10 digit. Format yang didukung: jpg, jpeg, png, webp.')
                 ->modalSubmitActionLabel('Import Sekarang')
                 ->form([
                     FileUpload::make('zip_file')
-                        ->label('File ZIP berisi avatar')
+                        ->label('File ZIP berisi foto')
                         ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
                         ->disk('local')
                         ->directory('imports-tmp')
@@ -153,12 +156,12 @@ class ListAlumnis extends ListRecords
                             zipPath: $path,
                             modelClass: Alumni::class,
                             identifierCol: 'nisn',
-                            fotoCol: 'avatar',
-                            storageDir: 'avatar-alumni',
+                            fotoCol: 'foto',
+                            storageDir: 'foto-alumni',
                         );
 
                         $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "Avatar alumni: {$result['berhasil']} berhasil"
+                        $title     = "Foto alumni: {$result['berhasil']} berhasil"
                             . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
                             . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
 
@@ -185,6 +188,7 @@ class ListAlumnis extends ListRecords
                 ->color(Color::Gray)
                 ->outlined()
                 ->size('sm')
+                ->requiresConfirmation()
                 ->action(function () {
                     return Excel::download(
                         new class implements

@@ -3,11 +3,12 @@
 namespace App\Filament\Resources\Siswas\Pages;
 
 use App\Actions\ImportDokumenSkl;
+use App\Actions\ImportDokumenUndangan;
 use App\Actions\ImportFoto;
+use App\Enums\StatusSiswa;
 use App\Exports\SiswaExport;
 use App\Filament\Resources\Siswas\SiswaResource;
 use App\Imports\SiswaImport;
-use App\Enums\StatusSiswa;
 use App\Models\Siswa;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -135,7 +136,7 @@ class ListSiswas extends ListRecords
                     );
                 }),
 
-            // ── 3. Import SKL (ZIP berisi PDF) ─────────────────────────
+            // ── 3a. Import SKL (ZIP berisi PDF) ─────────────────────────
             Action::make('import_skl')
                 ->label('Import SKL (ZIP)')
                 ->icon(Heroicon::DocumentArrowUp)
@@ -165,6 +166,55 @@ class ListSiswas extends ListRecords
 
                         $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
                         $title     = "SKL: {$result['berhasil']} berhasil"
+                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
+
+                        $body = implode("\n", array_slice($result['log'], 0, 8));
+                        if (count($result['log']) > 8) {
+                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                        }
+
+                        Notification::make()
+                            ->title($title)
+                            ->body($body)
+                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                            ->persistent()
+                            ->send();
+                    } finally {
+                        @unlink($path);
+                    }
+                }),
+
+            // ── 3b. Import Undangan (ZIP berisi PDF) ─────────────────────────
+            Action::make('import_undangan')
+                ->label('Import Undangan (ZIP)')
+                ->icon(Heroicon::DocumentArrowUp)
+                ->color(Color::Purple)
+                ->outlined()
+                ->size('sm')
+                ->requiresConfirmation()
+                ->modalHeading('Import Berkas Undangan dari ZIP')
+                ->modalDescription('Upload 1 file ZIP yang berisi file-file PDF. Nama setiap PDF harus berupa NISN 10 digit, contoh: 0012345678.pdf')
+                ->modalSubmitActionLabel('Import Sekarang')
+                ->form([
+                    FileUpload::make('zip_file')
+                        ->label('File ZIP berisi PDF Undangan')
+                        ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
+                        ->disk('local')
+                        ->directory('imports-tmp')
+                        ->visibility('private')
+                        ->maxSize(102400)
+                        ->required()
+                        ->helperText('Maks. 100 MB. Nama file PDF = NISN 10 digit, contoh: 0012345678.pdf'),
+                ])
+                ->action(function (array $data): void {
+                    $path = $this->resolveUpload($data['zip_file']);
+
+                    try {
+                        $result = (new ImportDokumenUndangan())->executeFromZip($path);
+
+                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                        $title     = "Undangan: {$result['berhasil']} berhasil"
                             . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
                             . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
 
