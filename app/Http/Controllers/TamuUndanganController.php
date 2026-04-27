@@ -16,14 +16,12 @@ class TamuUndanganController extends Controller
         $tamus = TamuUndangan::with('siswa')
             ->orderByDesc('created_at')
             ->paginate(20);
-        $totalPax = TamuUndangan::sum('jumlah_tamu');
-        $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
-        return view('tamu.index', [
-            'tamuUndangans' => $tamus,
-            'totalPax' => $totalPax,
-            'totalSiswa' => $totalSiswa,
-        ]);
+        $totalPax    = TamuUndangan::sum('jumlah_tamu');
+        $totalSiswa  = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
+
+        return view('tamu.index', compact('tamus', 'totalPax', 'totalSiswa'))
+            ->with('tamuUndangans', $tamus);
     }
 
     public function scanQr(Request $request): View
@@ -34,16 +32,24 @@ class TamuUndanganController extends Controller
     public function processScan(Request $request): RedirectResponse
     {
         $request->validate([
-            'kode' => ['required', 'string'],
+            'kode' => ['required', 'string', 'max:36'],
         ]);
 
-        $kode = $request->input('kode');
+        $kode  = trim($request->input('kode'));
         $siswa = Siswa::where('id', $kode)
             ->orWhere('nisn', $kode)
             ->first();
 
         if (! $siswa) {
-            return back()->withErrors(['kode' => 'Siswa tidak ditemukan.'])->withInput();
+            return back()
+                ->withErrors(['kode' => 'Siswa tidak ditemukan. Periksa kode yang dimasukkan.'])
+                ->withInput();
+        }
+
+        if (! $siswa->isLulus()) {
+            return back()
+                ->withErrors(['kode' => "Siswa {$siswa->nama} tidak berhak hadir (status: {$siswa->status->getLabel()})."])
+                ->withInput();
         }
 
         return redirect()->route('tamu.konfirmasi', $siswa);
@@ -51,12 +57,12 @@ class TamuUndanganController extends Controller
 
     public function konfirmasi(Siswa $siswa): View
     {
+        // Guard: hanya siswa lulus yang boleh dikonfirmasi
+        abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak hadir.');
+
         $sudahHadir = TamuUndangan::where('siswa_id', $siswa->id)->exists();
 
-        return view('tamu.konfirmasi', [
-            'siswa' => $siswa,
-            'sudahHadir' => $sudahHadir,
-        ]);
+        return view('tamu.konfirmasi', compact('siswa', 'sudahHadir'));
     }
 
     public function store(TamuUndanganStoreRequest $request): RedirectResponse
@@ -68,8 +74,9 @@ class TamuUndanganController extends Controller
             ['jumlah_tamu' => $data['jumlah_tamu'] ?? 1],
         );
 
-        return redirect()->route('tamu.index')
-            ->with('success', 'Tamu berhasil dicatat.');
+        return redirect()
+            ->route('tamu.index')
+            ->with('success', 'Kehadiran berhasil dicatat.');
     }
 
     public function cetakHadir(): View
@@ -79,7 +86,7 @@ class TamuUndanganController extends Controller
             ->get();
 
         return view('tamu.cetak-hadir', [
-            'tamus' => $tamus,
+            'tamus'    => $tamus,
             'totalPax' => $tamus->sum('jumlah_tamu'),
         ]);
     }

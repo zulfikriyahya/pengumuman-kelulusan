@@ -33,10 +33,10 @@ Route::middleware(JadwalKelulusanAktif::class)
     ->prefix('tamu')
     ->name('tamu.')
     ->group(function () {
-        Route::get('/', [TamuUndanganController::class, 'index'])->name('index');
-        Route::get('/scan', [TamuUndanganController::class, 'scanQr'])->name('scan');
-        Route::post('/scan', [TamuUndanganController::class, 'processScan'])->name('scan.post');
-        Route::get('/konfirmasi/{siswa}', [TamuUndanganController::class, 'konfirmasi'])->name('konfirmasi');
-        Route::post('/', [TamuUndanganController::class, 'store'])->name('store');
-        Route::get('/cetak-hadir', [TamuUndanganController::class, 'cetakHadir'])->name('cetak-hadir');
+        Route::get('/',                            [TamuUndanganController::class, 'index'])->name('index');
+        Route::get('/scan',                        [TamuUndanganController::class, 'scanQr'])->name('scan');
+        Route::post('/scan',                       [TamuUndanganController::class, 'processScan'])->name('scan.post');
+        Route::get('/konfirmasi/{siswa}',          [TamuUndanganController::class, 'konfirmasi'])->name('konfirmasi');
+        Route::post('/',                           [TamuUndanganController::class, 'store'])->name('store');
+        Route::get('/cetak-hadir',                 [TamuUndanganController::class, 'cetakHadir'])->name('cetak-hadir');
     });

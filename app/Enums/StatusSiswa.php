@@ -7,9 +7,9 @@ use Filament\Support\Contracts\HasLabel;
 
 enum StatusSiswa: string implements HasLabel, HasColor
 {
-    case Lulus           = 'Lulus';
-    case TidakLulus      = 'Tidak Lulus';
-    case LulusBersyarat  = 'Lulus Bersyarat';
+    case Lulus          = 'Lulus';
+    case TidakLulus     = 'Tidak Lulus';
+    case LulusBersyarat = 'Lulus Bersyarat';
 
     public function getLabel(): ?string
     {
@@ -18,6 +18,15 @@ enum StatusSiswa: string implements HasLabel, HasColor
             self::TidakLulus     => 'Tidak Lulus',
             self::LulusBersyarat => 'Lulus Bersyarat',
         };
+    }
+
+    /**
+     * Alias untuk getLabel() — agar kompatibel jika dipanggil ->label()
+     * di view atau tempat lain.
+     */
+    public function label(): string
+    {
+        return $this->getLabel();
     }
 
     public function getColor(): string|array|null

@@ -238,14 +238,20 @@
             </div>
         @else
             @php
-                [$themeClass, $iconLabel, $statusLabel] = match ($siswa->status) {
-                    App\Enums\StatusSiswa::Lulus => ['theme-lulus', 'LULUS', $siswa->status->label()],
-                    App\Enums\StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK', $siswa->status->label()],
-                    App\Enums\StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT', $siswa->status->label()],
+                [$themeClass, $iconLabel] = match ($siswa->status) {
+                    \App\Enums\StatusSiswa::Lulus => ['theme-lulus', 'LULUS'],
+                    \App\Enums\StatusSiswa::TidakLulus => ['theme-tidak', 'TIDAK'],
+                    \App\Enums\StatusSiswa::LulusBersyarat => ['theme-syarat', 'SYARAT'],
                 };
+
+                $statusLabel = $siswa->status->getLabel();
+                $adaSkl = (bool) $siswa->berkas_skl;
+                $bolehUndang = $siswa->isLulus();
             @endphp
 
             <div class="card {{ $themeClass }}" style="overflow:hidden;">
+
+                {{-- Header status --}}
                 <div class="result-header">
                     <div class="eyebrow" style="margin-bottom:.9rem;">Hasil Seleksi Kelulusan</div>
                     <div class="status-row">
@@ -257,6 +263,7 @@
                     </div>
                 </div>
 
+                {{-- Info siswa --}}
                 <div class="result-info">
                     @foreach ([
             'Nama Siswa' => [$siswa->nama, false],
@@ -267,33 +274,47 @@
                             <div class="info-row">
                                 <span class="info-label">{{ $label }}</span>
                                 <span class="info-val"
-                                    @if ($mono) style="font-family:monospace;" @endif>{{ $val }}</span>
+                                    @if ($mono) style="font-family:monospace;" @endif>
+                                    {{ $val }}
+                                </span>
                             </div>
                         @endif
                     @endforeach
                 </div>
 
+                {{-- Tombol dokumen --}}
                 <div class="result-actions">
-                    @if ($siswa->berkas_skl)
+                    {{-- SKL: semua status berhak, tapi cek berkas tersedia --}}
+                    @if ($adaSkl)
                         <a href="{{ route('landing.skl', $siswa) }}" target="_blank" class="doc-btn doc-btn-primary">
                             Unduh Surat Keterangan Lulus
                         </a>
                     @else
-                        <div class="doc-btn doc-btn-disabled">Dokumen SKL belum tersedia &mdash; hubungi madrasah</div>
+                        <div class="doc-btn doc-btn-disabled">
+                            Dokumen SKL belum tersedia &mdash; hubungi madrasah
+                        </div>
                     @endif
 
-                    @if ($siswa->isLulus())
+                    {{-- Surat Undangan: hanya Lulus & Lulus Bersyarat --}}
+                    @if ($bolehUndang)
                         <a href="{{ route('landing.undangan', $siswa) }}" target="_blank" class="doc-btn doc-btn-outline">
                             Cetak Surat Undangan Kelulusan
                         </a>
                     @endif
                 </div>
+
             </div>
 
-            @if ($siswa->status === App\Enums\StatusSiswa::Lulus)
+            {{-- Catatan bawah --}}
+            @if ($siswa->status === \App\Enums\StatusSiswa::Lulus)
                 <p class="result-footer-note">Selamat! Semoga sukses di jenjang berikutnya.</p>
-            @elseif ($siswa->status === App\Enums\StatusSiswa::LulusBersyarat)
-                <p class="result-footer-note" style="color:#fbbf24;">Segera hubungi madrasah untuk informasi lebih lanjut.
+            @elseif ($siswa->status === \App\Enums\StatusSiswa::LulusBersyarat)
+                <p class="result-footer-note" style="color:#fbbf24;">
+                    Segera hubungi madrasah untuk informasi lebih lanjut.
+                </p>
+            @elseif ($siswa->status === \App\Enums\StatusSiswa::TidakLulus)
+                <p class="result-footer-note" style="color:#f87171;">
+                    Tetap semangat. Hubungi madrasah untuk langkah selanjutnya.
                 </p>
             @endif
         @endif

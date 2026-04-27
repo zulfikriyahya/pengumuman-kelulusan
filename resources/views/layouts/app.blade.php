@@ -115,7 +115,9 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background-image: linear-gradient(rgba(13, 148, 136, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(13, 148, 136, .035) 1px, transparent 1px);
+            background-image:
+                linear-gradient(rgba(13, 148, 136, .035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(13, 148, 136, .035) 1px, transparent 1px);
             background-size: 56px 56px;
             mask-image: radial-gradient(ellipse 80% 55% at 50% 0%, black 35%, transparent 100%);
         }
@@ -221,6 +223,16 @@
             background: rgba(20, 184, 166, .09);
         }
 
+        .nav-links a.nav-tamu {
+            color: var(--gold-l);
+        }
+
+        .nav-links a.nav-tamu:hover,
+        .nav-links a.nav-tamu.active {
+            color: var(--gold-l);
+            background: rgba(212, 168, 67, .1);
+        }
+
         .nav-right {
             display: flex;
             align-items: center;
@@ -316,7 +328,7 @@
         }
 
         .drawer.open {
-            max-height: 380px;
+            max-height: 420px;
             padding: .9rem 1.5rem 1.75rem;
             border-color: var(--border);
         }
@@ -334,6 +346,15 @@
         .drawer a:hover {
             color: var(--teal-xl);
             background: rgba(20, 184, 166, .07);
+        }
+
+        .drawer a.drawer-tamu {
+            color: var(--gold-l);
+        }
+
+        .drawer a.drawer-tamu:hover {
+            color: var(--gold-l);
+            background: rgba(212, 168, 67, .08);
         }
 
         /* PAGE */
@@ -664,6 +685,12 @@
     <div class="orb orb-2"></div>
     <div class="grid-bg"></div>
 
+    @php
+        // Hitung sekali di sini — $tahunPelajaran sudah di-share via AppServiceProvider
+        $navTp = $tahunPelajaran ?? null;
+        $tampilTamu = $navTp && $navTp->isKelulusanAktif();
+    @endphp
+
     <nav id="mainNav">
         <a href="{{ route('landing') }}" class="nav-brand">
             <div class="nav-logo">
@@ -680,10 +707,24 @@
         </a>
 
         <ul class="nav-links">
-            <li><a href="{{ route('personil.index') }}"
-                    class="{{ request()->routeIs('personil*') ? 'active' : '' }}">Personil</a></li>
-            <li><a href="{{ route('alumni.index') }}"
-                    class="{{ request()->routeIs('alumni*') ? 'active' : '' }}">Alumni</a></li>
+            <li>
+                <a href="{{ route('personil.index') }}" class="{{ request()->routeIs('personil*') ? 'active' : '' }}">
+                    Personil
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('alumni.index') }}" class="{{ request()->routeIs('alumni*') ? 'active' : '' }}">
+                    Alumni
+                </a>
+            </li>
+            @if ($tampilTamu)
+                <li>
+                    <a href="{{ route('tamu.index') }}"
+                        class="nav-tamu {{ request()->routeIs('tamu*') ? 'active' : '' }}">
+                        Tamu Undangan
+                    </a>
+                </li>
+            @endif
         </ul>
 
         <div class="nav-right">
@@ -698,6 +739,9 @@
         <a href="{{ route('landing') }}">Beranda</a>
         <a href="{{ route('personil.index') }}">Personil</a>
         <a href="{{ route('alumni.index') }}">Alumni</a>
+        @if ($tampilTamu)
+            <a href="{{ route('tamu.index') }}" class="drawer-tamu">🎓 Tamu Undangan</a>
+        @endif
     </div>
 
     <div class="page-wrap">
@@ -736,7 +780,7 @@
             const o = drawer.classList.toggle('open');
             menuBtn.classList.toggle('open', o);
         });
-        [...drawer.querySelectorAll('a'), ...document.querySelectorAll('.d-link')].forEach(a =>
+        [...drawer.querySelectorAll('a')].forEach(a =>
             a.addEventListener('click', () => {
                 drawer.classList.remove('open');
                 menuBtn.classList.remove('open');

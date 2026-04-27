@@ -43,9 +43,13 @@
 
     <div class="isi">
         <p>Assalamu'alaikum Warahmatullahi Wabarakatuh.</p>
-        <p>Dengan hormat, kami mengundang Bapak/Ibu <b>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</b> beserta
-            putra/putri atas nama <b>{{ $siswa->nama }}</b> (NISN: {{ $siswa->nisn }}) untuk menghadiri acara Wisuda
-            &amp; Pengambilan Ijazah yang akan dilaksanakan pada:</p>
+        <p>
+            Dengan hormat, kami mengundang Bapak/Ibu
+            <b>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</b>
+            beserta putra/putri atas nama <b>{{ $siswa->nama }}</b>
+            (NISN: {{ $siswa->nisn }}) untuk menghadiri acara Wisuda &amp; Pengambilan Ijazah
+            yang akan dilaksanakan pada:
+        </p>
     </div>
 
     @php
@@ -81,6 +85,12 @@
 
     @include('pdf._ttd')
 
+    {{-- QR CODE untuk PDF (PNG base64 agar DomPDF support) --}}
+    <div class="qr-box">
+        <img src="data:image/png;base64,{{ base64_encode(QrCode::format('png')->size(120)->generate($siswa->id)) }}"
+            alt="QR Code">
+        <p>Scan QR ini saat registrasi kehadiran &bull; NISN: {{ $siswa->nisn }}</p>
+    </div>
 </body>
 
 </html>

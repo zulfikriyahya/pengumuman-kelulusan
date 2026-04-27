@@ -3,111 +3,56 @@
 
 @push('styles')
     <style>
-        .scan-wrap {
-            max-width: 440px;
-            margin: 0 auto
-        }
-
-        .scan-title {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: -.03em;
-            margin-bottom: .35rem;
-            font-family: var(--font-display)
-        }
-
-        .scan-sub {
-            font-size: .8rem;
-            color: var(--muted);
-            margin-bottom: 1.4rem
-        }
-
-        .scanner-card {
-            padding: 1.1rem;
-            border-radius: var(--radius);
-            margin-bottom: .9rem
-        }
-
-        #qr-region {
-            border-radius: 11px;
-            overflow: hidden;
-            background: rgba(13, 148, 136, .04);
-            aspect-ratio: 1
-        }
-
-        #qr-region video {
-            border-radius: 11px;
-            width: 100% !important
-        }
-
-        .qr-status-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: .55rem;
-            margin-top: .8rem
-        }
-
-        .qr-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--muted2);
-            transition: background .3s
-        }
-
-        .qr-text {
-            font-size: .73rem;
-            color: var(--muted)
-        }
-
-        .manual-card {
-            padding: 1.4rem;
-            border-radius: var(--radius)
-        }
-
-        .manual-label {
-            font-size: .78rem;
-            font-weight: 600;
-            color: var(--muted);
-            margin-bottom: .8rem
-        }
-
-        .manual-form {
-            display: flex;
-            gap: .55rem
-        }
-
+        .scan-wrap { max-width: 440px; margin: 0 auto }
+        .scan-title { font-size: 1.3rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: .35rem; font-family: var(--font-display) }
+        .scan-sub { font-size: .8rem; color: var(--muted); margin-bottom: 1.4rem }
+        .scanner-card { padding: 1.1rem; border-radius: var(--radius); margin-bottom: .9rem }
+        #qr-region { border-radius: 11px; overflow: hidden; background: rgba(13,148,136,.04); aspect-ratio: 1 }
+        #qr-region video { border-radius: 11px; width: 100% !important }
+        .qr-status-row { display: flex; align-items: center; justify-content: center; gap: .55rem; margin-top: .8rem }
+        .qr-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted2); transition: background .3s }
+        .qr-text { font-size: .73rem; color: var(--muted) }
+        .manual-card { padding: 1.4rem; border-radius: var(--radius) }
+        .manual-label { font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: .8rem }
+        .manual-form { display: flex; gap: .55rem }
         .manual-input {
-            flex: 1;
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: .58rem .88rem;
-            font-size: .83rem;
-            font-family: var(--font-body);
-            color: var(--text);
-            outline: none;
+            flex: 1; background: var(--card2); border: 1px solid var(--border);
+            border-radius: 9px; padding: .58rem .88rem; font-size: .83rem;
+            font-family: var(--font-body); color: var(--text); outline: none;
             transition: border-color .2s, box-shadow .2s;
         }
-
-        .manual-input::placeholder {
-            color: var(--muted2)
+        .manual-input::placeholder { color: var(--muted2) }
+        .manual-input:focus { border-color: rgba(20,184,166,.42); box-shadow: 0 0 0 3px rgba(13,148,136,.1) }
+        .manual-input.is-error { border-color: rgba(220,38,38,.4) }
+        .scan-overlay {
+            display: none; position: fixed; inset: 0; z-index: 999;
+            background: rgba(6,13,12,.92); align-items: center; justify-content: center;
+            flex-direction: column; gap: 1rem; backdrop-filter: blur(8px);
         }
-
-        .manual-input:focus {
-            border-color: rgba(20, 184, 166, .42);
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, .1)
+        .scan-overlay.active { display: flex }
+        .scan-spinner {
+            width: 44px; height: 44px; border: 3px solid rgba(20,184,166,.2);
+            border-top-color: var(--teal-xl); border-radius: 50%;
+            animation: spin .8s linear infinite;
         }
-
-        .manual-input.is-error {
-            border-color: rgba(220, 38, 38, .4)
-        }
+        @keyframes spin { to { transform: rotate(360deg) } }
+        .scan-overlay-text { font-size: .85rem; color: var(--teal-xl); font-weight: 600 }
     </style>
 @endpush
 
 @section('content')
+    {{-- Overlay loading saat QR terdeteksi --}}
+    <div class="scan-overlay" id="scan-overlay">
+        <div class="scan-spinner"></div>
+        <div class="scan-overlay-text">QR terdeteksi, memuat data…</div>
+    </div>
+
     <div class="scan-wrap">
+        <a href="{{ route('tamu.index') }}"
+            style="margin-bottom:1.2rem;display:inline-flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--muted);text-decoration:none;">
+            &larr; Kembali ke Daftar Tamu
+        </a>
+
         <h1 class="scan-title">Scan QR Undangan</h1>
         <p class="scan-sub">Arahkan kamera ke QR Code pada surat undangan siswa.</p>
 
@@ -115,16 +60,17 @@
             <div id="qr-region"></div>
             <div class="qr-status-row">
                 <span id="qr-dot" class="qr-dot"></span>
-                <span id="qr-status" class="qr-text">Menginisialisasi kamera</span>
+                <span id="qr-status" class="qr-text">Menginisialisasi kamera…</span>
             </div>
         </div>
 
         <div class="card manual-card">
-            <div class="manual-label">Atau masukkan kode secara manual:</div>
+            <div class="manual-label">Atau masukkan kode secara manual (ID Siswa / NISN):</div>
             <form action="{{ route('tamu.scan.post') }}" method="POST" class="manual-form">
                 @csrf
-                <input type="text" name="kode" placeholder="ID Siswa / NISN"
-                    class="manual-input {{ $errors->has('kode') ? 'is-error' : '' }}">
+                <input type="text" name="kode" placeholder="Contoh: 0012345678"
+                    class="manual-input {{ $errors->has('kode') ? 'is-error' : '' }}"
+                    autofocus>
                 <button type="submit" class="btn btn-primary"
                     style="font-size:.8rem;padding:.58rem 1rem;flex-shrink:0">Cari</button>
             </form>
@@ -140,9 +86,13 @@
         integrity="sha512-r6rDA7W6ZeQhvl8S09FkAP0l+F+VxQJr6B29Y5xMRCYAkELf2jNOGa+7kBvPKB4OIDHPx/8FBGqW2Y6UiRjg=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        const statusEl = document.getElementById('qr-status');
-        const dotEl = document.getElementById('qr-dot');
-        let scanned = false;
+        const statusEl  = document.getElementById('qr-status');
+        const dotEl     = document.getElementById('qr-dot');
+        const overlay   = document.getElementById('scan-overlay');
+        let scanned     = false;
+
+        // Base URL konfirmasi — pakai route helper PHP, placeholder __ID__ diganti JS
+        const konfirmasiBase = @json(url('/tamu/konfirmasi'));
 
         function setStatus(msg, color = 'var(--muted2)') {
             statusEl.textContent = msg;
@@ -150,28 +100,37 @@
         }
 
         const html5Qr = new Html5Qrcode('qr-region');
+
         Html5Qrcode.getCameras()
             .then(cameras => {
                 if (!cameras.length) {
                     setStatus('Tidak ada kamera ditemukan.', '#f87171');
                     return;
                 }
-                const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) ?? cameras[cameras.length - 1];
+
+                // Pilih kamera belakang jika tersedia
+                const cam = cameras.find(c => /back|rear|environment/i.test(c.label))
+                    ?? cameras[cameras.length - 1];
+
                 setStatus('Kamera aktif — arahkan ke QR Code', 'var(--teal-xl)');
-                html5Qr.start(cam.id, {
-                    fps: 10,
-                    qrbox: {
-                        width: 230,
-                        height: 230
+
+                html5Qr.start(
+                    cam.id,
+                    { fps: 12, qrbox: { width: 240, height: 240 } },
+                    text => {
+                        if (scanned) return;
+                        scanned = true;
+
+                        setStatus('QR terdeteksi!', 'var(--teal-xl)');
+                        overlay.classList.add('active');
+
+                        html5Qr.stop().catch(() => {});
+
+                        // text = UUID siswa (isi QR Code)
+                        // Redirect ke /tamu/konfirmasi/{uuid}
+                        window.location.href = konfirmasiBase + '/' + encodeURIComponent(text.trim());
                     }
-                }, text => {
-                    if (scanned) return;
-                    scanned = true;
-                    setStatus('QR terdeteksi, mengalihkan\u2026', 'var(--teal-xl)');
-                    html5Qr.stop().catch(() => {});
-                    window.location.href = '{{ route('tamu.konfirmasi', ['siswa' => ':id']) }}'.replace(':id',
-                        encodeURIComponent(text));
-                }).catch(() => setStatus('Gagal memulai kamera.', '#f87171'));
+                ).catch(() => setStatus('Gagal memulai kamera.', '#f87171'));
             })
             .catch(() => setStatus('Akses kamera ditolak. Gunakan input manual.', '#fbbf24'));
     </script>

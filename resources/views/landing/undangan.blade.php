@@ -43,8 +43,9 @@
                 <p class="doc-para">
                     Dengan hormat, kami mengundang Bapak/Ibu
                     <strong>{{ $siswa->nama_orangtua ?? 'Orang Tua/Wali' }}</strong>
-                    beserta putra/putri atas nama <strong>{{ $siswa->nama }}</strong> (NISN: {{ $siswa->nisn }})
-                    untuk menghadiri acara Wisuda &amp; Pengambilan Ijazah yang akan dilaksanakan pada:
+                    beserta putra/putri atas nama <strong>{{ $siswa->nama }}</strong>
+                    (NISN: {{ $siswa->nisn }}) untuk menghadiri acara Wisuda &amp; Pengambilan Ijazah
+                    yang akan dilaksanakan pada:
                 </p>
 
                 @php
@@ -81,10 +82,19 @@
 
                 @include('partials._ttd')
 
+                {{-- QR CODE SECTION --}}
+                <div class="qr-block"
+                    style="margin-top:1.5rem;padding-top:1rem;border-top:1px dashed #d1d5db;text-align:center;">
+                    {!! QrCode::size(100)->format('svg')->generate($siswa->id) !!}
+                    <p style="font-size:.68rem;color:#9ca3af;margin-top:.35rem;">
+                        Scan QR ini saat registrasi kehadiran &bull; {{ $siswa->nisn }}
+                    </p>
+                </div>
             </div>
         </div>
 
-        <p class="doc-note print:hidden">Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
+        <p class="doc-note print:hidden">
+            Dokumen ini sah jika dicetak menggunakan tombol <strong>Unduh PDF</strong> di atas.
         </p>
     </div>
 @endsection

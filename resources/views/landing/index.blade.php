@@ -155,43 +155,6 @@
             line-height: 1.7;
         }
 
-        /* Envelope */
-        .amplop-section {
-            display: flex;
-            justify-content: center;
-            padding: 1.25rem 2rem 0;
-            animation: fade-up .8s ease both .35s;
-        }
-
-        .amplop-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: .7rem;
-        }
-
-        .amplop-hint {
-            font-size: .7rem;
-            color: var(--muted);
-            letter-spacing: .04em;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-5px);
-            }
-        }
-
         /* Search card */
         .search-card {
             max-width: 460px;
@@ -298,6 +261,16 @@
             color: #fbbf24;
         }
 
+        /* Form muncul langsung jika sudah buka — tanpa amplop */
+        #cari-section {
+            animation: fade-up .7s ease both .35s;
+            padding: 0 1rem;
+        }
+
+        #cari-section.hidden {
+            display: none;
+        }
+
         .animate-fade-slide-up {
             animation: fade-up .4s ease both;
         }
@@ -309,13 +282,14 @@
         $tp = $tahunPelajaran ?? null;
         $now = now();
         $belumBuka = $tp && $now->lt($tp->jadwal_pengumuman_mulai);
-        $sudahBuka = $tp && $now->gte($tp->jadwal_pengumuman_mulai);
         $sudahTutup = $tp && $now->gt($tp->jadwal_pengumuman_selesai);
+        $sudahBuka = $tp && $now->between($tp->jadwal_pengumuman_mulai, $tp->jadwal_pengumuman_selesai);
     @endphp
 
     <div style="margin-top:-2.5rem">
         <section class="hero-section">
             <div class="hero-inner">
+
                 @if ($instansi?->logo_institusi)
                     <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="Logo" class="hero-logo">
                 @endif
@@ -328,16 +302,19 @@
                     @endif
                 </p>
 
+                {{-- CASE 1: Tidak ada TP aktif --}}
                 @if (!$tp)
                     <div class="card state-card" style="margin-top:2.25rem;">
                         <div class="state-title">Informasi Belum Tersedia</div>
-                        <div class="state-sub">Hubungi pihak madrasah untuk informasi lebih lanjut mengenai pengumuman
-                            kelulusan.</div>
+                        <div class="state-sub">
+                            Hubungi pihak madrasah untuk informasi lebih lanjut mengenai pengumuman kelulusan.
+                        </div>
                     </div>
+
+                    {{-- CASE 2: Belum waktunya buka --}}
                 @elseif ($belumBuka)
                     <div class="status-badge status-badge-warn">
-                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y H:i') }}
-                        WIB
+                        Pengumuman dibuka pada {{ $tp->jadwal_pengumuman_mulai->translatedFormat('d F Y H:i') }} WIB
                     </div>
                     <div class="cd-card">
                         <div class="cd-label">Hitung Mundur Pembukaan</div>
@@ -351,14 +328,18 @@
                         </div>
                         <div class="cd-footer-note">Pastikan kamu kembali tepat waktu.</div>
                     </div>
+
+                    {{-- CASE 3: Periode sudah tutup --}}
                 @elseif ($sudahTutup)
                     <div class="card state-card"
                         style="margin-top:2.25rem;background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.18);">
                         <div class="state-title" style="color:#fbbf24;">Periode Pengumuman Telah Berakhir</div>
                         <div class="state-sub">Hubungi madrasah untuk informasi lebih lanjut.</div>
                     </div>
+
+                    {{-- CASE 4: Sedang buka — langsung tampilkan form --}}
                 @elseif ($sudahBuka)
-                    <div id="cari-section" class="hidden" style="padding:0 1rem">
+                    <div id="cari-section">
                         <div class="search-card">
                             <div class="search-card-head">
                                 <div class="search-icon-wrap">SKL</div>
@@ -381,12 +362,14 @@
                                 @error('telepon')
                                     <div class="search-error"><span>&times;</span> {{ $message }}</div>
                                 @enderror
-                                <button type="submit" class="btn btn-primary"
-                                    style="width:100%;justify-content:center;">Cari Kelulusan</button>
+                                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+                                    Cari Kelulusan
+                                </button>
                             </form>
                         </div>
                     </div>
                 @endif
+
             </div>
         </section>
     </div>
@@ -394,64 +377,31 @@
 
 @push('scripts')
     <script>
-        const cdTarget = new Date("{{ $tp?->jadwal_pengumuman_mulai?->toIso8601String() }}");
-        const pad = n => String(n).padStart(2, '0');
+        // Countdown — hanya jalan jika elemen ada (state belumBuka)
+        const cdEl = document.getElementById('cd-seconds');
+        if (cdEl) {
+            const cdTarget = new Date("{{ $tp?->jadwal_pengumuman_mulai?->toIso8601String() }}");
+            const pad = n => String(n).padStart(2, '0');
 
-        function tickCountdown() {
-            const diff = cdTarget - Date.now();
-            if (diff <= 0) {
-                location.reload();
-                return;
+            function tickCountdown() {
+                const diff = cdTarget - Date.now();
+                if (diff <= 0) {
+                    location.reload();
+                    return;
+                }
+                [
+                    ['days', Math.floor(diff / 86400000)],
+                    ['hours', Math.floor((diff % 86400000) / 3600000)],
+                    ['minutes', Math.floor((diff % 3600000) / 60000)],
+                    ['seconds', Math.floor((diff % 60000) / 1000)],
+                ].forEach(([k, v]) => {
+                    const el = document.getElementById('cd-' + k);
+                    if (el) el.textContent = pad(v);
+                });
             }
-            [
-                ['days', Math.floor(diff / 86400000)],
-                ['hours', Math.floor((diff % 86400000) / 3600000)],
-                ['minutes', Math.floor((diff % 3600000) / 60000)],
-                ['seconds', Math.floor((diff % 60000) / 1000)]
-            ].forEach(([k, v]) => {
-                const el = document.getElementById('cd-' + k);
-                if (el) el.textContent = pad(v);
-            });
-        }
-        if (document.getElementById('cd-seconds')) {
+
             tickCountdown();
             setInterval(tickCountdown, 1000);
         }
-
-        function tampilkanForm() {
-            document.getElementById('amplop-section')?.classList.add('hidden');
-            const cari = document.getElementById('cari-section');
-            if (!cari) return;
-            cari.classList.remove('hidden');
-            cari.classList.add('animate-fade-slide-up');
-            setTimeout(() => cari.querySelector('input')?.focus(), 50);
-        }
-
-        function bukaAmplop() {
-            const lid = document.getElementById('amplop-lid');
-            const btn = document.getElementById('amplop-btn');
-            if (!lid || btn.disabled) return;
-            btn.disabled = true;
-            lid.style.transform = 'rotateX(-180deg)';
-            lid.style.opacity = '0';
-            setTimeout(() => {
-                const a = document.getElementById('amplop');
-                if (a) {
-                    a.style.transform = 'scale(.8)';
-                    a.style.opacity = '0';
-                }
-            }, 400);
-            setTimeout(tampilkanForm, 750);
-            try {
-                localStorage.setItem('amplop_dibuka', '1');
-            } catch (e) {}
-        }
-
-        try {
-            if (localStorage.getItem('amplop_dibuka') === '1') tampilkanForm();
-        } catch (e) {}
-        @if ($errors->any())
-            tampilkanForm();
-        @endif
     </script>
 @endpush
