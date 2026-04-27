@@ -21,7 +21,7 @@
         'subKey' => 'jabatan',
         'subPrefix' => '',
         'subColor' => 'var(--teal-xl)',
-        'monoKey' => 'nip',
+        // 'monoKey' => 'nip',
         'keyword' => $keyword ?? null,
     ])
 @endsection
