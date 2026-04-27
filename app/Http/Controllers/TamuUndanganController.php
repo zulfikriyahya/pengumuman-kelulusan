@@ -11,20 +11,19 @@ use Illuminate\View\View;
 
 class TamuUndanganController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $tamus = TamuUndangan::with('siswa')
-            ->orderByDesc('created_at')
-            ->paginate(20);
+        $tamus      = TamuUndangan::with('siswa')->latest()->paginate(20);
+        $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
-        $totalPax    = TamuUndangan::sum('jumlah_tamu');
-        $totalSiswa  = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
-
-        return view('tamu.index', compact('tamus', 'totalPax', 'totalSiswa'))
-            ->with('tamuUndangans', $tamus);
+        return view('tamu.index', [
+            'tamuUndangans' => $tamus,
+            'totalPax'      => $tamus->sum('jumlah_tamu'),
+            'totalSiswa'    => $totalSiswa,
+        ]);
     }
 
-    public function scanQr(Request $request): View
+    public function scanQr(): View
     {
         return view('tamu.scan');
     }
@@ -36,9 +35,7 @@ class TamuUndanganController extends Controller
         ]);
 
         $kode  = trim($request->input('kode'));
-        $siswa = Siswa::where('id', $kode)
-            ->orWhere('nisn', $kode)
-            ->first();
+        $siswa = Siswa::where('id', $kode)->orWhere('nisn', $kode)->first();
 
         if (! $siswa) {
             return back()
@@ -57,12 +54,12 @@ class TamuUndanganController extends Controller
 
     public function konfirmasi(Siswa $siswa): View
     {
-        // Guard: hanya siswa lulus yang boleh dikonfirmasi
         abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak hadir.');
 
-        $sudahHadir = TamuUndangan::where('siswa_id', $siswa->id)->exists();
-
-        return view('tamu.konfirmasi', compact('siswa', 'sudahHadir'));
+        return view('tamu.konfirmasi', [
+            'siswa'      => $siswa,
+            'sudahHadir' => TamuUndangan::where('siswa_id', $siswa->id)->exists(),
+        ]);
     }
 
     public function store(TamuUndanganStoreRequest $request): RedirectResponse
@@ -74,16 +71,12 @@ class TamuUndanganController extends Controller
             ['jumlah_tamu' => $data['jumlah_tamu'] ?? 1],
         );
 
-        return redirect()
-            ->route('tamu.index')
-            ->with('success', 'Kehadiran berhasil dicatat.');
+        return redirect()->route('tamu.index')->with('success', 'Kehadiran berhasil dicatat.');
     }
 
     public function cetakHadir(): View
     {
-        $tamus = TamuUndangan::with('siswa')
-            ->orderBy('created_at')
-            ->get();
+        $tamus = TamuUndangan::with('siswa')->oldest()->get();
 
         return view('tamu.cetak-hadir', [
             'tamus'    => $tamus,

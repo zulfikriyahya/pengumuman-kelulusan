@@ -4,13 +4,14 @@ namespace App\Filament\Resources\Personils\Pages;
 
 use App\Actions\ImportFoto;
 use App\Exports\PersonilExport;
+use App\Exports\Templates\PersonilTemplateExport;
+use App\Filament\Concerns\HasImportActions;
 use App\Filament\Resources\Personils\PersonilResource;
 use App\Imports\PersonilImport;
 use App\Models\Personil;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
@@ -18,22 +19,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ListPersonils extends ListRecords
 {
+    use HasImportActions;
+
     protected static string $resource = PersonilResource::class;
 
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
-    }
-
-    private function resolveUpload(string $filename): string
-    {
-        $path = storage_path('app/private/' . $filename);
-
-        if (! file_exists($path)) {
-            throw new \RuntimeException("Uploaded file not found: {$filename}");
-        }
-
-        return $path;
     }
 
     protected function getHeaderActions(): array
@@ -68,30 +60,10 @@ class ListPersonils extends ListRecords
                     $path = $this->resolveUpload($data['file']);
 
                     try {
-                        $import = new PersonilImport();
+                        $import = new PersonilImport;
                         Excel::import($import, $path);
 
-                        $failures = $import->failures();
-                        $berhasil = $import->getBerhasil();
-
-                        if ($failures->count() > 0) {
-                            $messages = collect($failures)
-                                ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
-                                ->take(5)
-                                ->join("\n");
-
-                            Notification::make()
-                                ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
-                                ->body($messages)
-                                ->warning()
-                                ->persistent()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title("{$berhasil} data personil berhasil diimpor!")
-                                ->success()
-                                ->send();
-                        }
+                        $this->sendExcelNotification($import->getBerhasil(), $import->failures(), 'personil');
                     } finally {
                         @unlink($path);
                     }
@@ -105,12 +77,10 @@ class ListPersonils extends ListRecords
                 ->outlined()
                 ->size('sm')
                 ->requiresConfirmation()
-                ->action(function () {
-                    return Excel::download(
-                        new PersonilExport(),
-                        'personil-' . now()->format('Ymd-His') . '.xlsx'
-                    );
-                }),
+                ->action(fn () => Excel::download(
+                    new PersonilExport,
+                    'personil-'.now()->format('Ymd-His').'.xlsx'
+                )),
 
             // ── 3. Import Foto Personil (ZIP) ──────────────────────────
             Action::make('import_foto')
@@ -138,7 +108,7 @@ class ListPersonils extends ListRecords
                     $path = $this->resolveUpload($data['zip_file']);
 
                     try {
-                        $result = (new ImportFoto())->execute(
+                        $result = (new ImportFoto)->execute(
                             zipPath: $path,
                             modelClass: Personil::class,
                             identifierCol: 'nip',
@@ -146,22 +116,7 @@ class ListPersonils extends ListRecords
                             storageDir: 'foto-personil',
                         );
 
-                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "Foto personil: {$result['berhasil']} berhasil"
-                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
-
-                        $body = implode("\n", array_slice($result['log'], 0, 8));
-                        if (count($result['log']) > 8) {
-                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
-                        }
-
-                        Notification::make()
-                            ->title($title)
-                            ->body($body)
-                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                            ->persistent()
-                            ->send();
+                        $this->sendImportNotification($result, 'Foto personil');
                     } finally {
                         @unlink($path);
                     }
@@ -175,39 +130,10 @@ class ListPersonils extends ListRecords
                 ->outlined()
                 ->size('sm')
                 ->requiresConfirmation()
-                ->action(function () {
-                    return Excel::download(
-                        new class implements
-                            \Maatwebsite\Excel\Concerns\FromArray,
-                            \Maatwebsite\Excel\Concerns\WithHeadings,
-                            \Maatwebsite\Excel\Concerns\WithStyles,
-                            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
-                            public function array(): array
-                            {
-                                return [
-                                    ['Siti Aminah, S.Pd', '196501011990032001', 'Guru Matematika', '08111111111', 'https://instagram.com/siti', 'Semangat belajar!'],
-                                    ['Drs. Hendra',        '',                   'Wali Kelas XII',  '08222222222', '',                           'Terus berkarya'],
-                                ];
-                            }
-
-                            public function headings(): array
-                            {
-                                return ['nama', 'nip', 'jabatan', 'telepon', 'sosial_media', 'quote'];
-                            }
-
-                            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
-                            {
-                                return [
-                                    1 => [
-                                        'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                                        'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
-                                    ],
-                                ];
-                            }
-                        },
-                        'template-personil.xlsx'
-                    );
-                }),
+                ->action(fn () => Excel::download(
+                    new PersonilTemplateExport,
+                    'template-personil.xlsx'
+                )),
 
             // ── 5. Tambah Personil ─────────────────────────────────────
             CreateAction::make()

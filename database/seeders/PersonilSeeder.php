@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class PersonilSeeder extends Seeder
 {
@@ -77,16 +77,16 @@ class PersonilSeeder extends Seeder
 
         foreach ($personils as $i => $p) {
             $data[] = [
-                'id'           => Str::uuid(),
-                'nama'         => $p['nama'],
-                'nip'          => $p['nip'],
-                'foto'         => null,
-                'telepon'      => null,
+                'id' => Str::uuid(),
+                'nama' => $p['nama'],
+                'nip' => $p['nip'],
+                'foto' => null,
+                'telepon' => null,
                 'sosial_media' => null,
-                'jabatan'      => $p['jabatan'],
-                'quote'        => $quotes[$i % count($quotes)],
-                'created_at'   => $now,
-                'updated_at'   => $now,
+                'jabatan' => $p['jabatan'],
+                'quote' => $quotes[$i % count($quotes)],
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 

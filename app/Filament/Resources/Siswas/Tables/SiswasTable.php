@@ -11,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -21,6 +22,9 @@ class SiswasTable
     {
         return $table
             ->columns([
+                ImageColumn::make('foto')
+                    ->label('Foto')
+                    ->circular(),
                 TextColumn::make('nama')
                     ->searchable()
                     ->sortable(),
@@ -36,10 +40,12 @@ class SiswasTable
                     ->toggleable(),
                 TextColumn::make('status')
                     ->badge(),
-                TextColumn::make('created_at')
-                    ->dateTime('d F Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('berkas_skl')
+                    ->label('SKL')
+                    ->url(fn ($record) => $record->berkas_skl ? asset('storage/'.$record->berkas_skl) : null),
+                TextColumn::make('berkas_undangan')
+                    ->label('Undangan')
+                    ->url(fn ($record) => $record->berkas_undangan ? asset('storage/'.$record->berkas_undangan) : null),
             ])
             ->filters([
                 SelectFilter::make('status')

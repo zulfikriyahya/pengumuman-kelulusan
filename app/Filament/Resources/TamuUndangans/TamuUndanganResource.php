@@ -21,10 +21,14 @@ class TamuUndanganResource extends Resource
     protected static ?string $model = TamuUndangan::class;
 
     protected static bool $shouldRegisterNavigation = true;
+
     // protected static string|UnitEnum|null $navigationGroup = 'Personil';
     protected static ?string $navigationLabel = 'Tamu Undangan';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
     protected static ?int $navigationSort = 6;
+
     public static function form(Schema $schema): Schema
     {
         return TamuUndanganForm::configure($schema);

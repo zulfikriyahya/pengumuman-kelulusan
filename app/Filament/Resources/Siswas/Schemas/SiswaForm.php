@@ -32,6 +32,14 @@ class SiswaForm
                     TextInput::make('telepon')
                         ->tel()
                         ->maxLength(15),
+                    FileUpload::make('foto')
+                        ->label('Foto Siswa')
+                        ->openable()
+                        ->directory('foto-siswa')
+                        ->columnSpanFull()
+                        ->maxSize(2048) // 2MB
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->helperText('Unggah foto siswa dalam format JPG, PNG, atau WEBP dengan ukuran maksimal 2MB.'),
                 ]),
 
             Section::make('Data Sistem')
@@ -41,13 +49,21 @@ class SiswaForm
                     Select::make('status')
                         ->options(StatusSiswa::class)
                         ->native(false)
+                        ->columnSpanFull()
                         ->required()
                         ->default(StatusSiswa::Lulus),
                     FileUpload::make('berkas_skl')->label('Berkas SKL')
                         ->directory('berkas-skl')
+                        ->openable()
                         ->maxSize(2048) // 2MB
                         ->acceptedFileTypes(['application/pdf'])
                         ->helperText('Unggah berkas SKL dalam format PDF dengan ukuran maksimal 2MB.'),
+                    FileUpload::make('berkas_undangan')->label('Berkas undangan')
+                        ->directory('berkas-undangan')
+                        ->openable()
+                        ->maxSize(2048) // 2MB
+                        ->acceptedFileTypes(['application/pdf'])
+                        ->helperText('Unggah berkas undangan dalam format PDF dengan ukuran maksimal 2MB.'),
                 ]),
         ]);
     }

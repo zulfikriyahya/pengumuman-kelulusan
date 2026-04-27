@@ -16,6 +16,7 @@ class ViewAlumni extends ViewRecord
     {
         return static::getResource()::getUrl('index');
     }
+
     protected function getHeaderActions(): array
     {
         return [

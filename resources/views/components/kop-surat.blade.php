@@ -1,6 +1,15 @@
+@props(['forPdf' => false])
+@php
+    $logoSrc = $instansi?->logo_institusi
+        ? ($forPdf
+            ? public_path('storage/' . $instansi->logo_institusi)
+            : Storage::url($instansi->logo_institusi))
+        : null;
+@endphp
+
 <div class="kop-surat">
-    @if ($instansi?->logo_institusi)
-        <img src="{{ Storage::url($instansi->logo_institusi) }}" alt="">
+    @if ($logoSrc)
+        <img src="{{ $logoSrc }}" alt="">
     @endif
     <div class="kop-text">
         <h1>{{ $instansi?->nama }}</h1>

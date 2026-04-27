@@ -2,25 +2,33 @@
 
 namespace App\Exports;
 
+use App\Enums\StatusSiswa;
+use App\Exports\Concerns\HasExportStyles;
 use App\Models\Siswa;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SiswaExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle
+class SiswaExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
-    public function __construct(
-        private readonly ?string $status = null,
-    ) {}
+    use HasExportStyles;
+
+    private int $no = 0;
+
+    private readonly ?string $status;
+
+    public function __construct(StatusSiswa|string|null $status = null)
+    {
+        $this->status = $status instanceof StatusSiswa ? $status->value : $status;
+    }
 
     public function query()
     {
         return Siswa::query()
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->orderBy('nama');
     }
 
@@ -31,25 +39,13 @@ class SiswaExport implements FromQuery, WithHeadings, WithMapping, WithStyles, S
 
     public function headings(): array
     {
-        return [
-            'No',
-            'Nama',
-            'Nama Orang Tua',
-            'NISN',
-            'Telepon',
-            'Status',
-            'Berkas SKL',
-            'Dibuat',
-        ];
+        return ['No', 'Nama', 'Nama Orang Tua', 'NISN', 'Telepon', 'Status', 'Berkas SKL', 'Dibuat'];
     }
 
     public function map($siswa): array
     {
-        static $no = 0;
-        $no++;
-
         return [
-            $no,
+            ++$this->no,
             $siswa->nama,
             $siswa->nama_orangtua ?? '-',
             $siswa->nisn,
@@ -57,16 +53,6 @@ class SiswaExport implements FromQuery, WithHeadings, WithMapping, WithStyles, S
             $siswa->status->getLabel(),
             $siswa->berkas_skl ?? '-',
             $siswa->created_at->format('d/m/Y'),
-        ];
-    }
-
-    public function styles(Worksheet $sheet): array
-    {
-        return [
-            1 => [
-                'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
-            ],
         ];
     }
 }

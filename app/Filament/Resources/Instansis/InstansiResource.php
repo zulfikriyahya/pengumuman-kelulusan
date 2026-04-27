@@ -21,9 +21,12 @@ class InstansiResource extends Resource
     protected static ?string $model = Instansi::class;
 
     protected static bool $shouldRegisterNavigation = true;
+
     // protected static string|UnitEnum|null $navigationGroup = 'Personil';
     protected static ?string $navigationLabel = 'Instansi';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingOffice2;
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'nama';

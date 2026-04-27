@@ -21,10 +21,14 @@ class SiswaResource extends Resource
     protected static ?string $model = Siswa::class;
 
     protected static bool $shouldRegisterNavigation = true;
+
     // protected static string|UnitEnum|null $navigationGroup = 'Personil';
     protected static ?string $navigationLabel = 'Siswa';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+
     protected static ?int $navigationSort = 5;
+
     protected static ?string $recordTitleAttribute = 'nama';
 
     public static function form(Schema $schema): Schema

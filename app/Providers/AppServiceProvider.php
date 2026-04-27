@@ -19,8 +19,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FilamentColor::register([
-            'danger'  => Color::hex('#FF0022'),
-            'info'    => Color::hex('#00FFEA'),
+            'danger' => Color::hex('#FF0022'),
+            'info' => Color::hex('#00FFEA'),
             'primary' => Color::hex('#BF00FF'),
             'success' => Color::hex('#00FF41'),
             'warning' => Color::hex('#FF6D00'),
@@ -37,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
         // Share instansi ke semua view
         $instansiArray = Cache::remember('instansi.aktif', now()->addHour(), function () {
             $data = Instansi::first();
+
             return $data ? $data->toArray() : null;
         });
         $instansi = $instansiArray ? (object) $instansiArray : null;

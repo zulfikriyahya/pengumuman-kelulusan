@@ -34,15 +34,15 @@ class WhatsAppService
         $response = Http::withHeaders([
             'X-Api-Key' => config('services.whatsapp.api_key'),
         ])->post(config('services.whatsapp.endpoint'), [
-            'number'  => $normalized,
+            'number' => $normalized,
             'message' => $message,
         ]);
 
         Log::info('WhatsApp send', [
-            'phone'    => $normalized,
+            'phone' => $normalized,
             'endpoint' => config('services.whatsapp.endpoint'),
-            'status'   => $response->status(),
-            'body'     => $response->body(),
+            'status' => $response->status(),
+            'body' => $response->body(),
         ]);
 
         if (! $response->successful()) {

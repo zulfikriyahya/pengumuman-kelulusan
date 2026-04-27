@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\Siswas\Pages;
 
-use App\Actions\ImportDokumenSkl;
-use App\Actions\ImportDokumenUndangan;
+use App\Actions\ImportDokumen;
 use App\Actions\ImportFoto;
 use App\Enums\StatusSiswa;
 use App\Exports\SiswaExport;
+use App\Exports\Templates\SiswaTemplateExport;
+use App\Filament\Concerns\HasImportActions;
 use App\Filament\Resources\Siswas\SiswaResource;
 use App\Imports\SiswaImport;
 use App\Models\Siswa;
@@ -14,7 +15,6 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
@@ -22,34 +22,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ListSiswas extends ListRecords
 {
+    use HasImportActions;
+
     protected static string $resource = SiswaResource::class;
 
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
-    }
-
-    /**
-     * Resolve a Filament/Livewire uploaded file to a stable absolute path.
-     *
-     * By configuring FileUpload with ->disk('local')->directory('imports-tmp'),
-     * Filament stores the file immediately on upload to:
-     *   storage/app/private/imports-tmp/{filename}
-     *
-     * $data['file'] will contain the filename string, e.g. "abc123.xlsx".
-     * Caller is responsible for @unlink($path) after use.
-     */
-    private function resolveUpload(string $filename): string
-    {
-        $path = storage_path('app/private/' . $filename);
-
-        if (! file_exists($path)) {
-            throw new \RuntimeException(
-                "Uploaded file not found: {$filename}"
-            );
-        }
-
-        return $path;
     }
 
     protected function getHeaderActions(): array
@@ -84,30 +63,10 @@ class ListSiswas extends ListRecords
                     $path = $this->resolveUpload($data['file']);
 
                     try {
-                        $import = new SiswaImport();
+                        $import = new SiswaImport;
                         Excel::import($import, $path);
 
-                        $failures = $import->failures();
-                        $berhasil = $import->getBerhasil();
-
-                        if ($failures->count() > 0) {
-                            $messages = collect($failures)
-                                ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
-                                ->take(5)
-                                ->join("\n");
-
-                            Notification::make()
-                                ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
-                                ->body($messages)
-                                ->warning()
-                                ->persistent()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title("{$berhasil} data siswa berhasil diimpor!")
-                                ->success()
-                                ->send();
-                        }
+                        $this->sendExcelNotification($import->getBerhasil(), $import->failures(), 'siswa');
                     } finally {
                         @unlink($path);
                     }
@@ -130,13 +89,18 @@ class ListSiswas extends ListRecords
                         ->options(StatusSiswa::class),
                 ])
                 ->action(function (array $data) {
+                    $status = $data['status'] ?? null;
+                    if ($status instanceof StatusSiswa) {
+                        $status = $status->value;
+                    }
+
                     return Excel::download(
-                        new SiswaExport($data['status'] ?? null),
-                        'siswa-' . now()->format('Ymd-His') . '.xlsx'
+                        new SiswaExport($status),
+                        'siswa-'.now()->format('Ymd-His').'.xlsx'
                     );
                 }),
 
-            // ── 3a. Import SKL (ZIP berisi PDF) ─────────────────────────
+            // ── 3a. Import SKL (ZIP berisi PDF) ───────────────────────
             Action::make('import_skl')
                 ->label('Import SKL (ZIP)')
                 ->icon(Heroicon::DocumentArrowUp)
@@ -162,30 +126,14 @@ class ListSiswas extends ListRecords
                     $path = $this->resolveUpload($data['zip_file']);
 
                     try {
-                        $result = (new ImportDokumenSkl())->executeFromZip($path);
-
-                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "SKL: {$result['berhasil']} berhasil"
-                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
-
-                        $body = implode("\n", array_slice($result['log'], 0, 8));
-                        if (count($result['log']) > 8) {
-                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
-                        }
-
-                        Notification::make()
-                            ->title($title)
-                            ->body($body)
-                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                            ->persistent()
-                            ->send();
+                        $result = (new ImportDokumen)->execute($path, 'berkas_skl', 'skl', 'SKL');
+                        $this->sendImportNotification($result, 'SKL');
                     } finally {
                         @unlink($path);
                     }
                 }),
 
-            // ── 3b. Import Undangan (ZIP berisi PDF) ─────────────────────────
+            // ── 3b. Import Undangan (ZIP berisi PDF) ──────────────────
             Action::make('import_undangan')
                 ->label('Import Undangan (ZIP)')
                 ->icon(Heroicon::DocumentArrowUp)
@@ -211,24 +159,8 @@ class ListSiswas extends ListRecords
                     $path = $this->resolveUpload($data['zip_file']);
 
                     try {
-                        $result = (new ImportDokumenUndangan())->executeFromZip($path);
-
-                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "Undangan: {$result['berhasil']} berhasil"
-                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
-
-                        $body = implode("\n", array_slice($result['log'], 0, 8));
-                        if (count($result['log']) > 8) {
-                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
-                        }
-
-                        Notification::make()
-                            ->title($title)
-                            ->body($body)
-                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                            ->persistent()
-                            ->send();
+                        $result = (new ImportDokumen)->execute($path, 'berkas_undangan', 'undangan', 'Undangan');
+                        $this->sendImportNotification($result, 'Undangan');
                     } finally {
                         @unlink($path);
                     }
@@ -260,7 +192,7 @@ class ListSiswas extends ListRecords
                     $path = $this->resolveUpload($data['zip_file']);
 
                     try {
-                        $result = (new ImportFoto())->execute(
+                        $result = (new ImportFoto)->execute(
                             zipPath: $path,
                             modelClass: Siswa::class,
                             identifierCol: 'nisn',
@@ -268,22 +200,7 @@ class ListSiswas extends ListRecords
                             storageDir: 'foto-siswa',
                         );
 
-                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "Foto siswa: {$result['berhasil']} berhasil"
-                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
-
-                        $body = implode("\n", array_slice($result['log'], 0, 8));
-                        if (count($result['log']) > 8) {
-                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
-                        }
-
-                        Notification::make()
-                            ->title($title)
-                            ->body($body)
-                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                            ->persistent()
-                            ->send();
+                        $this->sendImportNotification($result, 'Foto siswa');
                     } finally {
                         @unlink($path);
                     }
@@ -299,40 +216,10 @@ class ListSiswas extends ListRecords
                 ->requiresConfirmation()
                 ->modalHeading('Unduh Template Excel')
                 ->modalDescription('Apakah Anda yakin ingin mengunduh template Excel untuk mengisi data siswa?')
-                ->action(function () {
-                    return Excel::download(
-                        new class implements
-                            \Maatwebsite\Excel\Concerns\FromArray,
-                            \Maatwebsite\Excel\Concerns\WithHeadings,
-                            \Maatwebsite\Excel\Concerns\WithStyles,
-                            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
-                            public function array(): array
-                            {
-                                return [
-                                    ['Budi Santoso', 'Ahmad Santoso', '0012345678', '08123456789', 'Lulus'],
-                                    ['Siti Rahayu',  'Budi Rahayu',   '0098765432', '08199999999', 'Tidak Lulus'],
-                                    ['Andi Wijaya',  'Hendra Wijaya', '0011223344', '',             'Lulus Bersyarat'],
-                                ];
-                            }
-
-                            public function headings(): array
-                            {
-                                return ['nama', 'nama_orangtua', 'nisn', 'telepon', 'status'];
-                            }
-
-                            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
-                            {
-                                return [
-                                    1 => [
-                                        'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                                        'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
-                                    ],
-                                ];
-                            }
-                        },
-                        'template-siswa.xlsx'
-                    );
-                }),
+                ->action(fn () => Excel::download(
+                    new SiswaTemplateExport,
+                    'template-siswa.xlsx'
+                )),
 
             // ── 6. Tambah Siswa ────────────────────────────────────────
             CreateAction::make()

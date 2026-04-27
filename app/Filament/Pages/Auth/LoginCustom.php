@@ -120,6 +120,7 @@ class LoginCustom extends Login
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
+
             return null;
         }
 
@@ -140,6 +141,7 @@ class LoginCustom extends Login
             session(['otp_user_id' => $user->id]);
             Auth::logout();
             $this->redirect('/verifikasi-otp');
+
             return null;
         }
 

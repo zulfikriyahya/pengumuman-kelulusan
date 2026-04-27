@@ -7,46 +7,45 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ZipArchive;
 
-class ImportDokumenUndangan
+class ImportDokumen
 {
     /**
-     * Ekstrak ZIP, lalu simpan setiap PDF ke storage berdasarkan nama file (NISN).
-     *
+     * @param  string  $zipPath  Path absolut ke file ZIP
+     * @param  string  $kolom  Kolom pada model Siswa: 'berkas_skl' | 'berkas_undangan'
+     * @param  string  $dir  Direktori storage tujuan: 'skl' | 'undangan'
+     * @param  string  $label  Label untuk log/notifikasi: 'SKL' | 'Undangan'
      * @return array{berhasil: int, dilewati: int, gagal: int, log: string[]}
      */
-    public function executeFromZip(string $zipPath): array
+    public function execute(string $zipPath, string $kolom, string $dir, string $label): array
     {
         $berhasil = $dilewati = $gagal = 0;
         $log = [];
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         if ($zip->open($zipPath) !== true) {
             return [
                 'berhasil' => 0,
                 'dilewati' => 0,
-                'gagal'    => 1,
-                'log'      => ['Gagal membuka file ZIP. Pastikan file tidak rusak.'],
+                'gagal' => 1,
+                'log' => ['Gagal membuka file ZIP. Pastikan file tidak rusak.'],
             ];
         }
 
-        $tmpDir = storage_path('app/tmp/undangan-' . uniqid());
+        $tmpDir = storage_path('app/tmp/'.Str::slug($label).'-'.uniqid());
         mkdir($tmpDir, 0755, true);
 
         $zip->extractTo($tmpDir);
         $zip->close();
 
-        // Kumpulkan semua PDF dari dalam ZIP (termasuk subfolder)
-        $pdfFiles = $this->collectPdfs($tmpDir);
-
-        foreach ($pdfFiles as $pdfPath) {
+        foreach ($this->collectPdfs($tmpDir) as $pdfPath) {
             $filename = basename($pdfPath);
-            $nisn     = Str::beforeLast($filename, '.pdf');
+            $nisn = Str::beforeLast($filename, '.pdf');
 
-            // Validasi nama file = 10 digit angka
             if (! preg_match('/^\d{10}$/', $nisn)) {
                 $log[] = "Dilewati — nama file tidak valid: {$filename}";
                 $gagal++;
+
                 continue;
             }
 
@@ -55,39 +54,48 @@ class ImportDokumenUndangan
             if (! $siswa) {
                 $log[] = "Siswa dengan NISN {$nisn} tidak ditemukan.";
                 $dilewati++;
+
                 continue;
             }
 
-            // Hapus berkas lama jika ada
-            if ($siswa->berkas_undangan && Storage::disk('public')->exists($siswa->berkas_undangan)) {
-                Storage::disk('public')->delete($siswa->berkas_undangan);
+            $oldPath = $siswa->getAttribute($kolom);
+            if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
             }
 
-            $destination = "undangan/{$nisn}.pdf";
+            $destination = "{$dir}/{$nisn}.pdf";
             Storage::disk('public')->put($destination, file_get_contents($pdfPath));
 
-            $siswa->update(['berkas_undangan' => $destination]);
-            $log[] = "Undangan {$nisn} berhasil diimpor.";
+            $siswa->update([$kolom => $destination]);
+            $log[] = "{$label} {$nisn} berhasil diimpor.";
             $berhasil++;
         }
 
-        // Bersihkan direktori temp
         $this->deleteDirectory($tmpDir);
 
         return compact('berhasil', 'dilewati', 'gagal', 'log');
     }
 
-    /** Kumpulkan semua file .pdf secara rekursif dari sebuah direktori. */
+    /**
+     * Alias untuk kompatibilitas pemanggilan lama.
+     *
+     * @deprecated Gunakan execute() dengan parameter eksplisit.
+     */
+    public function executeFromZip(string $zipPath): array
+    {
+        return $this->execute($zipPath, 'berkas_skl', 'skl', 'SKL');
+    }
+
     private function collectPdfs(string $dir): array
     {
         $pdfs = [];
 
         foreach (scandir($dir) as $entry) {
-            if ($entry === '.' || $entry === '..') {
+            if (in_array($entry, ['.', '..'], true)) {
                 continue;
             }
 
-            $full = $dir . DIRECTORY_SEPARATOR . $entry;
+            $full = $dir.DIRECTORY_SEPARATOR.$entry;
 
             if (is_dir($full)) {
                 $pdfs = array_merge($pdfs, $this->collectPdfs($full));
@@ -99,7 +107,6 @@ class ImportDokumenUndangan
         return $pdfs;
     }
 
-    /** Hapus direktori beserta isinya secara rekursif. */
     private function deleteDirectory(string $dir): void
     {
         if (! is_dir($dir)) {
@@ -107,11 +114,11 @@ class ImportDokumenUndangan
         }
 
         foreach (scandir($dir) as $entry) {
-            if ($entry === '.' || $entry === '..') {
+            if (in_array($entry, ['.', '..'], true)) {
                 continue;
             }
 
-            $full = $dir . DIRECTORY_SEPARATOR . $entry;
+            $full = $dir.DIRECTORY_SEPARATOR.$entry;
             is_dir($full) ? $this->deleteDirectory($full) : unlink($full);
         }
 

@@ -16,6 +16,7 @@ class ListTamuUndangans extends ListRecords
     {
         return static::getResource()::getUrl('index');
     }
+
     protected function getHeaderActions(): array
     {
         return [

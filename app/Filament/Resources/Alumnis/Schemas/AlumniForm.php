@@ -33,9 +33,10 @@ class AlumniForm
                         ])
                         ->circleCropper()
                         ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            $nisn = $record?->nisn ?? 'alumni_' . time();
+                            $nisn = $record?->nisn ?? 'alumni_'.time();
                             $ext = $file->getClientOriginalExtension();
-                            return strtolower($nisn) . '.' . $ext;
+
+                            return strtolower($nisn).'.'.$ext;
                         })
                         ->extraAttributes([
                             'class' => 'flex flex-col items-center',

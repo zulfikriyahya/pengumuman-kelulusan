@@ -57,9 +57,10 @@ class PersonilForm
                             null,
                         ])
                         ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            $nip = $record?->nip ?? 'foto_' . time();
+                            $nip = $record?->nip ?? 'foto_'.time();
                             $ext = $file->getClientOriginalExtension();
-                            return strtolower($nip) . '.' . $ext;
+
+                            return strtolower($nip).'.'.$ext;
                         }),
                 ]),
 

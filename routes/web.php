@@ -7,36 +7,41 @@ use App\Http\Controllers\TamuUndanganController;
 use App\Http\Middleware\JadwalKelulusanAktif;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+// ── Landing & Pencarian ────────────────────────────────────────────
+Route::get('/',      [LandingPageController::class, 'index'])->name('landing');
 Route::post('/cari', [LandingPageController::class, 'cari'])->name('landing.cari');
-Route::get('/siswa/{siswa}', [LandingPageController::class, 'hasil'])->name('landing.hasil');
-Route::get('/siswa/{siswa}/skl', [LandingPageController::class, 'cetakSkl'])
-    ->name('landing.skl')
-    ->middleware('throttle:30,1');
-Route::get('/siswa/{siswa}/skl/pdf', [LandingPageController::class, 'cetakSklPdf'])
-    ->name('landing.skl.pdf')
-    ->middleware('throttle:10,1');
-Route::get('/siswa/{siswa}/undangan', [LandingPageController::class, 'cetakUndangan'])
-    ->name('landing.undangan')
-    ->middleware('throttle:30,1');
-Route::get('/siswa/{siswa}/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf'])
-    ->name('landing.undangan.pdf')
-    ->middleware('throttle:10,1');
 
-Route::get('/personil', [PersonilController::class, 'index'])->name('personil.index');
-Route::get('/personil/cari', [PersonilController::class, 'cari'])->name('personil.cari');
+// ── Siswa: hasil & dokumen ─────────────────────────────────────────
+Route::prefix('/siswa/{siswa}')->name('landing.')->group(function () {
+    Route::get('/',             [LandingPageController::class, 'hasil'])->name('hasil');
+    Route::get('/skl',          [LandingPageController::class, 'cetakSkl'])->name('skl')->middleware('throttle:30,1');
+    Route::get('/skl/pdf',      [LandingPageController::class, 'cetakSklPdf'])->name('skl.pdf')->middleware('throttle:10,1');
+    Route::get('/undangan',     [LandingPageController::class, 'cetakUndangan'])->name('undangan')->middleware('throttle:30,1');
+    Route::get('/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf'])->name('undangan.pdf')->middleware('throttle:10,1');
+});
 
-Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
-Route::get('/alumni/cari', [AlumniController::class, 'cari'])->name('alumni.cari');
+// ── Personil ───────────────────────────────────────────────────────
+Route::prefix('personil')->name('personil.')->controller(PersonilController::class)->group(function () {
+    Route::get('/',      'index')->name('index');
+    Route::get('/cari',  'search')->name('cari');
+});
 
+// ── Alumni ─────────────────────────────────────────────────────────
+Route::prefix('alumni')->name('alumni.')->controller(AlumniController::class)->group(function () {
+    Route::get('/',      'index')->name('index');
+    Route::get('/cari',  'search')->name('cari');
+});
+
+// ── Tamu Undangan (dibatasi jadwal kelulusan) ──────────────────────
 Route::middleware(JadwalKelulusanAktif::class)
     ->prefix('tamu')
     ->name('tamu.')
+    ->controller(TamuUndanganController::class)
     ->group(function () {
-        Route::get('/',                            [TamuUndanganController::class, 'index'])->name('index');
-        Route::get('/scan',                        [TamuUndanganController::class, 'scanQr'])->name('scan');
-        Route::post('/scan',                       [TamuUndanganController::class, 'processScan'])->name('scan.post');
-        Route::get('/konfirmasi/{siswa}',          [TamuUndanganController::class, 'konfirmasi'])->name('konfirmasi');
-        Route::post('/',                           [TamuUndanganController::class, 'store'])->name('store');
-        Route::get('/cetak-hadir',                 [TamuUndanganController::class, 'cetakHadir'])->name('cetak-hadir');
+        Route::get('/',              'index')->name('index');
+        Route::get('/scan',          'scanQr')->name('scan');
+        Route::post('/scan',         'processScan')->name('scan.post');
+        Route::get('/konfirmasi/{siswa}', 'konfirmasi')->name('konfirmasi');
+        Route::post('/',             'store')->name('store');
+        Route::get('/cetak-hadir',   'cetakHadir')->name('cetak-hadir');
     });

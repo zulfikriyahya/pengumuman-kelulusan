@@ -2,35 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AlumnusCariRequest;
+use App\Http\Controllers\Concerns\HasPeopleIndex;
 use App\Models\Alumni;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class AlumniController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $alumnis = Alumni::orderBy('nama')->paginate(12);
+    use HasPeopleIndex;
 
-        return view('alumni.index', ['alumnis' => $alumnis]);
+    protected function model(): string
+    {
+        return Alumni::class;
     }
-
-    public function cari(AlumnusCariRequest $request): View
+    protected function indexView(): string
     {
-        $keyword = $request->filled('nisn')
-            ? $request->validated('nisn')
-            : $request->validated('nama');
-
-        $alumnis = Alumni::where('nisn', $keyword)
-            ->orWhere('nama', 'like', "%{$keyword}%")
-            ->orderBy('nama')
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('alumni.index', [
-            'alumnis' => $alumnis,
-            'keyword' => $keyword,
-        ]);
+        return 'alumni.index';
+    }
+    protected function searchColumns(): array
+    {
+        return ['nisn', 'nama'];
     }
 }

@@ -17,6 +17,7 @@ class EditSiswa extends EditRecord
     {
         return static::getResource()::getUrl('index');
     }
+
     protected function getHeaderActions(): array
     {
         return [

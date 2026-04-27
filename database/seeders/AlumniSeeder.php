@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class AlumniSeeder extends Seeder
 {
@@ -84,14 +84,14 @@ class AlumniSeeder extends Seeder
         for ($i = 0; $i < 50; $i++) {
             $nisnBase = 2000000000 + ($i * 11 + 3);
             $alumnis[] = [
-                'id'          => Str::uuid(),
-                'nama'        => $namaAlumni[$i],
-                'nisn'        => str_pad($nisnBase % 10000000000, 10, '0', STR_PAD_LEFT),
+                'id' => Str::uuid(),
+                'nama' => $namaAlumni[$i],
+                'nisn' => str_pad($nisnBase % 10000000000, 10, '0', STR_PAD_LEFT),
                 'tahun_lulus' => $tahunLulus[$i % count($tahunLulus)],
-                'foto'      => null,
-                'quote'       => $quotes[$i % count($quotes)],
-                'created_at'  => $now,
-                'updated_at'  => $now,
+                'foto' => null,
+                'quote' => $quotes[$i % count($quotes)],
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 

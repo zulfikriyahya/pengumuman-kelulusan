@@ -24,7 +24,7 @@
 </head>
 
 <body>
-    @include('pdf._kop')
+    <x-kop-surat :for-pdf="true" />
 
     <table class="nomor">
         <tr>
@@ -83,9 +83,8 @@
         <p>Wassalamu'alaikum Warahmatullahi Wabarakatuh.</p>
     </div>
 
-    @include('pdf._ttd')
+    <x-ttd :for-pdf="true" />
 
-    {{-- QR CODE untuk PDF (PNG base64 agar DomPDF support) --}}
     <div class="qr-box">
         <img src="data:image/png;base64,{{ base64_encode(QrCode::format('png')->size(120)->generate($siswa->id)) }}"
             alt="QR Code">

@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Alumnis\Pages;
 
 use App\Actions\ImportFoto;
 use App\Exports\AlumniExport;
+use App\Exports\Templates\AlumniTemplateExport;
+use App\Filament\Concerns\HasImportActions;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Imports\AlumniImport;
 use App\Models\Alumni;
@@ -11,7 +13,6 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
@@ -19,22 +20,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ListAlumnis extends ListRecords
 {
+    use HasImportActions;
+
     protected static string $resource = AlumniResource::class;
 
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
-    }
-
-    private function resolveUpload(string $filename): string
-    {
-        $path = storage_path('app/private/' . $filename);
-
-        if (! file_exists($path)) {
-            throw new \RuntimeException("Uploaded file not found: {$filename}");
-        }
-
-        return $path;
     }
 
     protected function getHeaderActions(): array
@@ -69,30 +61,10 @@ class ListAlumnis extends ListRecords
                     $path = $this->resolveUpload($data['file']);
 
                     try {
-                        $import = new AlumniImport();
+                        $import = new AlumniImport;
                         Excel::import($import, $path);
 
-                        $failures = $import->failures();
-                        $berhasil = $import->getBerhasil();
-
-                        if ($failures->count() > 0) {
-                            $messages = collect($failures)
-                                ->map(fn($f) => "Baris {$f->row()}: " . implode(', ', $f->errors()))
-                                ->take(5)
-                                ->join("\n");
-
-                            Notification::make()
-                                ->title("Import selesai — {$berhasil} berhasil, {$failures->count()} baris gagal")
-                                ->body($messages)
-                                ->warning()
-                                ->persistent()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title("{$berhasil} data alumni berhasil diimpor!")
-                                ->success()
-                                ->send();
-                        }
+                        $this->sendExcelNotification($import->getBerhasil(), $import->failures(), 'alumni');
                     } finally {
                         @unlink($path);
                     }
@@ -113,20 +85,18 @@ class ListAlumnis extends ListRecords
                         ->label('Filter Tahun Lulus')
                         ->placeholder('Semua Tahun')
                         ->options(
-                            fn() => Alumni::query()
+                            fn () => Alumni::query()
                                 ->distinct()
                                 ->orderByDesc('tahun_lulus')
                                 ->pluck('tahun_lulus', 'tahun_lulus')
                         ),
                 ])
-                ->action(function (array $data) {
-                    return Excel::download(
-                        new AlumniExport($data['tahun_lulus'] ?? null),
-                        'alumni-' . now()->format('Ymd-His') . '.xlsx'
-                    );
-                }),
+                ->action(fn (array $data) => Excel::download(
+                    new AlumniExport($data['tahun_lulus'] ?? null),
+                    'alumni-'.now()->format('Ymd-His').'.xlsx'
+                )),
 
-            // ── 3. Import Foto Alumni (ZIP) ──────────────────────────
+            // ── 3. Import Foto Alumni (ZIP) ────────────────────────────
             Action::make('import_foto')
                 ->label('Import Foto (ZIP)')
                 ->icon(Heroicon::Photo)
@@ -152,7 +122,7 @@ class ListAlumnis extends ListRecords
                     $path = $this->resolveUpload($data['zip_file']);
 
                     try {
-                        $result = (new ImportFoto())->execute(
+                        $result = (new ImportFoto)->execute(
                             zipPath: $path,
                             modelClass: Alumni::class,
                             identifierCol: 'nisn',
@@ -160,22 +130,7 @@ class ListAlumnis extends ListRecords
                             storageDir: 'foto-alumni',
                         );
 
-                        $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
-                        $title     = "Foto alumni: {$result['berhasil']} berhasil"
-                            . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
-                            . ($result['gagal']    ? ", {$result['gagal']} gagal"       : '');
-
-                        $body = implode("\n", array_slice($result['log'], 0, 8));
-                        if (count($result['log']) > 8) {
-                            $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
-                        }
-
-                        Notification::make()
-                            ->title($title)
-                            ->body($body)
-                            ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
-                            ->persistent()
-                            ->send();
+                        $this->sendImportNotification($result, 'Foto alumni');
                     } finally {
                         @unlink($path);
                     }
@@ -189,39 +144,10 @@ class ListAlumnis extends ListRecords
                 ->outlined()
                 ->size('sm')
                 ->requiresConfirmation()
-                ->action(function () {
-                    return Excel::download(
-                        new class implements
-                            \Maatwebsite\Excel\Concerns\FromArray,
-                            \Maatwebsite\Excel\Concerns\WithHeadings,
-                            \Maatwebsite\Excel\Concerns\WithStyles,
-                            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
-                            public function array(): array
-                            {
-                                return [
-                                    ['Budi Santoso', '0012345678', '2024', 'Terus semangat meraih mimpi!'],
-                                    ['Siti Rahayu',  '0098765432', '2024', ''],
-                                ];
-                            }
-
-                            public function headings(): array
-                            {
-                                return ['nama', 'nisn', 'tahun_lulus', 'quote'];
-                            }
-
-                            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
-                            {
-                                return [
-                                    1 => [
-                                        'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                                        'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
-                                    ],
-                                ];
-                            }
-                        },
-                        'template-alumni.xlsx'
-                    );
-                }),
+                ->action(fn () => Excel::download(
+                    new AlumniTemplateExport,
+                    'template-alumni.xlsx'
+                )),
 
             // ── 5. Tambah Alumni ───────────────────────────────────────
             CreateAction::make()

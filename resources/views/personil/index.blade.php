@@ -12,16 +12,14 @@
         'clearRoute' => 'personil.index',
         'placeholder' => 'Cari nama',
         'keyword' => $keyword ?? null,
-        'totalFound' => $personils->count() ?? null,
+        'totalFound' => $items->count() ?? null,
     ])
 
     @include('partials._people-grid', [
-        'items' => $personils,
+        'items' => $items,
         'photoKey' => 'foto',
         'subKey' => 'jabatan',
-        'subPrefix' => '',
         'subColor' => 'var(--teal-xl)',
-        // 'monoKey' => 'nip',
         'keyword' => $keyword ?? null,
     ])
 @endsection

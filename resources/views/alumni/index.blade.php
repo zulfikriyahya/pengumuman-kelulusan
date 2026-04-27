@@ -7,21 +7,20 @@
 
 @section('content')
     @include('partials._page-header', [
-        'title' => 'Alumni',
+        'title'       => 'Alumni',
         'searchRoute' => 'alumni.cari',
-        'clearRoute' => 'alumni.index',
+        'clearRoute'  => 'alumni.index',
         'placeholder' => 'Nama atau NISN',
-        'keyword' => $keyword ?? null,
-        'totalFound' => $alumnis->total() ?? null,
+        'keyword'     => $keyword ?? null,
+        'totalFound'  => $items->total() ?? null,
     ])
 
     @include('partials._people-grid', [
-        'items' => $alumnis,
-        'photoKey' => 'avatar',
-        'subKey' => 'tahun_lulus',
+        'items'     => $items,
+        'photoKey'  => 'foto',
+        'subKey'    => 'tahun_lulus',
         'subPrefix' => 'Lulus ',
-        'subColor' => '',
-        'monoKey' => 'nisn',
-        'keyword' => $keyword ?? null,
+        'monoKey'   => 'nisn',
+        'keyword'   => $keyword ?? null,
     ])
 @endsection

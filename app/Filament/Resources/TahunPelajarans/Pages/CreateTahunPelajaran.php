@@ -8,6 +8,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateTahunPelajaran extends CreateRecord
 {
     protected static string $resource = TahunPelajaranResource::class;
+
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');

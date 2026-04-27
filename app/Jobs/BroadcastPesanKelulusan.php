@@ -39,7 +39,7 @@ class BroadcastPesanKelulusan implements ShouldQueue
                 'message' => $pesan,
             ]);
         if ($response->failed()) {
-            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): " . $response->body());
+            Log::warning("WA gagal ke {$this->siswa->nisn} (attempt {$this->attempts()}): ".$response->body());
 
             throw new \RuntimeException("Gagal kirim WA ke {$this->siswa->nisn}: HTTP {$response->status()}");
         }
@@ -76,6 +76,6 @@ class BroadcastPesanKelulusan implements ShouldQueue
 
     public function failed(\Throwable $e): void
     {
-        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: " . $e->getMessage());
+        Log::error("Broadcast WA gagal permanen untuk {$this->siswa->nisn}: ".$e->getMessage());
     }
 }

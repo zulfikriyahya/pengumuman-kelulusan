@@ -2,33 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PersonilCariRequest;
+use App\Http\Controllers\Concerns\HasPeopleIndex;
 use App\Models\Personil;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class PersonilController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $personils = Personil::orderBy('jabatan')->get();
+    use HasPeopleIndex;
 
-        return view('personil.index', [
-            'personils' => $personils,
-        ]);
+    protected function model(): string
+    {
+        return Personil::class;
     }
-
-    public function cari(PersonilCariRequest $request): View
+    protected function indexView(): string
     {
-        $keyword = $request->validated('nama');
-
-        $personils = Personil::where('nama', 'like', "%{$keyword}%")
-            ->orderBy('jabatan')
-            ->get();
-
-        return view('personil.index', [
-            'personils' => $personils,
-            'keyword' => $keyword,
-        ]);
+        return 'personil.index';
+    }
+    protected function searchColumns(): array
+    {
+        return ['nama'];
+    }
+    protected function paginated(): bool
+    {
+        return false;
     }
 }

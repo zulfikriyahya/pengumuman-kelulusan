@@ -5,12 +5,17 @@ use App\Models\TahunPelajaran;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 Schedule::command(BroadcastKelulusan::class)
     ->dailyAt('07:00')
     ->when(
-        fn() => TahunPelajaran::where('status', true)
+        fn () => TahunPelajaran::where('status', true)
             ->whereDate('jadwal_pengumuman_mulai', today())
             ->exists()
     );
@@ -27,11 +32,8 @@ Artisan::command('inspire', function () {
 Artisan::command('export:template', function () {
     // ── Template Siswa ────────────────────────────────────────────
     Excel::store(
-        new class implements
-            \Maatwebsite\Excel\Concerns\FromArray,
-            \Maatwebsite\Excel\Concerns\WithHeadings,
-            \Maatwebsite\Excel\Concerns\WithStyles,
-            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+        new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+        {
             public function array(): array
             {
                 return [
@@ -45,11 +47,11 @@ Artisan::command('export:template', function () {
                 return ['nama', 'nama_orangtua', 'nisn', 'telepon', 'status'];
             }
 
-            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
+            public function styles(Worksheet $sheet): array
             {
                 return [1 => [
                     'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']]
+                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
                 ]];
             }
         },
@@ -60,11 +62,8 @@ Artisan::command('export:template', function () {
 
     // ── Template Personil ─────────────────────────────────────────
     Excel::store(
-        new class implements
-            \Maatwebsite\Excel\Concerns\FromArray,
-            \Maatwebsite\Excel\Concerns\WithHeadings,
-            \Maatwebsite\Excel\Concerns\WithStyles,
-            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+        new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+        {
             public function array(): array
             {
                 return [
@@ -78,11 +77,11 @@ Artisan::command('export:template', function () {
                 return ['nama', 'nip', 'jabatan', 'telepon', 'sosial_media', 'quote'];
             }
 
-            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
+            public function styles(Worksheet $sheet): array
             {
                 return [1 => [
                     'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']]
+                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
                 ]];
             }
         },
@@ -93,11 +92,8 @@ Artisan::command('export:template', function () {
 
     // ── Template Alumni ───────────────────────────────────────────
     Excel::store(
-        new class implements
-            \Maatwebsite\Excel\Concerns\FromArray,
-            \Maatwebsite\Excel\Concerns\WithHeadings,
-            \Maatwebsite\Excel\Concerns\WithStyles,
-            \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+        new class implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+        {
             public function array(): array
             {
                 return [
@@ -111,11 +107,11 @@ Artisan::command('export:template', function () {
                 return ['nama', 'nisn', 'tahun_lulus', 'quote'];
             }
 
-            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): array
+            public function styles(Worksheet $sheet): array
             {
                 return [1 => [
                     'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']]
+                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF0D9488']],
                 ]];
             }
         },

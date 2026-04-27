@@ -649,7 +649,11 @@
             letter-spacing: .01em;
         }
 
-        /* RESPONSIVE */
+        /* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — gantikan blok @media yang ada di layouts/app.blade.php
+   ═══════════════════════════════════════════════════════════════ */
+
+        /* ── Tablet ≤ 960px ─────────────────────────────────────────── */
         @media (max-width: 960px) {
             .nav-links {
                 display: none !important;
@@ -660,19 +664,185 @@
             }
         }
 
+        /* ── Mobile L ≤ 768px ──────────────────────────────────────── */
         @media (max-width: 768px) {
             :root {
                 --nav-h: 54px;
             }
 
             .content-wrap {
-                padding: 2rem 1.1rem;
+                padding: 1.75rem 1rem;
+            }
+
+            /* People grid: 2 kolom di mobile */
+            .people-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .65rem;
+            }
+
+            /* Page header: stack vertikal */
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .75rem;
+            }
+
+            .search-form {
+                width: 100%;
+            }
+
+            .search-field-wrap {
+                flex: 1;
+            }
+
+            .search-field-input {
+                width: 100%;
+            }
+
+            /* Tamu stats: 2 kolom */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* Tamu header: stack */
+            .tamu-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .tamu-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            /* Doc wrap: padding lebih kecil */
+            .doc-wrap {
+                padding: 0 .25rem;
+            }
+
+            .doc-card .doc-body {
+                padding: 1.1rem 1.2rem 1.5rem;
+            }
+
+            .kop-surat {
+                padding: 1.25rem 1.2rem 1rem;
+                gap: .65rem;
+            }
+
+            .kop-surat img {
+                height: 52px;
+                width: 52px;
+            }
+
+            /* Hasil: card full-width */
+            .hasil-wrap {
+                max-width: 100%;
+            }
+
+            .result-header,
+            .result-info,
+            .result-actions {
+                padding-left: 1.1rem;
+                padding-right: 1.1rem;
+            }
+
+            /* Tamu table: horizontal scroll */
+            .tamu-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tamu-tbl {
+                min-width: 500px;
             }
         }
 
+        /* ── Mobile S ≤ 540px ──────────────────────────────────────── */
         @media (max-width: 540px) {
             :root {
                 --nav-h: 50px;
+            }
+
+            .content-wrap {
+                padding: 1.5rem .85rem;
+            }
+
+            /* People grid: tetap 2 kolom tapi lebih compact */
+            .people-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: .5rem;
+            }
+
+            .person-card {
+                padding: 1rem .65rem;
+            }
+
+            .avatar-wrap {
+                width: 48px;
+                height: 48px;
+            }
+
+            .person-name {
+                font-size: .78rem;
+            }
+
+            /* Stats: 1 kolom di layar kecil */
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            /* Nav brand: sembunyikan nama sekolah jika terlalu panjang */
+            .nav-sub {
+                display: none;
+            }
+
+            /* Search card di landing */
+            .search-card {
+                padding: 1.25rem 1rem;
+            }
+
+            /* Konfirmasi wrap */
+            .konfirmasi-wrap {
+                max-width: 100%;
+            }
+
+            /* Scan wrap */
+            .scan-wrap {
+                max-width: 100%;
+            }
+
+            /* Doc toolbar: stack */
+            .doc-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .5rem;
+            }
+        }
+
+        /* ── Print override ─────────────────────────────────────────── */
+        @media print {
+
+            .orb,
+            .grid-bg,
+            nav#mainNav,
+            .drawer,
+            .flash-area,
+            footer.site-footer {
+                display: none !important;
+            }
+
+            .page-wrap {
+                padding-top: 0;
+            }
+
+            .content-wrap {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            body {
+                background: #fff;
+                color: #000;
             }
         }
     </style>

@@ -76,7 +76,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('Whatsapp')
                     ->url('https://wapi.zedlabs.id', shouldOpenInNewTab: true)
                     ->icon('heroicon-o-chat-bubble-bottom-center-text')
-                    ->sort(7)
+                    ->sort(7),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

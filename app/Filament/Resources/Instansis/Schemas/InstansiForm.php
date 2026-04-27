@@ -72,9 +72,10 @@ class InstansiForm
                             null,
                         ])
                         ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            $npsn = $record?->npsn ?? 'logo_' . time();
+                            $npsn = $record?->npsn ?? 'logo_'.time();
                             $ext = $file->getClientOriginalExtension();
-                            return strtolower($npsn) . '.' . $ext;
+
+                            return strtolower($npsn).'.'.$ext;
                         }),
                     FileUpload::make('logo_institusi')
                         ->image()
@@ -92,9 +93,10 @@ class InstansiForm
                             null,
                         ])
                         ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            $npsn = $record?->npsn ?? 'logo_institusi_' . time();
+                            $npsn = $record?->npsn ?? 'logo_institusi_'.time();
                             $ext = $file->getClientOriginalExtension();
-                            return strtolower($npsn) . '.' . $ext;
+
+                            return strtolower($npsn).'.'.$ext;
                         }),
                 ]),
 

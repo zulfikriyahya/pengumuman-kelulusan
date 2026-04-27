@@ -18,9 +18,7 @@
         </div>
 
         <div class="doc-card">
-            <div class="kop-surat">
-                @include('partials._kop-surat')
-            </div>
+            <x-kop-surat />
 
             <div class="doc-body">
                 <table class="doc-meta">
@@ -49,9 +47,10 @@
                 </p>
 
                 @php
-                    $tp = $tahunPelajaran;
-                    $adaJadwal =
-                        $tp?->jadwal_kelulusan_mulai && $tp?->jadwal_kelulusan_selesai && $tp?->jadwal_kelulusan_tempat;
+                    $tp        = $tahunPelajaran;
+                    $adaJadwal = $tp?->jadwal_kelulusan_mulai
+                              && $tp?->jadwal_kelulusan_selesai
+                              && $tp?->jadwal_kelulusan_tempat;
                 @endphp
 
                 @if ($adaJadwal)
@@ -80,15 +79,11 @@
                 <p class="doc-para">Atas kehadiran Bapak/Ibu, kami ucapkan terima kasih.</p>
                 <p class="doc-para">Wassalamu&rsquo;alaikum Warahmatullahi Wabarakatuh.</p>
 
-                @include('partials._ttd')
+                <x-ttd />
 
-                {{-- QR CODE SECTION --}}
-                <div class="qr-block"
-                    style="margin-top:1.5rem;padding-top:1rem;border-top:1px dashed #d1d5db;text-align:center;">
+                <div class="qr-block">
                     {!! QrCode::size(100)->format('svg')->generate($siswa->id) !!}
-                    <p style="font-size:.68rem;color:#9ca3af;margin-top:.35rem;">
-                        Scan QR ini saat registrasi kehadiran &bull; {{ $siswa->nisn }}
-                    </p>
+                    <p>Scan QR ini saat registrasi kehadiran &bull; {{ $siswa->nisn }}</p>
                 </div>
             </div>
         </div>

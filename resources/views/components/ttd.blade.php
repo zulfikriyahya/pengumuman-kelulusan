@@ -1,8 +1,17 @@
+@props(['forPdf' => false])
+@php
+    $ttdSrc = $instansi?->tte_pimpinan
+        ? ($forPdf
+            ? public_path('storage/' . $instansi->tte_pimpinan)
+            : Storage::url($instansi->tte_pimpinan))
+        : null;
+@endphp
+
 <div class="ttd-block">
     <div class="ttd-inner">
         <p>{{ $instansi?->nama }}, {{ now()->translatedFormat('d F Y') }}</p>
-        @if ($instansi?->tte_pimpinan)
-            <img src="{{ Storage::url($instansi->tte_pimpinan) }}" alt="Tanda Tangan">
+        @if ($ttdSrc)
+            <img src="{{ $ttdSrc }}" alt="Tanda Tangan">
         @else
             <div class="ttd-space"></div>
         @endif

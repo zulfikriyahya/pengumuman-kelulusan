@@ -15,11 +15,11 @@ class ImportFoto
     private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
     /**
-     * @param  string        $zipPath        Path absolut ke file ZIP
-     * @param  class-string  $modelClass     Model Eloquent target (Siswa::class, dll.)
-     * @param  string        $identifierCol  Kolom pencocok nama file, mis. 'nisn' atau 'nip'
-     * @param  string        $fotoCol        Kolom yang menyimpan path foto, mis. 'foto' atau 'avatar'
-     * @param  string        $storageDir     Direktori tujuan di disk public, mis. 'foto-siswa'
+     * @param  string  $zipPath  Path absolut ke file ZIP
+     * @param  class-string  $modelClass  Model Eloquent target (Siswa::class, dll.)
+     * @param  string  $identifierCol  Kolom pencocok nama file, mis. 'nisn' atau 'nip'
+     * @param  string  $fotoCol  Kolom yang menyimpan path foto, mis. 'foto' atau 'avatar'
+     * @param  string  $storageDir  Direktori tujuan di disk public, mis. 'foto-siswa'
      * @return array{berhasil: int, dilewati: int, gagal: int, log: string[]}
      */
     public function execute(
@@ -33,17 +33,17 @@ class ImportFoto
         $log = [];
 
         // Buka ZIP
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             return [
                 'berhasil' => 0,
                 'dilewati' => 0,
-                'gagal'    => 1,
-                'log'      => ['Gagal membuka file ZIP. Pastikan file tidak rusak.'],
+                'gagal' => 1,
+                'log' => ['Gagal membuka file ZIP. Pastikan file tidak rusak.'],
             ];
         }
 
-        $tmpDir = storage_path('app/tmp/foto-' . uniqid());
+        $tmpDir = storage_path('app/tmp/foto-'.uniqid());
         mkdir($tmpDir, 0755, true);
         $zip->extractTo($tmpDir);
         $zip->close();
@@ -52,23 +52,25 @@ class ImportFoto
 
         if (empty($images)) {
             $this->deleteDirectory($tmpDir);
+
             return [
                 'berhasil' => 0,
                 'dilewati' => 0,
-                'gagal'    => 1,
-                'log'      => ['Tidak ada file gambar yang ditemukan di dalam ZIP.'],
+                'gagal' => 1,
+                'log' => ['Tidak ada file gambar yang ditemukan di dalam ZIP.'],
             ];
         }
 
         foreach ($images as $imagePath) {
-            $filename  = basename($imagePath);
-            $ext       = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-            $identifier = Str::beforeLast($filename, '.' . $ext);
+            $filename = basename($imagePath);
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $identifier = Str::beforeLast($filename, '.'.$ext);
 
             // Validasi: identifier tidak boleh kosong
             if (blank($identifier)) {
                 $log[] = "Dilewati — nama file tidak valid: {$filename}";
                 $gagal++;
+
                 continue;
             }
 
@@ -78,6 +80,7 @@ class ImportFoto
             if (! $record) {
                 $log[] = "Data dengan {$identifierCol} '{$identifier}' tidak ditemukan — {$filename} dilewati.";
                 $dilewati++;
+
                 continue;
             }
 
@@ -118,7 +121,7 @@ class ImportFoto
                 continue;
             }
 
-            $full = $dir . DIRECTORY_SEPARATOR . $entry;
+            $full = $dir.DIRECTORY_SEPARATOR.$entry;
 
             if (is_dir($full)) {
                 $results = array_merge($results, $this->collectImages($full));
@@ -147,7 +150,7 @@ class ImportFoto
                 continue;
             }
 
-            $full = $dir . DIRECTORY_SEPARATOR . $entry;
+            $full = $dir.DIRECTORY_SEPARATOR.$entry;
             is_dir($full) ? $this->deleteDirectory($full) : unlink($full);
         }
 

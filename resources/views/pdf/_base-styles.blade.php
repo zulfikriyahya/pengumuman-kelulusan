@@ -15,8 +15,8 @@
         line-height: 1.65;
     }
 
-    /* KOP */
-    .kop {
+    /* ── KOP ──────────────────────────────────────────────────── */
+    .kop-surat {
         display: flex;
         align-items: center;
         gap: 14px;
@@ -25,7 +25,7 @@
         margin-bottom: 18px;
     }
 
-    .kop img {
+    .kop-surat img {
         height: 80px;
         width: 80px;
         object-fit: contain;
@@ -49,7 +49,7 @@
         margin-top: 2px;
     }
 
-    /* JUDUL */
+    /* ── JUDUL ────────────────────────────────────────────────── */
     h2.judul {
         text-align: center;
         font-size: 14pt;
@@ -60,7 +60,7 @@
         margin: 18px 0 20px;
     }
 
-    /* NOMOR */
+    /* ── NOMOR / META ─────────────────────────────────────────── */
     table.nomor {
         margin-bottom: 16px;
         font-size: 11pt;
@@ -80,7 +80,7 @@
         width: .3cm;
     }
 
-    /* DATA */
+    /* ── DATA SISWA ───────────────────────────────────────────── */
     table.data {
         width: 100%;
         margin-bottom: 16px;
@@ -106,43 +106,48 @@
         font-weight: bold;
     }
 
-    /* ISI */
+    /* ── ISI ──────────────────────────────────────────────────── */
     .isi p {
         text-indent: 1.5cm;
         margin-bottom: 10px;
         text-align: justify;
     }
 
-    /* TTD */
-    .ttd {
+    /* ── TTD ──────────────────────────────────────────────────── */
+    .ttd-block {
         display: flex;
         justify-content: flex-end;
         margin-top: 32px;
     }
 
-    .ttd-box {
+    .ttd-inner {
         text-align: center;
         width: 7cm;
         font-size: 11pt;
     }
 
-    .ttd-box img {
+    .ttd-inner img {
         height: 72px;
         margin: 6px auto;
         display: block;
         object-fit: contain;
     }
 
-    .ttd-box .nama {
+    .ttd-inner .ttd-space {
+        height: 72px;
+    }
+
+    .ttd-inner .ttd-nama {
         font-weight: bold;
         text-decoration: underline;
     }
 
-    .ttd-box .nip {
+    .ttd-inner .ttd-nip {
         font-size: 10pt;
         color: #444;
     }
 
+    /* ── QR ───────────────────────────────────────────────────── */
     .qr-box {
         margin-top: 28px;
         text-align: center;
