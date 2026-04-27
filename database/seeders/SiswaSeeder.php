@@ -130,6 +130,7 @@ class SiswaSeeder extends Seeder
                 'nama_orangtua' => $namaOrangTua[$i],
                 'nisn'          => str_pad($nisnBase, 10, '0', STR_PAD_LEFT),
                 'berkas_skl'    => null,
+                'foto'    => null,
                 'telepon'       => '08' . str_pad(10000000 + ($i * 77777), 10, '0', STR_PAD_LEFT),
                 'status'        => $statusOptions[$i % 3 === 0 ? ($i % 2 === 0 ? 1 : 2) : 0],
                 'created_at'    => $now,

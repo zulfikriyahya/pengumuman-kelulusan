@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Alumnis\Pages;
 
+use App\Actions\ImportFoto;
 use App\Exports\AlumniExport;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Imports\AlumniImport;
@@ -106,7 +107,54 @@ class ListAlumnis extends ListRecords
                     );
                 }),
 
-            // ── 3. Unduh Template Excel ────────────────────────────────
+            // ── 3. Import Avatar Alumni (ZIP) ──────────────────────────
+            Action::make('import_avatar')
+                ->label('Import Avatar (ZIP)')
+                ->icon(Heroicon::Photo)
+                ->color(Color::Orange)
+                ->outlined()
+                ->size('sm')
+                ->modalHeading('Import Avatar Alumni dari ZIP')
+                ->modalDescription('Upload 1 file ZIP berisi foto/avatar alumni. Nama file harus berupa NISN 10 digit. Format yang didukung: jpg, jpeg, png, webp.')
+                ->modalSubmitActionLabel('Import Sekarang')
+                ->form([
+                    FileUpload::make('zip_file')
+                        ->label('File ZIP berisi avatar')
+                        ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
+                        ->maxSize(204800) // 200 MB
+                        ->required()
+                        ->helperText('Maks. 200 MB. Nama file = NISN 10 digit, contoh: 0012345678.jpg'),
+                ])
+                ->action(function (array $data): void {
+                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+
+                    $result = (new ImportFoto())->execute(
+                        zipPath: $zipPath,
+                        modelClass: Alumni::class,
+                        identifierCol: 'nisn',
+                        fotoCol: 'avatar',
+                        storageDir: 'avatar-alumni',
+                    );
+
+                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                    $title = "Avatar alumni: {$result['berhasil']} berhasil"
+                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+
+                    $body = implode("\n", array_slice($result['log'], 0, 8));
+                    if (count($result['log']) > 8) {
+                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                    }
+
+                    Notification::make()
+                        ->title($title)
+                        ->body($body)
+                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                        ->persistent()
+                        ->send();
+                }),
+
+            // ── 4. Unduh Template Excel ────────────────────────────────
             Action::make('template')
                 ->label('Unduh Template')
                 ->icon(Heroicon::DocumentArrowDown)
@@ -147,7 +195,7 @@ class ListAlumnis extends ListRecords
                     );
                 }),
 
-            // ── 4. Tambah Alumni ───────────────────────────────────────
+            // ── 5. Tambah Alumni ───────────────────────────────────────
             CreateAction::make()
                 ->icon(Heroicon::PlusCircle)
                 ->label('')

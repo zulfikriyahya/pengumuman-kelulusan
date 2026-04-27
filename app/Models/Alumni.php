@@ -19,7 +19,7 @@ class Alumni extends Model
         'nama',
         'nisn',
         'tahun_lulus',
-        'avatar',
+        'foto',
         'quote',
     ];
 }

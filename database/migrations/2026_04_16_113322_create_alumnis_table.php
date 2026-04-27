@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nama');
             $table->string('nisn', 10)->unique();
             $table->string('tahun_lulus', 4);
-            $table->string('avatar')->nullable();
+            $table->string('foto')->nullable();
             $table->text('quote')->nullable();
             $table->timestamps();
         });

@@ -88,7 +88,7 @@ class AlumniSeeder extends Seeder
                 'nama'        => $namaAlumni[$i],
                 'nisn'        => str_pad($nisnBase % 10000000000, 10, '0', STR_PAD_LEFT),
                 'tahun_lulus' => $tahunLulus[$i % count($tahunLulus)],
-                'avatar'      => null,
+                'foto'      => null,
                 'quote'       => $quotes[$i % count($quotes)],
                 'created_at'  => $now,
                 'updated_at'  => $now,

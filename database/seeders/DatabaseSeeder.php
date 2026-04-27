@@ -29,9 +29,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             InstansiSeeder::class,
             TahunPelajaranSeeder::class,
-            SiswaSeeder::class,
-            AlumniSeeder::class,
-            PersonilSeeder::class,
+            // SiswaSeeder::class,
+            // AlumniSeeder::class,
+            // PersonilSeeder::class,
         ]);
     }
 }

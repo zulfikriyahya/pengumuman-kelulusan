@@ -3,10 +3,12 @@
 namespace App\Filament\Resources\Siswas\Pages;
 
 use App\Actions\ImportDokumenSkl;
+use App\Actions\ImportFoto;
 use App\Exports\SiswaExport;
 use App\Filament\Resources\Siswas\SiswaResource;
 use App\Imports\SiswaImport;
 use App\Enums\StatusSiswa;
+use App\Models\Siswa;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
@@ -142,7 +144,54 @@ class ListSiswas extends ListRecords
                         ->send();
                 }),
 
-            // ── 4. Unduh Template Excel ────────────────────────────────
+            // ── 4. Import Foto Siswa (ZIP) ─────────────────────────────
+            Action::make('import_foto')
+                ->label('Import Foto (ZIP)')
+                ->icon(Heroicon::Photo)
+                ->color(Color::Orange)
+                ->outlined()
+                ->size('sm')
+                ->modalHeading('Import Foto Siswa dari ZIP')
+                ->modalDescription('Upload 1 file ZIP berisi foto siswa. Nama file harus berupa NISN 10 digit. Format yang didukung: jpg, jpeg, png, webp.')
+                ->modalSubmitActionLabel('Import Sekarang')
+                ->form([
+                    FileUpload::make('zip_file')
+                        ->label('File ZIP berisi foto')
+                        ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
+                        ->maxSize(204800) // 200 MB
+                        ->required()
+                        ->helperText('Maks. 200 MB. Nama file = NISN 10 digit, contoh: 0012345678.jpg'),
+                ])
+                ->action(function (array $data): void {
+                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+
+                    $result = (new ImportFoto())->execute(
+                        zipPath: $zipPath,
+                        modelClass: Siswa::class,
+                        identifierCol: 'nisn',
+                        fotoCol: 'foto',
+                        storageDir: 'foto-siswa',
+                    );
+
+                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                    $title = "Foto siswa: {$result['berhasil']} berhasil"
+                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+
+                    $body = implode("\n", array_slice($result['log'], 0, 8));
+                    if (count($result['log']) > 8) {
+                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                    }
+
+                    Notification::make()
+                        ->title($title)
+                        ->body($body)
+                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                        ->persistent()
+                        ->send();
+                }),
+
+            // ── 5. Unduh Template Excel ────────────────────────────────
             Action::make('template')
                 ->label('Unduh Template')
                 ->icon(Heroicon::DocumentArrowDown)
@@ -184,7 +233,7 @@ class ListSiswas extends ListRecords
                     );
                 }),
 
-            // ── 5. Tambah Siswa ────────────────────────────────────────
+            // ── 6. Tambah Siswa ────────────────────────────────────────
             CreateAction::make()
                 ->icon(Heroicon::PlusCircle)
                 ->label('')

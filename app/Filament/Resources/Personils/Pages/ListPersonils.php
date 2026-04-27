@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Personils\Pages;
 
+use App\Actions\ImportFoto;
 use App\Exports\PersonilExport;
 use App\Filament\Resources\Personils\PersonilResource;
 use App\Imports\PersonilImport;
+use App\Models\Personil;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
@@ -90,7 +92,54 @@ class ListPersonils extends ListRecords
                     );
                 }),
 
-            // ── 3. Unduh Template Excel ────────────────────────────────
+            // ── 3. Import Foto Personil (ZIP) ──────────────────────────
+            Action::make('import_foto')
+                ->label('Import Foto (ZIP)')
+                ->icon(Heroicon::Photo)
+                ->color(Color::Orange)
+                ->outlined()
+                ->size('sm')
+                ->modalHeading('Import Foto Personil dari ZIP')
+                ->modalDescription('Upload 1 file ZIP berisi foto personil. Nama file harus berupa NIP. Format yang didukung: jpg, jpeg, png, webp. Untuk personil tanpa NIP, gunakan fitur edit manual.')
+                ->modalSubmitActionLabel('Import Sekarang')
+                ->form([
+                    FileUpload::make('zip_file')
+                        ->label('File ZIP berisi foto')
+                        ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
+                        ->maxSize(204800) // 200 MB
+                        ->required()
+                        ->helperText('Maks. 200 MB. Nama file = NIP personil, contoh: 196501011990032001.jpg'),
+                ])
+                ->action(function (array $data): void {
+                    $zipPath = storage_path('app/livewire-tmp/' . $data['zip_file']);
+
+                    $result = (new ImportFoto())->execute(
+                        zipPath: $zipPath,
+                        modelClass: Personil::class,
+                        identifierCol: 'nip',
+                        fotoCol: 'foto',
+                        storageDir: 'foto-personil',
+                    );
+
+                    $isWarning = $result['gagal'] > 0 || $result['dilewati'] > 0;
+                    $title = "Foto personil: {$result['berhasil']} berhasil"
+                        . ($result['dilewati'] ? ", {$result['dilewati']} dilewati" : '')
+                        . ($result['gagal'] ? ", {$result['gagal']} gagal" : '');
+
+                    $body = implode("\n", array_slice($result['log'], 0, 8));
+                    if (count($result['log']) > 8) {
+                        $body .= "\n... dan " . (count($result['log']) - 8) . " lainnya.";
+                    }
+
+                    Notification::make()
+                        ->title($title)
+                        ->body($body)
+                        ->when($isWarning, fn($n) => $n->warning(), fn($n) => $n->success())
+                        ->persistent()
+                        ->send();
+                }),
+
+            // ── 4. Unduh Template Excel ────────────────────────────────
             Action::make('template')
                 ->label('Unduh Template')
                 ->icon(Heroicon::DocumentArrowDown)
@@ -131,7 +180,7 @@ class ListPersonils extends ListRecords
                     );
                 }),
 
-            // ── 4. Tambah Personil ─────────────────────────────────────
+            // ── 5. Tambah Personil ─────────────────────────────────────
             CreateAction::make()
                 ->icon(Heroicon::PlusCircle)
                 ->label('')

@@ -17,6 +17,7 @@ class Siswa extends Model
         'nama_orangtua',
         'nisn',
         'berkas_skl',
+        'foto',
         'telepon',
         'status',
     ];

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nama_orangtua')->nullable();
             $table->string('nisn', 10)->unique();
             $table->string('berkas_skl')->nullable();
+            $table->string('foto')->nullable();
             $table->string('telepon', 15)->unique()->nullable();
             $table->enum('status', ['Lulus', 'Tidak Lulus', 'Lulus Bersyarat'])->default('Lulus');
             $table->timestamps();
