@@ -342,16 +342,21 @@
                     <div id="cari-section">
                         <div class="search-card">
                             <div class="search-card-head">
-                                <div class="search-icon-wrap">SKL</div>
-                                <div>
+                                <div class="search-icon-wrap"
+                                    style="background:transparent;border:none;padding:0;width:44px;height:44px;flex-shrink:0;">
+                                    <img src="/favicon.ico" alt="SKL"
+                                        style="width:44px;height:44px;object-fit:contain;border-radius:10px;">
+                                </div>
+                                <div style="min-width:0;">
                                     <div class="search-card-title">Cek Status Kelulusan</div>
-                                    <div class="search-card-sub">Masukkan NISN atau nomor telepon terdaftar</div>
+                                    <div class="search-card-sub">Masukkan NISN</div>
                                 </div>
                             </div>
+
                             <form action="{{ route('landing.cari') }}" method="POST">
                                 @csrf
                                 <div class="search-field">
-                                    <input type="text" name="nisn" placeholder="NISN (10 digit) atau Nomor Telepon"
+                                    <input type="text" name="nisn" placeholder="Cth. 0000971291"
                                         value="{{ old('nisn') }}"
                                         class="search-input {{ $errors->hasAny(['nisn', 'telepon']) ? 'is-error' : '' }}"
                                         maxlength="15" autofocus>
@@ -368,10 +373,11 @@
                             </form>
                         </div>
                     </div>
-                @endif
-
             </div>
-        </section>
+            @endif
+
+    </div>
+    </section>
     </div>
 @endsection
 

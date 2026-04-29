@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidak Ada Koneksi — SKL</title>
+    <style>
+        :root {
+            --teal: #0d9488;
+            --teal-xl: #5eead4;
+            --gold: #d4a843;
+            --bg: #060d0c;
+            --text: #dff0ec;
+            --muted: #6aada3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .wrap {
+            max-width: 340px;
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.25rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            margin-bottom: .5rem;
+        }
+
+        p {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--teal), #0f766e);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: .7rem 2rem;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 0 20px rgba(13, 148, 136, .3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(13, 148, 136, .45);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="icon">📡</div>
+        <h1>Tidak Ada Koneksi</h1>
+        <p>Periksa koneksi internet kamu, lalu coba lagi.<br>Halaman ini tersimpan untuk diakses offline.</p>
+        <button onclick="location.reload()">Coba Lagi</button>
+    </div>
+</body>
+
+</html>

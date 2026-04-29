@@ -1,5 +1,4 @@
 @php
-    // Support koleksi biasa maupun paginator
     $isEmpty = method_exists($items, 'isEmpty') ? $items->isEmpty() : $items->count() === 0;
 @endphp
 
@@ -15,12 +14,49 @@
 @else
     <div class="people-grid">
         @foreach ($items as $p)
-            @php $photo = $p->{$photoKey} ?? null; @endphp
-            <div class="card card-hover person-card reveal">
+            @php
+                $photo = $p->{$photoKey} ?? null;
+                $photoUrl = $photo ? Storage::url($photo) : null;
+
+                /*
+                 * Tentukan badge & baris data berdasarkan konteks:
+                 *  - alumni  : subKey = tahun_lulus, monoKey = nisn
+                 *  - personil: subKey = jabatan
+                 */
+                $isAlumni = isset($monoKey) && $monoKey === 'nisn';
+                $badgeLabel = $isAlumni ? ($subPrefix ?? '') . ($p->{$subKey} ?? '') : $p->{$subKey} ?? '';
+
+                $rows = [];
+                if (!$isAlumni && ($p->{$subKey} ?? null)) {
+                    $rows[] = ['Jabatan', $p->{$subKey}, false];
+                }
+                if (!empty($monoKey) && ($p->{$monoKey} ?? null)) {
+                    $rows[] = [$isAlumni ? 'NISN' : 'ID', $p->{$monoKey}, true];
+                }
+                if ($isAlumni && ($p->nama_orangtua ?? null)) {
+                    $rows[] = ['Nama Orang Tua', $p->nama_orangtua, false];
+                }
+
+                $personData = json_encode(
+                    [
+                        'nama' => $p->nama,
+                        'photo' => $photoUrl,
+                        'badge' => $badgeLabel,
+                        'badgeGold' => $isAlumni,
+                        'quote' => $p->quote ?? null,
+                        'sosial' => $p->sosial_media ?? null,
+                        'rows' => $rows,
+                    ],
+                    JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT,
+                );
+            @endphp
+
+            <div class="card card-hover person-card reveal" data-person="{{ $personData }}"
+                title="Lihat detail {{ $p->nama }}">
 
                 <div class="avatar-wrap">
-                    @if ($photo)
-                        <img src="{{ Storage::url($photo) }}" alt="{{ $p->nama }}" class="avatar-img">
+                    @if ($photoUrl)
+                        <img src="{{ $photoUrl }}" alt="{{ $p->nama }}" class="avatar-img">
                     @else
                         <div class="avatar-fallback">{{ strtoupper(mb_substr($p->nama, 0, 1)) }}</div>
                     @endif
@@ -40,11 +76,8 @@
                     <div class="person-quote">&ldquo;{{ $p->quote }}&rdquo;</div>
                 @endif
 
-                @if ($p->sosial_media ?? null)
-                    <a href="{{ $p->sosial_media }}" target="_blank" rel="noopener" class="person-link">
-                        Sosial Media
-                    </a>
-                @endif
+                {{-- Tanda klik --}}
+                <div class="person-hint">Lihat detail &rsaquo;</div>
 
             </div>
         @endforeach
