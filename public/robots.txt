@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /personil
+Allow: /alumni
+
+# Blokir halaman pribadi siswa & operasional
+Disallow: /siswa/
+Disallow: /cari
+Disallow: /tamu/
+Disallow: /admin/
+
+# Blokir file teknis
+Disallow: /*.json$
+Disallow: /sw.js
+Disallow: /offline.html
+
+Sitemap: https://lulus.mtsn1pandeglang.sch.id/sitemap.xml

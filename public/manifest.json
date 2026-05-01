@@ -1,36 +1,73 @@
 {
-    "name": "Layanan SKL Digital",
-    "short_name": "SKL",
-    "description": "Sistem Pengumuman Kelulusan & Surat Keterangan Lulus Digital",
+    "name": "Layanan Kelulusan Digital — MTsN 1 Pandeglang",
+    "short_name": "SKL MTsN 1",
+    "description": "Cek status kelulusan, unduh SKL, dan surat undangan wisuda secara digital.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "orientation": "portrait",
-    "background_color": "#060d0c",
+    "orientation": "portrait-primary",
+    "background_color": "#030b09",
     "theme_color": "#0d9488",
+    "lang": "id",
+    "dir": "ltr",
+    "categories": [
+        "education"
+    ],
     "icons": [
         {
-            "src": "/favicon.ico",
+            "src": "/icons/icon-192.png",
             "sizes": "192x192",
-            "type": "image/x-icon",
-            "purpose": "any maskable"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "src": "/favicon.ico",
+            "src": "/icons/icon-192-maskable.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
             "sizes": "512x512",
-            "type": "image/x-icon",
-            "purpose": "any maskable"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ],
     "screenshots": [
         {
-            "src": "/favicon.ico",
-            "sizes": "512x512",
-            "type": "image/x-icon",
-            "form_factor": "narrow"
+            "src": "/icons/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Halaman Pengumuman Kelulusan"
+        },
+        {
+            "src": "/icons/screenshot-desktop.png",
+            "sizes": "1280x800",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Dashboard Kelulusan Digital"
         }
     ],
-    "categories": [
-        "education"
+    "shortcuts": [
+        {
+            "name": "Cek Kelulusan",
+            "short_name": "Cek",
+            "description": "Langsung cek status kelulusan dengan NISN",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
     ],
-    "lang": "id"
+    "prefer_related_applications": false
 }
