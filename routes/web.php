@@ -8,28 +8,28 @@ use App\Http\Middleware\JadwalKelulusanAktif;
 use Illuminate\Support\Facades\Route;
 
 // ── Landing & Pencarian ────────────────────────────────────────────
-Route::get('/',      [LandingPageController::class, 'index'])->name('landing');
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::post('/cari', [LandingPageController::class, 'cari'])->name('landing.cari');
 
 // ── Siswa: hasil & dokumen ─────────────────────────────────────────
 Route::prefix('/siswa/{siswa}')->name('landing.')->group(function () {
-    Route::get('/',             [LandingPageController::class, 'hasil'])->name('hasil');
-    Route::get('/skl',          [LandingPageController::class, 'cetakSkl'])->name('skl')->middleware('throttle:30,1');
-    Route::get('/skl/pdf',      [LandingPageController::class, 'cetakSklPdf'])->name('skl.pdf')->middleware('throttle:10,1');
-    Route::get('/undangan',     [LandingPageController::class, 'cetakUndangan'])->name('undangan')->middleware('throttle:30,1');
+    Route::get('/', [LandingPageController::class, 'hasil'])->name('hasil');
+    Route::get('/skl', [LandingPageController::class, 'cetakSkl'])->name('skl')->middleware('throttle:30,1');
+    Route::get('/skl/pdf', [LandingPageController::class, 'cetakSklPdf'])->name('skl.pdf')->middleware('throttle:10,1');
+    Route::get('/undangan', [LandingPageController::class, 'cetakUndangan'])->name('undangan')->middleware('throttle:30,1');
     Route::get('/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf'])->name('undangan.pdf')->middleware('throttle:10,1');
 });
 
 // ── Personil ───────────────────────────────────────────────────────
 Route::prefix('personil')->name('personil.')->controller(PersonilController::class)->group(function () {
-    Route::get('/',      'index')->name('index');
-    Route::get('/cari',  'search')->name('cari');
+    Route::get('/', 'index')->name('index');
+    Route::get('/cari', 'search')->name('cari');
 });
 
 // ── Alumni ─────────────────────────────────────────────────────────
 Route::prefix('alumni')->name('alumni.')->controller(AlumniController::class)->group(function () {
-    Route::get('/',      'index')->name('index');
-    Route::get('/cari',  'search')->name('cari');
+    Route::get('/', 'index')->name('index');
+    Route::get('/cari', 'search')->name('cari');
 });
 
 // ── Tamu Undangan (dibatasi jadwal kelulusan) ──────────────────────
@@ -38,10 +38,10 @@ Route::middleware(JadwalKelulusanAktif::class)
     ->name('tamu.')
     ->controller(TamuUndanganController::class)
     ->group(function () {
-        Route::get('/',              'index')->name('index');
-        Route::get('/scan',          'scanQr')->name('scan');
-        Route::post('/scan',         'processScan')->name('scan.post');
+        Route::get('/', 'index')->name('index');
+        Route::get('/scan', 'scanQr')->name('scan');
+        Route::post('/scan', 'processScan')->name('scan.post');
         Route::get('/konfirmasi/{siswa}', 'konfirmasi')->name('konfirmasi');
-        Route::post('/',             'store')->name('store');
-        Route::get('/cetak-hadir',   'cetakHadir')->name('cetak-hadir');
+        Route::post('/', 'store')->name('store');
+        Route::get('/cetak-hadir', 'cetakHadir')->name('cetak-hadir');
     });

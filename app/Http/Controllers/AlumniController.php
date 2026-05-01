@@ -13,10 +13,12 @@ class AlumniController extends Controller
     {
         return Alumni::class;
     }
+
     protected function indexView(): string
     {
         return 'alumni.index';
     }
+
     protected function searchColumns(): array
     {
         return ['nisn', 'nama'];

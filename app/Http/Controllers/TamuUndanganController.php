@@ -13,13 +13,13 @@ class TamuUndanganController extends Controller
 {
     public function index(): View
     {
-        $tamus      = TamuUndangan::with('siswa')->latest()->paginate(20);
+        $tamus = TamuUndangan::with('siswa')->latest()->paginate(20);
         $totalSiswa = Siswa::whereIn('status', ['Lulus', 'Lulus Bersyarat'])->count();
 
         return view('tamu.index', [
             'tamuUndangans' => $tamus,
-            'totalPax'      => $tamus->sum('jumlah_tamu'),
-            'totalSiswa'    => $totalSiswa,
+            'totalPax' => $tamus->sum('jumlah_tamu'),
+            'totalSiswa' => $totalSiswa,
         ]);
     }
 
@@ -34,7 +34,7 @@ class TamuUndanganController extends Controller
             'kode' => ['required', 'string', 'max:36'],
         ]);
 
-        $kode  = trim($request->input('kode'));
+        $kode = trim($request->input('kode'));
         $siswa = Siswa::where('id', $kode)->orWhere('nisn', $kode)->first();
 
         if (! $siswa) {
@@ -57,7 +57,7 @@ class TamuUndanganController extends Controller
         abort_unless($siswa->isLulus(), 403, 'Siswa tidak berhak hadir.');
 
         return view('tamu.konfirmasi', [
-            'siswa'      => $siswa,
+            'siswa' => $siswa,
             'sudahHadir' => TamuUndangan::where('siswa_id', $siswa->id)->exists(),
         ]);
     }
@@ -79,7 +79,7 @@ class TamuUndanganController extends Controller
         $tamus = TamuUndangan::with('siswa')->oldest()->get();
 
         return view('tamu.cetak-hadir', [
-            'tamus'    => $tamus,
+            'tamus' => $tamus,
             'totalPax' => $tamus->sum('jumlah_tamu'),
         ]);
     }

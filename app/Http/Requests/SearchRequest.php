@@ -19,9 +19,9 @@ class SearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q'       => ['nullable', 'string', 'max:255'],
-            'nama'    => ['nullable', 'string', 'max:255'],
-            'nisn'    => ['nullable', 'string', 'max:10'],
+            'q' => ['nullable', 'string', 'max:255'],
+            'nama' => ['nullable', 'string', 'max:255'],
+            'nisn' => ['nullable', 'string', 'max:10'],
             'telepon' => ['nullable', 'string', 'max:15'],
         ];
     }

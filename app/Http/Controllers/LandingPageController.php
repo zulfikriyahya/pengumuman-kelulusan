@@ -33,7 +33,7 @@ class LandingPageController extends Controller
     public function hasil(Siswa $siswa): View
     {
         return view('landing.hasil', [
-            'siswa'   => $siswa,
+            'siswa' => $siswa,
             'keyword' => $siswa->nisn,
         ]);
     }
@@ -73,7 +73,7 @@ class LandingPageController extends Controller
      */
     private function renderPdf(string $view, Siswa $siswa, string $filename): Response
     {
-        $instansi       = Instansi::first();
+        $instansi = Instansi::first();
         $tahunPelajaran = TahunPelajaran::aktif()->first();
 
         return Pdf::loadView($view, compact('siswa', 'instansi', 'tahunPelajaran'))

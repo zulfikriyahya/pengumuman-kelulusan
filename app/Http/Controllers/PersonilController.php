@@ -13,14 +13,17 @@ class PersonilController extends Controller
     {
         return Personil::class;
     }
+
     protected function indexView(): string
     {
         return 'personil.index';
     }
+
     protected function searchColumns(): array
     {
         return ['nama'];
     }
+
     protected function paginated(): bool
     {
         return false;

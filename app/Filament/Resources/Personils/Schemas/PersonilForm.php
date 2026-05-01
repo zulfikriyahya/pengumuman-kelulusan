@@ -25,14 +25,14 @@ class PersonilForm
                         ->required()
                         ->native(false)
                         ->options([
-                            'Kepala Madrasah'      => 'Kepala Madrasah',
+                            'Kepala Madrasah' => 'Kepala Madrasah',
                             'Wakil Kepala Madrasah' => 'Wakil Kepala Madrasah',
-                            'Komite Madrasah'      => 'Komite Madrasah',
-                            'Guru'                 => 'Guru',
-                            'Kepala Tata Usaha'    => 'Kepala Tata Usaha',
-                            'Bendahara'            => 'Bendahara',
-                            'Staf Tata Usaha'      => 'Staf Tata Usaha',
-                            'Outsourcing'          => 'Outsourcing',
+                            'Komite Madrasah' => 'Komite Madrasah',
+                            'Guru' => 'Guru',
+                            'Kepala Tata Usaha' => 'Kepala Tata Usaha',
+                            'Bendahara' => 'Bendahara',
+                            'Staf Tata Usaha' => 'Staf Tata Usaha',
+                            'Outsourcing' => 'Outsourcing',
                         ]),
                     TextInput::make('nip')
                         ->label('NIP')
@@ -59,10 +59,10 @@ class PersonilForm
                             null,
                         ])
                         ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            $nip = $record?->nip ?? 'foto_' . time();
+                            $nip = $record?->nip ?? 'foto_'.time();
                             $ext = $file->getClientOriginalExtension();
 
-                            return strtolower($nip) . '.' . $ext;
+                            return strtolower($nip).'.'.$ext;
                         }),
                 ]),
 
