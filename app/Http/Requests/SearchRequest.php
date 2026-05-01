@@ -4,11 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-/**
- * Request umum untuk semua halaman pencarian publik.
- *
- * Menggantikan: AlumnusCariRequest, PersonilCariRequest, LandingPageCariRequest
- */
 class SearchRequest extends FormRequest
 {
     public function authorize(): bool

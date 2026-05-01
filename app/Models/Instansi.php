@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Observers\InstansiObserver;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,11 +11,6 @@ class Instansi extends Model
 {
     use HasFactory, HasUuids;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'nama',
         'npsn',
@@ -32,15 +28,15 @@ class Instansi extends Model
         'status',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'status' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::observe(InstansiObserver::class);
     }
 }

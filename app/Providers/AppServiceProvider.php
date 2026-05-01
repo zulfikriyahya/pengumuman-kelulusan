@@ -19,8 +19,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         FilamentColor::register([
-            'danger' => Color::hex('#FF0022'),
-            'info' => Color::hex('#00FFEA'),
+            'danger'  => Color::hex('#FF0022'),
+            'info'    => Color::hex('#00FFEA'),
             'primary' => Color::hex('#BF00FF'),
             'success' => Color::hex('#00FF41'),
             'warning' => Color::hex('#FF6D00'),
@@ -34,16 +34,22 @@ class AppServiceProvider extends ServiceProvider
         setlocale(LC_TIME, 'id_ID.utf8');
         Carbon::setLocale('id');
 
-        // Share instansi ke semua view
-        $instansiArray = Cache::remember('instansi.aktif', now()->addHour(), function () {
-            $data = Instansi::first();
+        // ── Instansi ────────────────────────────────────────────────
+        // Cache di-tag 'instansi' agar bisa di-flush spesifik
+        // tanpa harus clear seluruh cache aplikasi.
+        $instansiArray = Cache::tags('instansi')
+            ->remember('instansi.aktif', now()->addDay(), function () {
+                $data = Instansi::first();
 
-            return $data ? $data->toArray() : null;
-        });
+                return $data ? $data->toArray() : null;
+            });
+
         $instansi = $instansiArray ? (object) $instansiArray : null;
         View::share('instansi', $instansi);
 
-        // Share tahun pelajaran aktif ke semua view
+        // ── Tahun Pelajaran ─────────────────────────────────────────
+        // Tidak di-cache karena query ringan dan jarang berubah,
+        // tapi hasilnya sangat time-sensitive (jadwal pengumuman).
         $tahunPelajaran = TahunPelajaran::where('status', true)->first();
         View::share('tahunPelajaran', $tahunPelajaran);
     }

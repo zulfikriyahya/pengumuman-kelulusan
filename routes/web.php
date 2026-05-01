@@ -11,13 +11,21 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
 Route::post('/cari', [LandingPageController::class, 'cari'])->name('landing.cari');
 
-// ── Siswa: hasil & dokumen ─────────────────────────────────────────
+// ── Siswa: hasil, dokumen & aset ───────────────────────────────────
 Route::prefix('/siswa/{siswa}')->name('landing.')->group(function () {
     Route::get('/', [LandingPageController::class, 'hasil'])->name('hasil');
-    Route::get('/skl', [LandingPageController::class, 'cetakSkl'])->name('skl')->middleware('throttle:30,1');
-    Route::get('/skl/pdf', [LandingPageController::class, 'cetakSklPdf'])->name('skl.pdf')->middleware('throttle:10,1');
-    Route::get('/undangan', [LandingPageController::class, 'cetakUndangan'])->name('undangan')->middleware('throttle:30,1');
-    Route::get('/undangan/pdf', [LandingPageController::class, 'cetakUndanganPdf'])->name('undangan.pdf')->middleware('throttle:10,1');
+
+    Route::get('/foto', [LandingPageController::class, 'foto'])
+        ->name('foto')
+        ->middleware('throttle:60,1');
+
+    Route::get('/skl', [LandingPageController::class, 'cetakSkl'])
+        ->name('skl')
+        ->middleware('throttle:20,1');
+
+    Route::get('/undangan', [LandingPageController::class, 'cetakUndangan'])
+        ->name('undangan')
+        ->middleware('throttle:20,1');
 });
 
 // ── Personil ───────────────────────────────────────────────────────
